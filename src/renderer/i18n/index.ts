@@ -15,6 +15,7 @@ const resources = {
             "scroll_sensitivity": "Scroll Sensitivity",
             "ingest_lookback": "Ingestion Look-back",
             "days": "Days",
+            "thumbnail_size": "Thumbnail Size",
         }
     }
 };

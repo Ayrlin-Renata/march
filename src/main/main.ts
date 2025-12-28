@@ -17,6 +17,8 @@ const settings = new ElectronStore<AppSettings>({
     }
 }) as any;
 
+const labelStore = new ElectronStore({ name: 'image-labels' }) as any;
+
 function createWindow() {
     const windowState = getWindowState();
 
@@ -38,9 +40,25 @@ function createWindow() {
         saveWindowState(win);
     });
 
+    win.on('move', () => {
+        saveWindowState(win);
+    });
+
+    win.on('resize', () => {
+        saveWindowState(win);
+    });
+
     ipcMain.on('renderer-ready', () => {
         console.log('Renderer signaled ready, sending initial files...');
         reBroadcastFiles(win);
+    });
+
+    ipcMain.handle('get-label', (_event, filePath) => {
+        return labelStore.get(filePath.replace(/\\/g, '/'), 0);
+    });
+
+    ipcMain.on('set-label', (_event, { filePath, labelIndex }) => {
+        labelStore.set(filePath.replace(/\\/g, '/'), labelIndex);
     });
 
     if (process.env.NODE_ENV === 'development' || !app.isPackaged) {

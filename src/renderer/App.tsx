@@ -14,17 +14,46 @@ const App: React.FC = () => {
     const { toggleTheme } = useTheme();
     const { t } = useTranslation();
     const { addImages } = useIngestionStore();
-    const { toggleSettings } = useSettingsStore();
+    const { toggleSettings, ingestionWidth, setIngestionWidth, thumbnailSize } = useSettingsStore();
+
+    const isResizing = React.useRef(false);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isResizing.current) return;
+            const newWidth = e.clientX - 48; // Sidebar width
+            if (newWidth > 200 && newWidth < 800) {
+                setIngestionWidth(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            isResizing.current = false;
+            document.body.style.cursor = 'default';
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [setIngestionWidth]);
 
     useEffect(() => {
         if (window.electron && window.electron.on) {
-            const cleanup = window.electron.on('file-added', (data: any) => {
+            const cleanup = window.electron.on('file-added', async (data: any) => {
                 console.log('File ingested:', data.path, data.timestamp);
+
+                // Fetch persistent label
+                const labelIndex = await window.electron.getLabel(data.path);
+
                 addImages([{
                     path: data.path,
                     name: data.name,
                     timestamp: data.timestamp || Date.now(),
-                    source: data.source || 'Default'
+                    source: data.source || 'Default',
+                    labelIndex: labelIndex || 0
                 }]);
             });
             return () => cleanup();
@@ -38,7 +67,7 @@ const App: React.FC = () => {
     }, []);
 
     return (
-        <div className="layout-root">
+        <div className="layout-root" style={{ '--thumb-size': `${thumbnailSize}px` } as React.CSSProperties}>
             {/* Sidebar Toolrail (VSCode-like) */}
             <nav className="toolrail">
                 <div className="toolrail-top">
@@ -60,7 +89,21 @@ const App: React.FC = () => {
             </nav>
 
             <main className="main-content">
-                <IngestionArea />
+                <div
+                    className="ingestion-area-container"
+                    style={{ width: `${ingestionWidth}px` }}
+                >
+                    <IngestionArea />
+                </div>
+
+                <div
+                    className="resizer"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        isResizing.current = true;
+                        document.body.style.cursor = 'col-resize';
+                    }}
+                />
 
                 {/* Story Builder Area */}
                 <section className="story-builder-area">

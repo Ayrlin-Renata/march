@@ -12,6 +12,8 @@ interface IngestionState {
     setHoveredImageId: (id: string | null) => void;
     selectNext: () => void;
     selectPrev: () => void;
+    cycleLabel: (id: string) => void;
+    resetLabel: (id: string) => void;
 }
 
 export const useIngestionStore = create<IngestionState>((set, get) => ({
@@ -77,5 +79,39 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
         if (currentIndex > 0) {
             set({ selectedImageId: images[currentIndex - 1].id });
         }
+    },
+
+    cycleLabel: (id) => {
+        const { images } = get();
+        const updated = images.map(img => {
+            if (img.id === id) {
+                const nextLabel = ((img.labelIndex || 0) + 1) % 9;
+
+                // Persist to main process
+                if (window.electron && window.electron.setLabel) {
+                    window.electron.setLabel(img.path, nextLabel);
+                }
+
+                return { ...img, labelIndex: nextLabel };
+            }
+            return img;
+        });
+        set({ images: updated });
+    },
+
+    resetLabel: (id) => {
+        const { images } = get();
+        const updated = images.map(img => {
+            if (img.id === id) {
+                // Persist to main process
+                if (window.electron && window.electron.setLabel) {
+                    window.electron.setLabel(img.path, 0);
+                }
+
+                return { ...img, labelIndex: 0 };
+            }
+            return img;
+        });
+        set({ images: updated });
     }
 }));

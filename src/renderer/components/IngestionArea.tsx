@@ -5,8 +5,101 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAssetUrl } from '../utils/pathUtils';
 
+const ImageThumbnail: React.FC<{
+    img: IngestedImage;
+    isSelected: boolean;
+    onSelect: () => void;
+    onCycle: () => void;
+    onReset: () => void;
+    hoveredImageId: string | null;
+    popoverPos: { top: number, left: number, below: boolean } | null;
+    onMouseEnter: (e: React.MouseEvent) => void;
+    onMouseLeave: () => void;
+}> = ({ img, isSelected, onSelect, onCycle, onReset, hoveredImageId, popoverPos, onMouseEnter, onMouseLeave }) => {
+    const timerRef = React.useRef<any>(null);
+    const wasResetRef = React.useRef(false);
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (wasResetRef.current) {
+            wasResetRef.current = false;
+            return;
+        }
+        onCycle();
+    };
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button === 2) { // Right click
+            wasResetRef.current = false;
+            timerRef.current = setTimeout(() => {
+                onReset();
+                wasResetRef.current = true;
+            }, 500); // 500ms for long press
+        }
+    };
+
+    const handleMouseUp = (_e: React.MouseEvent) => {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    };
+
+    return (
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`thumbnail-wrapper ${isSelected ? 'selected' : ''} ${hoveredImageId === img.id ? 'hovered' : ''} label-${img.labelIndex || 0}`}
+            onClick={onSelect}
+            onContextMenu={handleContextMenu}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={() => {
+                onMouseLeave();
+                handleMouseUp(null as any);
+            }}
+        >
+            <div
+                className="thumbnail-card"
+                draggable
+                onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', img.path);
+                    e.dataTransfer.setData('application/json', JSON.stringify(img));
+                }}
+            >
+                <img src={getAssetUrl(img.path)} alt={img.name} loading="lazy" className="thumbnail-img" />
+                <div className="label-glow"></div>
+            </div>
+            {hoveredImageId === img.id && popoverPos && (
+                <div
+                    className={`hover-popover ${popoverPos.below ? 'below' : ''}`}
+                    style={{
+                        top: popoverPos.below ? popoverPos.top : 'auto',
+                        bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
+                        left: popoverPos.left,
+                        transform: 'translateX(-50%)'
+                    }}
+                >
+                    <img src={getAssetUrl(img.path)} alt="preview" />
+                </div>
+            )}
+        </motion.div>
+    );
+};
+
 const IngestionArea: React.FC = () => {
-    const { images, setSelectedImageId, hoveredImageId, setHoveredImageId } = useIngestionStore();
+    const {
+        images,
+        selectedImageId,
+        setSelectedImageId,
+        hoveredImageId,
+        setHoveredImageId,
+        cycleLabel,
+        resetLabel
+    } = useIngestionStore();
     const [activeSource, setActiveSource] = React.useState('All');
     const [popoverPos, setPopoverPos] = React.useState<{ top: number, left: number, below: boolean } | null>(null);
     const { t } = useTranslation();
@@ -21,7 +114,6 @@ const IngestionArea: React.FC = () => {
         return images.filter(img => img.source === activeSource);
     }, [images, activeSource]);
 
-    // Group images by burstId
     const bursts = filteredImages.reduce((acc, img) => {
         const lastBurst = acc[acc.length - 1];
         if (lastBurst && lastBurst[0].burstId === img.burstId) {
@@ -67,17 +159,18 @@ const IngestionArea: React.FC = () => {
                                 <div className="thumbnail-grid">
                                     <AnimatePresence>
                                         {burst.map((img) => (
-                                            <motion.div
+                                            <ImageThumbnail
                                                 key={img.id}
-                                                layout
-                                                initial={{ opacity: 0, scale: 0.8 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.8 }}
-                                                className={`thumbnail-wrapper ${hoveredImageId === img.id ? 'hovered' : ''}`}
+                                                img={img}
+                                                isSelected={selectedImageId === img.id}
+                                                onSelect={() => setSelectedImageId(img.id)}
+                                                onCycle={() => cycleLabel(img.id)}
+                                                onReset={() => resetLabel(img.id)}
+                                                hoveredImageId={hoveredImageId}
+                                                popoverPos={popoverPos}
                                                 onMouseEnter={(e) => {
                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                     const showBelow = rect.top < 250;
-                                                    // Calculate left, keeping it at least 135px from edges (250px width / 2 + margin)
                                                     const left = Math.min(window.innerWidth - 135, Math.max(135, rect.left + rect.width / 2));
                                                     setPopoverPos({
                                                         top: showBelow ? rect.bottom + 10 : rect.top - 10,
@@ -90,37 +183,7 @@ const IngestionArea: React.FC = () => {
                                                     setHoveredImageId(null);
                                                     setPopoverPos(null);
                                                 }}
-                                                onClick={() => setSelectedImageId(img.id)}
-                                            >
-                                                <div
-                                                    className="thumbnail-img-container"
-                                                    draggable
-                                                    onDragStart={(e) => {
-                                                        e.dataTransfer.setData('text/plain', img.path);
-                                                        e.dataTransfer.setData('application/json', JSON.stringify(img));
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={getAssetUrl(img.path)}
-                                                        alt={img.name}
-                                                        className="thumbnail-img"
-                                                        loading="lazy"
-                                                    />
-                                                </div>
-                                                {hoveredImageId === img.id && popoverPos && (
-                                                    <div
-                                                        className={`hover-popover ${popoverPos.below ? 'below' : ''}`}
-                                                        style={{
-                                                            top: popoverPos.below ? popoverPos.top : 'auto',
-                                                            bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
-                                                            left: popoverPos.left,
-                                                            transform: 'translateX(-50%)'
-                                                        }}
-                                                    >
-                                                        <img src={getAssetUrl(img.path)} alt="preview" />
-                                                    </div>
-                                                )}
-                                            </motion.div>
+                                            />
                                         ))}
                                     </AnimatePresence>
                                 </div>

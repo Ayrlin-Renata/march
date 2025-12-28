@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld('electron', {
         return () => ipcRenderer.removeListener(channel, subscription);
     },
     invoke: (channel, data) => ipcRenderer.invoke(channel, data),
+    getLabel: (filePath) => ipcRenderer.invoke('get-label', filePath),
+    setLabel: (filePath, labelIndex) => ipcRenderer.send('set-label', { filePath, labelIndex }),
 });

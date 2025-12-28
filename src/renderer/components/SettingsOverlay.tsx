@@ -11,7 +11,9 @@ const SettingsOverlay: React.FC = () => {
         scrollSensitivity,
         setScrollSensitivity,
         ingestLookbackDays,
-        setIngestLookbackDays
+        setIngestLookbackDays,
+        thumbnailSize,
+        setThumbnailSize
     } = useSettingsStore();
     const { t } = useTranslation();
 
@@ -65,7 +67,22 @@ const SettingsOverlay: React.FC = () => {
                                         value={ingestLookbackDays}
                                         onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))}
                                     />
-                                    <span>{ingestLookbackDays} {t('days')}</span>
+                                    <span>{ingestLookbackDays}<small>{t('days')}</small></span>
+                                </div>
+                            </div>
+
+                            <div className="settings-group">
+                                <label className="settings-label">{t('thumbnail_size')}</label>
+                                <div className="settings-control">
+                                    <input
+                                        type="range"
+                                        min="80"
+                                        max="300"
+                                        step="10"
+                                        value={thumbnailSize}
+                                        onChange={(e) => setThumbnailSize(parseInt(e.target.value))}
+                                    />
+                                    <span>{thumbnailSize}px</span>
                                 </div>
                             </div>
                         </div>
