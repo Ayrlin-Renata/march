@@ -14,6 +14,7 @@ interface IngestionState {
     selectPrev: () => void;
     cycleLabel: (id: string) => void;
     resetLabel: (id: string) => void;
+    updateImageDimensions: (id: string, width: number, height: number) => void;
 }
 
 export const useIngestionStore = create<IngestionState>((set, get) => ({
@@ -40,6 +41,8 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
                 name: img.name || 'Unknown',
                 timestamp,
                 source: img.source || 'Default',
+                width: img.width,
+                height: img.height,
             };
 
             // Simple burst detection: if last image was taken within threshold
@@ -103,15 +106,19 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
         const { images } = get();
         const updated = images.map(img => {
             if (img.id === id) {
-                // Persist to main process
                 if (window.electron && window.electron.setLabel) {
                     window.electron.setLabel(img.path, 0);
                 }
-
                 return { ...img, labelIndex: 0 };
             }
             return img;
         });
         set({ images: updated });
+    },
+
+    updateImageDimensions: (id, width, height) => {
+        set((state) => ({
+            images: state.images.map(img => img.id === id ? { ...img, width, height } : img)
+        }));
     }
 }));

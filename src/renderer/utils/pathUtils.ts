@@ -8,10 +8,10 @@ export const getAssetUrl = (path: string): string => {
     // Replace backslashes with forward slashes for Windows compatibility
     const normalized = path.replace(/\\/g, '/');
 
-    // Ensure it starts with file:/// (three slashes for absolute paths)
+    // Use a dummy hostname 'local' to avoid Windows drive letters being parsed as hostnames
     if (normalized.startsWith('/')) {
-        return `file://${normalized}`;
+        return `media://local${normalized}`;
     }
 
-    return `file:///${normalized}`;
+    return `media://local/${normalized}`;
 };

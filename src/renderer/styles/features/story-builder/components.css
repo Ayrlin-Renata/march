@@ -1,0 +1,168 @@
+/* Platform Tabs */
+.platform-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.platform-tab-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.platform-tab {
+    height: 32px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--fg-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.platform-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--fg-primary);
+}
+
+.platform-tab.disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.platform-icon {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.platform-enable-btn {
+    width: 24px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: var(--fg-secondary);
+    cursor: pointer;
+}
+
+.platform-enable-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--fg-primary);
+}
+
+/* Layout Sidebar Expanded */
+.layout-sidebar {
+    width: 120px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    gap: 12px;
+    align-items: stretch;
+}
+
+.layout-btn {
+    height: 64px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.layout-btn .layout-btn-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.layout-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.layout-btn.active {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--fg-accent);
+    color: var(--fg-primary);
+}
+
+.layout-icon-preview {
+    width: 20px;
+    height: 20px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    opacity: 0.6;
+}
+
+/* Layout Icons CSS representation */
+.layout-icon-preview.layout-1-single {
+    background: linear-gradient(135deg, transparent 48%, currentColor 50%, transparent 52%);
+}
+
+.layout-icon-preview.layout-1-square {
+    background: radial-gradient(circle, currentColor 2px, transparent 3px);
+}
+
+.layout-icon-preview.layout-2-vertical {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+}
+
+.layout-icon-preview.layout-2-vertical::before,
+.layout-icon-preview.layout-2-vertical::after {
+    content: '';
+    background: currentColor;
+    opacity: 0.3;
+}
+
+.layout-icon-preview.layout-3-large-left {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+}
+
+.layout-icon-preview.layout-3-large-left::before {
+    content: '';
+    grid-row: span 2;
+    background: currentColor;
+    opacity: 0.3;
+}
+
+.layout-icon-preview.layout-3-large-left::after {
+    content: '';
+    background: currentColor;
+    opacity: 0.3;
+    grid-column: 2;
+}
+
+.layout-icon-preview.layout-4-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+}
+
+.layout-icon-preview.layout-4-grid::before {
+    content: '';
+    background: currentColor;
+    opacity: 0.3;
+}

@@ -16,6 +16,16 @@ const resources = {
             "ingest_lookback": "Ingestion Look-back",
             "days": "Days",
             "thumbnail_size": "Thumbnail Size",
+            "new_post": "New Post",
+            "posts": "Posts",
+            "copy_to_all": "Copy to All",
+            "active_post": "Active Post",
+            "no_posts_title": "No Posts Yet",
+            "create_your_first": "Create your first story to get started.",
+            "post_name_placeholder": "Story Name...",
+            "post_content_placeholder": "Write your post content here...",
+            "enable_platform": "Enable Platform",
+            "hashtags_placeholder": "Add hashtags...",
         }
     }
 };

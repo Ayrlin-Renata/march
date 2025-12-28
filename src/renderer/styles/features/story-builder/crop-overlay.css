@@ -1,0 +1,105 @@
+/* Global Crop Overlay */
+.crop-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* React Easy Crop Overrides */
+.cropper-container {
+    border-radius: 0;
+}
+
+.cropper-media-full {
+    margin: 0 !important;
+    object-fit: cover !important;
+}
+
+.cropper-crop-area-none {
+    display: none;
+    /* Hide default crop box */
+}
+
+/* Passthrough Overlay Root */
+.global-crop-overlay-root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    /* Let clicks pass through */
+    z-index: 9000;
+    /* Above everything */
+}
+
+.preview-boundary-highlight {
+    position: absolute;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+    /* Dim everything else */
+    border: 2px solid var(--fg-accent);
+    /* Highlight active slot */
+    pointer-events: none;
+}
+
+.export-crop-boundary {
+    position: absolute;
+    border: 2px dashed #00e5ff;
+    /* Cyan dashed line */
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    /* Contrast */
+    pointer-events: auto;
+    /* Allow interaction with handles */
+}
+
+.expansion-handle {
+    position: absolute;
+    background-color: #00e5ff;
+    border: 1px solid #fff;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    pointer-events: auto;
+    cursor: grab;
+}
+
+.expansion-handle.top {
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.expansion-handle.bottom {
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+.expansion-handle.left {
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.expansion-handle.right {
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+.source-image-boundary {
+    position: absolute;
+    border: 1px dashed rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+.export-crop-boundary {
+    pointer-events: none !important;
+}

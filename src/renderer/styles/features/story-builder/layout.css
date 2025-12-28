@@ -1,0 +1,76 @@
+/* Story Builder Main Layout */
+.story-builder-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-primary);
+    height: 100%;
+    overflow: hidden;
+}
+
+.story-builder-area.empty {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--fg-secondary);
+}
+
+.empty-icon {
+    opacity: 0.2;
+}
+
+/* Builder Workspace */
+.builder-workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Builder Main View */
+.builder-main-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    background-color: #121212;
+    /* Darker bg for canvas */
+}
+
+/* Header */
+.builder-header {
+    height: 48px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+.builder-header h1 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08rem;
+    color: var(--text-dim);
+    margin: 0;
+}
+
+.builder-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.builder-main-view .area-body {
+    display: flex;
+    flex-direction: column;
+}

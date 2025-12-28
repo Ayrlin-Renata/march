@@ -1,6 +1,6 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net } from 'electron';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { setupWatcher, reBroadcastFiles } from './watcher.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
@@ -10,6 +10,12 @@ interface AppSettings {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Register protocol before app ready
+protocol.registerSchemesAsPrivileged([
+    { scheme: 'media', privileges: { secure: true, standard: true, supportFetchAPI: true, bypassCSP: true, stream: true } }
+]);
+
 const settings = new ElectronStore<AppSettings>({
     name: 'settings',
     defaults: {
@@ -31,7 +37,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.cjs'),
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: app.isPackaged ? true : false,
+            webSecurity: true, // Re-enable security now that we have a protocol
         },
         backgroundColor: '#1e1e1e',
     });
@@ -75,6 +81,30 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    // Modern protocol handling for high-performance image loading
+    protocol.handle('media', (request) => {
+        try {
+            const url = new URL(request.url);
+            let filePath = decodeURIComponent(url.pathname);
+
+            // Support both media://local/F:/... and media://F:/...
+            if (url.hostname && url.hostname !== 'local') {
+                // If hostname is e.g. "f", and pathname starts with "/", combine them: "f:/..."
+                filePath = url.hostname + ":" + filePath;
+            }
+
+            // On Windows, strip any leading slash that might remain (e.g. /F:/ -> F:/)
+            if (process.platform === 'win32' && filePath.startsWith('/')) {
+                filePath = filePath.slice(1);
+            }
+
+            return net.fetch(pathToFileURL(filePath).toString());
+        } catch (error) {
+            console.error('Failed to resolve media protocol path:', error);
+            return new Response('Not Found', { status: 404 });
+        }
+    });
+
     createWindow();
 
     app.on('activate', () => {

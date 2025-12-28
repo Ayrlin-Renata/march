@@ -1,0 +1,55 @@
+.tool-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tool-btn:hover {
+    color: var(--fg-primary);
+}
+
+.tool-btn.active {
+    color: var(--fg-primary);
+    color: #fff;
+    border-left: 2px solid var(--fg-accent);
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--fg-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.primary-btn {
+    background-color: var(--fg-accent);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: filter 0.2s ease;
+}
+
+.primary-btn:hover {
+    filter: brightness(1.1);
+}

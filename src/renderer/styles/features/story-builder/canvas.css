@@ -1,0 +1,157 @@
+/* Preview Canvas (Center) */
+.preview-canvas {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center mockup in view */
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.mockup-container {
+    width: 380px;
+    /* Mobile width roughly */
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    color: #000;
+    display: flex;
+    flex-direction: column;
+}
+
+.mockup-container.x {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.mockup-header {
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mockup-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #ddd;
+}
+
+.mockup-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mockup-name {
+    width: 100px;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 2px;
+}
+
+.mockup-handle {
+    width: 60px;
+    height: 8px;
+    background-color: #eee;
+    border-radius: 2px;
+}
+
+.mockup-text-area-inline {
+    width: 100%;
+    border: none;
+    resize: none;
+    padding: 0 12px 12px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    outline: none;
+    min-height: 60px;
+    background: transparent;
+    color: #0f1419;
+}
+
+.mockup-image-grid {
+    display: grid;
+    gap: 2px;
+    background-color: #fff;
+    margin-bottom: 12px;
+    border: 1px solid #efefef;
+    /* Subtle border */
+    border-radius: 12px;
+    /* Smoother corners */
+    overflow: hidden;
+}
+
+/* Grid Layouts */
+.mockup-image-grid.layout-1-single {
+    grid-template-columns: 1fr;
+    aspect-ratio: 16/9;
+}
+
+.mockup-image-grid.layout-1-square {
+    grid-template-columns: 1fr;
+    aspect-ratio: 1;
+}
+
+/* .layout-1-wide is now 1-single default */
+
+.mockup-image-grid.layout-2-vertical {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    aspect-ratio: 7/8;
+}
+
+/* .layout-2-horizontal unused */
+
+.mockup-image-grid.layout-3-large-left {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    aspect-ratio: 1;
+}
+
+.mockup-image-grid.layout-3-large-left .mockup-slot:first-child {
+    grid-row: span 2;
+}
+
+.mockup-image-grid.layout-3-large-top {
+    grid-template-rows: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    aspect-ratio: 1;
+}
+
+.mockup-image-grid.layout-3-large-top .mockup-slot:first-child {
+    grid-column: span 2;
+}
+
+.mockup-image-grid.layout-4-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    aspect-ratio: 2/1;
+}
+
+.mockup-slot {
+    background-color: #f7f9f9;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mockup-slot.drag-over {
+    background-color: #e8f5fd;
+    box-shadow: inset 0 0 0 2px #1d9bf0;
+}
+
+.slot-placeholder {
+    color: #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}

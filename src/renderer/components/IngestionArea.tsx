@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAssetUrl } from '../utils/pathUtils';
 
+import { useDraggable } from '@dnd-kit/core';
+
 const ImageThumbnail: React.FC<{
     img: IngestedImage;
     isSelected: boolean;
@@ -18,6 +20,17 @@ const ImageThumbnail: React.FC<{
 }> = ({ img, isSelected, onSelect, onCycle, onReset, hoveredImageId, popoverPos, onMouseEnter, onMouseLeave }) => {
     const timerRef = React.useRef<any>(null);
     const wasResetRef = React.useRef(false);
+
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: img.id,
+        data: img,
+    });
+
+    const style = transform ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 1000,
+        opacity: isDragging ? 0.5 : 1,
+    } : undefined;
 
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -47,12 +60,18 @@ const ImageThumbnail: React.FC<{
 
     return (
         <motion.div
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
             layout
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             className={`thumbnail-wrapper ${isSelected ? 'selected' : ''} ${hoveredImageId === img.id ? 'hovered' : ''} label-${img.labelIndex || 0}`}
-            onClick={onSelect}
+            onClick={(_e) => {
+                if (!transform) onSelect();
+            }}
             onContextMenu={handleContextMenu}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
@@ -62,18 +81,22 @@ const ImageThumbnail: React.FC<{
                 handleMouseUp(null as any);
             }}
         >
-            <div
-                className="thumbnail-card"
-                draggable
-                onDragStart={(e) => {
-                    e.dataTransfer.setData('text/plain', img.path);
-                    e.dataTransfer.setData('application/json', JSON.stringify(img));
-                }}
-            >
-                <img src={getAssetUrl(img.path)} alt={img.name} loading="lazy" className="thumbnail-img" />
+            <div className="thumbnail-card">
+                <img
+                    src={getAssetUrl(img.path)}
+                    alt={img.name}
+                    loading="lazy"
+                    className="thumbnail-img"
+                    onLoad={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (!img.width || !img.height) {
+                            useIngestionStore.getState().updateImageDimensions(img.id, target.naturalWidth, target.naturalHeight);
+                        }
+                    }}
+                />
                 <div className="label-glow"></div>
             </div>
-            {hoveredImageId === img.id && popoverPos && (
+            {hoveredImageId === img.id && popoverPos && !isDragging && (
                 <div
                     className={`hover-popover ${popoverPos.below ? 'below' : ''}`}
                     style={{
