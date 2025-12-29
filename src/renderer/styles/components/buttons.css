@@ -25,15 +25,28 @@
     background: none;
     border: none;
     color: var(--fg-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 4px;
-    transition: var(--transition);
+    transition: all 0.2s ease;
+}
+
+[data-base-theme='march'] .icon-btn {
+    color: var(--fg-accent-dark);
 }
 
 .icon-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background-color: var(--bg-surface-hover);
+    color: var(--fg-primary);
+}
+
+.icon-btn.active {
+    background-color: var(--bg-surface-active);
+    color: var(--fg-accent);
 }
 
 .primary-btn {

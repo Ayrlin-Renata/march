@@ -4,11 +4,13 @@
     --transition: all 0.2s ease;
 }
 
-[data-theme='light'] {
+/* Base Theme: Simple (Classic Gray/Neutral) */
+[data-base-theme='simple'][data-theme='light'] {
     --bg-primary: #ffffff;
     --bg-secondary: #f8f9fa;
     --bg-tertiary: #f1f3f4;
     --bg-canvas: #e8eaed;
+    --bg-card: #ffffff;
     --border-color: #dadce0;
     --divider-color: #e8eaed;
     --fg-primary: #202124;
@@ -17,14 +19,24 @@
     --text-main: #202124;
     --fg-accent: #1a73e8;
     --bg-surface-hover: rgba(0, 0, 0, 0.05);
-    --bg-surface-active: rgba(29, 155, 240, 0.1);
+    --bg-surface-active: rgba(121, 122, 123, 0.1);
+    --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+
+    /* Mockup Sync */
+    --bg-mockup: #ffffff;
+    --text-mockup: #0f1419;
+    --preview-bg-x: #ffffff;
+    --preview-text-x: #000000;
+    --preview-bg-bsky: #ffffff;
+    --preview-text-bsky: #0085FF;
 }
 
-[data-theme='dark'] {
+[data-base-theme='simple'][data-theme='dark'] {
     --bg-primary: #121212;
     --bg-secondary: #1a1a1b;
     --bg-tertiary: #272729;
     --bg-canvas: #0a0a0a;
+    --bg-card: #1a1a1b;
     --border-color: #333333;
     --divider-color: #3e3e42;
     --fg-primary: #ffffff;
@@ -34,4 +46,79 @@
     --fg-accent: #1d9bf0;
     --bg-surface-hover: rgba(255, 255, 255, 0.05);
     --bg-surface-active: rgba(29, 155, 240, 0.1);
+    --bg-gradient: linear-gradient(135deg, #121212 0%, #1a1a1b 100%);
+
+    /* Mockup Sync */
+    --bg-mockup: #000000;
+    --text-mockup: #ffffff;
+    --preview-bg-x: #000000;
+    --preview-text-x: #ffffff;
+    --preview-bg-bsky: #000814;
+    --preview-text-bsky: #ffffff;
+}
+
+/* Base Theme: March (Deeper Pastel Blue/Pink) */
+[data-base-theme='march'][data-theme='light'] {
+    --bg-primary: #e3f2fd;
+    /* Blue for Main Areas */
+    --bg-secondary: #fce4ec;
+    /* Pink for Bars (Top/Bottom/Header) */
+    --bg-tertiary: #ffffff;
+    /* White for Buttons/Cards */
+    --bg-canvas: #e3f2fd;
+    --bg-card: #ffffff;
+    --border-color: #f8bbd0;
+    --divider-color: #bbdefb;
+    --fg-primary: #2c3e50;
+    --fg-secondary: #546e7a;
+    --text-dim: #78909c;
+    --text-main: #2c3e50;
+    --fg-accent: #f06292;
+    /* Vibrant Pink */
+    --fg-accent-dark: #d81b60;
+    /* Deeper Pink for icons/headings */
+    --bg-surface-hover: rgba(240, 98, 146, 0.08);
+    --bg-surface-active: rgba(240, 98, 146, 0.15);
+    --bg-gradient: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+    --bg-gradient-pink: linear-gradient(135deg, #fce4ec 0%, #ffffff 100%);
+
+    /* Mockup Sync */
+    --bg-mockup: #ffffff;
+    --text-mockup: #0f1419;
+    --preview-bg-x: #ffffff;
+    --preview-text-x: #000000;
+    --preview-bg-bsky: #ffffff;
+    --preview-text-bsky: #0085FF;
+}
+
+[data-base-theme='march'][data-theme='dark'] {
+    --bg-primary: #1a1f2c;
+    /* Deep Blue for Main Areas */
+    --bg-secondary: #2d1a24;
+    /* Deep Pink for Bars */
+    --bg-tertiary: #3d2b35;
+    /* Themed Surface for Buttons */
+    --bg-canvas: #1a1f2c;
+    --bg-card: #252a3a;
+    --border-color: #4d3b45;
+    --divider-color: #2c3e50;
+    --fg-primary: #eceff1;
+    --fg-secondary: #b0bec5;
+    --text-dim: #90a4ae;
+    --text-main: #eceff1;
+    --fg-accent: #f06292;
+    /* Vibrant Pink */
+    --fg-accent-dark: #ff80ab;
+    --bg-surface-hover: rgba(255, 128, 171, 0.1);
+    --bg-surface-active: rgba(255, 128, 171, 0.2);
+    --bg-gradient: linear-gradient(135deg, #1a1f2c 0%, #252a3a 100%);
+    --bg-gradient-pink: linear-gradient(135deg, #2d1a24 0%, #3d2b35 100%);
+
+    /* Mockup Sync */
+    --bg-mockup: #000000;
+    --text-mockup: #ffffff;
+    --preview-bg-x: #000000;
+    --preview-text-x: #ffffff;
+    --preview-bg-bsky: #000814;
+    --preview-text-bsky: #ffffff;
 }

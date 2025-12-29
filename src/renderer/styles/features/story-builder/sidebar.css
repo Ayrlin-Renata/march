@@ -63,6 +63,10 @@
     letter-spacing: 0.05rem;
 }
 
+[data-base-theme='march'] .sidebar-header h3 {
+    color: var(--fg-accent-dark);
+}
+
 .sidebar-add-btn {
     background: var(--accent-blue);
     color: #fff;
@@ -74,12 +78,20 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+[data-base-theme='march'] .sidebar-add-btn {
+    background: var(--fg-accent);
 }
 
 .sidebar-add-btn:hover {
     transform: scale(1.05);
     background: #0088ee;
+}
+
+[data-base-theme='march'] .sidebar-add-btn:hover {
+    background: var(--fg-accent-dark);
 }
 
 .post-list {
@@ -88,33 +100,42 @@
 }
 
 .post-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--divider-color);
-    cursor: pointer;
+    margin: 4px 0px;
+    padding: 16px 14px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: background 0.15s ease;
+    transition: all 0.15s ease;
+    cursor: pointer;
 }
 
 .post-item:hover {
     background: var(--bg-surface-hover);
+    border-color: var(--border-color);
 }
 
 .post-item.active {
     background: var(--bg-surface-active);
-    border-left: 3px solid var(--accent-blue);
+    border-color: var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+[data-base-theme='march'] .post-item.active {
+    border-left-color: var(--fg-accent);
 }
 
 .post-name-text {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--fg-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    color: var(--text-main);
+    opacity: 0.8;
 }
 
 .post-item.active .post-name-text {
-    color: var(--fg-primary);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .post-name-input {
@@ -133,9 +154,16 @@
     color: var(--fg-error);
     opacity: 0;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: all 0.2s ease;
+    padding: 6px;
+    border-radius: 4px;
 }
 
 .post-item:hover .delete-btn {
-    opacity: 1;
+    opacity: 0.6;
+}
+
+.delete-btn:hover {
+    opacity: 1 !important;
+    background: rgba(255, 77, 77, 0.1);
 }

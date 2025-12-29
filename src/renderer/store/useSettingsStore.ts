@@ -40,6 +40,7 @@ interface SettingsState {
     storedWindowWidthCollapsed: number;
     storedWindowWidthUncollapsed: number;
     language: string;
+    baseTheme: 'simple' | 'march';
 
     // Actions
     setScrollSensitivity: (val: number) => void;
@@ -50,6 +51,7 @@ interface SettingsState {
     setThumbnailSize: (size: number) => void;
     setBurstThreshold: (val: number) => void;
     setLanguage: (lang: string) => void;
+    setBaseTheme: (theme: 'simple' | 'march') => void;
 
     setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | null) => void;
     setEnabledPlatformKeys: (keys: PlatformKey[]) => void;
@@ -65,6 +67,7 @@ interface SettingsState {
     updateTextPreset: (id: string, name: string, content: string) => void;
     reorderTextPresets: (presets: TextPreset[]) => void;
     removeTextPreset: (id: string) => void;
+    resetLabels: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -83,22 +86,23 @@ export const useSettingsStore = create<SettingsState>()(
                 { id: '1', name: 'March Tag', content: '#march' }
             ],
             labels: [
-                { index: 1, name: 'Red', color: '#ff4d4d' },
-                { index: 2, name: 'Orange', color: '#ff944d' },
-                { index: 3, name: 'Yellow', color: '#ffd24d' },
-                { index: 4, name: 'Green', color: '#4dff4d' },
-                { index: 5, name: 'Blue', color: '#4da6ff' },
-                { index: 6, name: 'Purple', color: '#a64dff' },
-                { index: 7, name: 'Pink', color: '#ff4dff' },
-                { index: 8, name: 'White', color: '#ffffff' },
+                { index: 1, name: 'Red', color: '#ffb4b4' },
+                { index: 2, name: 'Orange', color: '#ffc9a6' },
+                { index: 3, name: 'Yellow', color: '#ffe8a2' },
+                { index: 4, name: 'Green', color: '#a2ffa2' },
+                { index: 5, name: 'Blue', color: '#9fcfff' },
+                { index: 6, name: 'Purple', color: '#d4a9ff' },
+                { index: 7, name: 'Pink', color: '#ffaeff' },
+                { index: 8, name: 'White', color: '#b4b4b4' },
             ],
-            enabledPlatformKeys: ['x', 'bsky', 'threads', 'instagram'],
+            enabledPlatformKeys: ['x', 'bsky'],
             activeManager: null,
             isBuilderCollapsed: false,
             lastBuilderWidth: 400,
             storedWindowWidthCollapsed: 800,
             storedWindowWidthUncollapsed: 1200,
             language: 'en',
+            baseTheme: 'simple',
 
             setScrollSensitivity: (val) => set({ scrollSensitivity: val }),
             setIngestLookbackDays: (val) => set({ ingestLookbackDays: val }),
@@ -111,6 +115,7 @@ export const useSettingsStore = create<SettingsState>()(
             setThumbnailSize: (size) => set({ thumbnailSize: size }),
             setBurstThreshold: (val) => set({ burstThreshold: val }),
             setLanguage: (lang) => set({ language: lang }),
+            setBaseTheme: (theme) => set({ baseTheme: theme }),
 
             setActiveManager: (manager) => set({ activeManager: manager, isSettingsOpen: !!(manager && manager.startsWith('settings_')) }),
             setEnabledPlatformKeys: (keys) => set({ enabledPlatformKeys: keys }),
@@ -118,27 +123,39 @@ export const useSettingsStore = create<SettingsState>()(
             setLastBuilderWidth: (width) => set({ lastBuilderWidth: width }),
             setStoredWindowWidthCollapsed: (width) => set({ storedWindowWidthCollapsed: width }),
             setStoredWindowWidthUncollapsed: (width) => set({ storedWindowWidthUncollapsed: width }),
-            reorderLabels: (newLabels) => set({ labels: newLabels }),
-            updateLabel: (index, name, color) => set((state) => ({
+            reorderLabels: (newLabels: LabelConfig[]) => set({ labels: newLabels }),
+            updateLabel: (index: number, name: string, color: string) => set((state) => ({
                 labels: state.labels.map(l => l.index === index ? { ...l, name, color } : l)
             })),
 
-            addWatchedFolder: (path, alias) => set((state) => ({
+            addWatchedFolder: (path: string, alias: string) => set((state) => ({
                 watchedFolders: [...state.watchedFolders, { path, alias, enabled: true }]
             })),
-            removeWatchedFolder: (path) => set((state) => ({
+            removeWatchedFolder: (path: string) => set((state) => ({
                 watchedFolders: state.watchedFolders.filter(f => f.path !== path)
             })),
-            addTextPreset: (name, content) => set((state) => ({
+            addTextPreset: (name: string, content: string) => set((state) => ({
                 textPresets: [...state.textPresets, { id: Date.now().toString(), name, content }]
             })),
-            updateTextPreset: (id, name, content) => set((state) => ({
+            updateTextPreset: (id: string, name: string, content: string) => set((state) => ({
                 textPresets: state.textPresets.map(p => p.id === id ? { ...p, name, content } : p)
             })),
-            reorderTextPresets: (presets) => set({ textPresets: presets }),
-            removeTextPreset: (id) => set((state) => ({
+            reorderTextPresets: (presets: TextPreset[]) => set({ textPresets: presets }),
+            removeTextPreset: (id: string) => set((state) => ({
                 textPresets: state.textPresets.filter(p => p.id !== id)
             })),
+            resetLabels: () => set({
+                labels: [
+                    { index: 1, name: 'Red', color: '#ffb4b4' },
+                    { index: 2, name: 'Orange', color: '#ffc9a6' },
+                    { index: 3, name: 'Yellow', color: '#ffe8a2' },
+                    { index: 4, name: 'Green', color: '#a2ffa2' },
+                    { index: 5, name: 'Blue', color: '#9fcfff' },
+                    { index: 6, name: 'Purple', color: '#d4a9ff' },
+                    { index: 7, name: 'Pink', color: '#ffaeff' },
+                    { index: 8, name: 'White', color: '#b4b4b4' },
+                ]
+            }),
         }),
         {
             name: 'march-settings',
@@ -158,6 +175,7 @@ export const useSettingsStore = create<SettingsState>()(
                 storedWindowWidthCollapsed: state.storedWindowWidthCollapsed,
                 storedWindowWidthUncollapsed: state.storedWindowWidthUncollapsed,
                 language: state.language,
+                baseTheme: state.baseTheme,
             }),
         }
     )

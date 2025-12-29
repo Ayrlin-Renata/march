@@ -8,6 +8,8 @@
 .toolrail {
     width: 48px;
     background-color: var(--bg-secondary);
+    background-image: var(--bg-gradient-pink);
+    /* March theme rail gradient */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -44,6 +46,8 @@
 .app-bottom-bar {
     height: 48px;
     background-color: var(--bg-secondary);
+    background-image: var(--bg-gradient-pink);
+    /* March theme bar gradient */
     border-top: 1px solid var(--border-color);
     display: flex;
     align-items: center;

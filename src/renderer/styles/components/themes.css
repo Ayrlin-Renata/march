@@ -1,0 +1,67 @@
+/* Theme Selection UI */
+.theme-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-picker-wrapper {
+    position: relative;
+}
+
+.theme-selection-popup {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 160px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--fg-secondary);
+}
+
+.theme-option:hover {
+    background-color: var(--bg-surface-hover);
+    color: var(--fg-primary);
+}
+
+.theme-option.selected {
+    background-color: var(--bg-surface-active);
+    color: var(--fg-accent);
+}
+
+.palette {
+    display: flex;
+    gap: 2px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.palette span {
+    width: 12px;
+    height: 12px;
+    display: block;
+}
+
+/* Subtle Gradients for large areas */
+.ingestion-area-container {
+    background: var(--bg-gradient);
+}

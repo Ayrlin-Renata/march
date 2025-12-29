@@ -1,12 +1,12 @@
 /* Story Builder Main Layout */
 .story-builder-area {
-    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-primary);
-    height: 100%;
+    background: transparent;
     overflow: hidden;
 }
+
 
 .story-builder-area.empty {
     align-items: center;
@@ -23,9 +23,9 @@
 }
 
 .new-story-btn-large {
-    background: var(--accent-blue);
-    color: #fff;
-    border: none;
+    background: var(--bg-tertiary);
+    color: var(--fg-accent);
+    border: 1px solid var(--border-color);
     padding: 16px 32px;
     border-radius: 12px;
     font-size: 1.1rem;
@@ -35,13 +35,14 @@
     gap: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .new-story-btn-large:hover {
     transform: translateY(-2px);
-    background: #0088ee;
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+    background: var(--bg-tertiary);
+    filter: brightness(0.95);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Builder Workspace */
@@ -59,23 +60,18 @@
     overflow: hidden;
     position: relative;
     background-color: var(--bg-canvas);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.preview-canvas {
-    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    overflow: auto;
-}
+
 
 /* Header */
 .builder-header {
     height: 48px;
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
+    background-image: var(--bg-gradient-pink);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -99,9 +95,14 @@
     gap: 16px;
 }
 
+[data-base-theme='march'] .builder-header h1 {
+    color: var(--fg-accent-dark);
+}
+
 .builder-main-view .area-body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    background: transparent !important;
 }

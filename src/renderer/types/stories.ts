@@ -1,4 +1,4 @@
-export type PlatformKey = 'x' | 'bsky' | 'threads' | 'instagram' | 'facebook';
+export type PlatformKey = 'x' | 'bsky';
 
 export type LayoutKey = '1-single' | '1-square' | '2-vertical' | '3-large-left' | '4-grid';
 
@@ -40,10 +40,7 @@ export interface StoryPost {
 
 export const PLATFORMS: { key: PlatformKey; name: string; color: string; bgColor: string; textColor: string }[] = [
     { key: 'x', name: 'X', color: '#1DA1F2', bgColor: '#000000', textColor: '#ffffff' },
-    { key: 'bsky', name: 'BlueSky', color: '#0085FF', bgColor: '#000814', textColor: '#ffffff' },
-    { key: 'threads', name: 'Threads', color: '#ffffff', bgColor: '#101010', textColor: '#ffffff' },
-    { key: 'instagram', name: 'Instagram', color: '#E1306C', bgColor: '#fafafa', textColor: '#000000' },
-    { key: 'facebook', name: 'Facebook', color: '#4267B2', bgColor: '#f0f2f5', textColor: '#000000' },
+    { key: 'bsky', name: 'BlueSky', color: '#0085FF', bgColor: '#000814', textColor: '#ffffff' }
 ];
 
 export const LAYOUTS: { key: LayoutKey; slots: number; label: string }[] = [

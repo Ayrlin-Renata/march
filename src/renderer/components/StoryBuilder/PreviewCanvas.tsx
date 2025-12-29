@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { type PlatformKey, LAYOUTS, PLATFORMS } from '../../types/stories';
+import { type PlatformKey, LAYOUTS } from '../../types/stories';
 import { useStoryStore } from '../../store/useStoryStore';
 import { DroppableSlot } from './DroppableSlot';
 
@@ -23,7 +23,6 @@ export const PreviewCanvas: React.FC<{
     const post = useStoryStore(state => state.posts.find(p => p.id === postId));
     const config = post?.platforms[platform];
     const { updatePlatformText } = useStoryStore();
-    const platformData = PLATFORMS.find(p => p.key === platform);
 
     if (!config) return null;
 
@@ -38,10 +37,6 @@ export const PreviewCanvas: React.FC<{
         >
             <div className={clsx("mockup-container", platform)}
                 onClick={(e) => e.stopPropagation()}
-                style={{
-                    backgroundColor: platformData?.bgColor || '#1a1a1a',
-
-                }}
             >
                 <header className="mockup-header">
                     <div className="mockup-avatar" />
@@ -51,7 +46,7 @@ export const PreviewCanvas: React.FC<{
                     </div>
                 </header>
 
-                <div className="mockup-text-wrapper" style={{ color: platformData?.textColor || '#ffffff' }}>
+                <div className="mockup-text-wrapper">
                     <textarea
                         className="mockup-text-area-inline"
                         value={config.text}

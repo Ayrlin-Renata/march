@@ -4,7 +4,7 @@ import { HoverOverlay as IngestionHoverOverlay, BurstControl as IngestionBurstCo
 import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getThumbnailUrl } from './utils/pathUtils';
-import { MdSettings, MdMenu, MdOutlineLightMode, MdOutlineDarkMode, MdStyle } from 'react-icons/md';
+import { MdSettings, MdMenu, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes } from 'react-icons/md';
 import { useIngestionStore } from './store/useIngestionStore';
 import IngestionArea from './components/IngestionArea';
 import StoryBuilderArea from './components/StoryBuilderArea';
@@ -28,6 +28,7 @@ import './styles/features/story-builder/canvas.css';
 import './styles/features/story-builder/sidebar.css';
 import './styles/features/story-builder/components.css';
 import './styles/features/story-builder/crop-overlay.css';
+import './styles/components/themes.css';
 
 interface ResizerProps {
     id: string;
@@ -136,6 +137,10 @@ const App: React.FC = () => {
     const storedWindowWidthUncollapsed = useSettingsStore(s => s.storedWindowWidthUncollapsed);
     const setStoredWindowWidthCollapsed = useSettingsStore(s => s.setStoredWindowWidthCollapsed);
     const setStoredWindowWidthUncollapsed = useSettingsStore(s => s.setStoredWindowWidthUncollapsed);
+    const baseTheme = useSettingsStore(s => s.baseTheme);
+    const setBaseTheme = useSettingsStore(s => s.setBaseTheme);
+
+    const [isThemePopupOpen, setIsThemePopupOpen] = React.useState(false);
 
     const activePostId = useStoryStore(s => s.activePostId);
     const setSlotImage = useStoryStore(s => s.setSlotImage);
@@ -162,6 +167,11 @@ const App: React.FC = () => {
             window.removeEventListener('dragstart', handleDragStart);
         };
     }, []);
+
+    // Sync Base Theme to DOM
+    React.useEffect(() => {
+        document.documentElement.setAttribute('data-base-theme', baseTheme);
+    }, [baseTheme]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -315,15 +325,52 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="bottom-bar-center">
-                            <button className="icon-btn theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                                {theme === 'dark' ? <MdOutlineLightMode size={20} /> : <MdOutlineDarkMode size={20} />}
-                            </button>
+                            <div className="theme-controls">
+                                <button className="icon-btn theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                                    {theme === 'dark' ? <MdOutlineLightMode size={20} /> : <MdOutlineDarkMode size={20} />}
+                                </button>
+                                <div className="theme-picker-wrapper">
+                                    <button
+                                        className={clsx("icon-btn", isThemePopupOpen && "active")}
+                                        onClick={() => setIsThemePopupOpen(!isThemePopupOpen)}
+                                        title="Select Base Theme"
+                                    >
+                                        <MdStyle size={20} />
+                                    </button>
+                                    {isThemePopupOpen && (
+                                        <div className="theme-selection-popup">
+                                            <div
+                                                className={clsx("theme-option", baseTheme === 'simple' && "selected")}
+                                                onClick={() => { setBaseTheme('simple'); setIsThemePopupOpen(false); }}
+                                            >
+                                                <div className="palette simple">
+                                                    <span style={{ background: '#ffffff' }}></span>
+                                                    <span style={{ background: '#f8f9fa' }}></span>
+                                                    <span style={{ background: '#1d9bf0' }}></span>
+                                                </div>
+                                                <span>Simple</span>
+                                            </div>
+                                            <div
+                                                className={clsx("theme-option", baseTheme === 'march' && "selected")}
+                                                onClick={() => { setBaseTheme('march'); setIsThemePopupOpen(false); }}
+                                            >
+                                                <div className="palette march">
+                                                    <span style={{ background: '#ff85a2' }}></span>
+                                                    <span style={{ background: '#fff5f8' }}></span>
+                                                    <span style={{ background: '#a7d5f3ff' }}></span>
+                                                </div>
+                                                <span>March</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="bottom-bar-right">
                             <div className="preset-tiny-manager">
                                 <button className="icon-btn" title="Text Preset Manager" onClick={() => setActiveManager('presets')}>
-                                    <MdStyle size={20} />
+                                    <MdSpeakerNotes size={20} />
                                 </button>
                             </div>
                             <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>

@@ -388,6 +388,7 @@ const LabelManagerPane: React.FC = () => {
     const labels = useSettingsStore(s => s.labels);
     const updateLabel = useSettingsStore(s => s.updateLabel);
     const reorderLabels = useSettingsStore(s => s.reorderLabels);
+    const resetLabels = useSettingsStore(s => s.resetLabels);
     const images = useIngestionStore(s => s.images);
 
     const sensors = useSensors(
@@ -424,8 +425,15 @@ const LabelManagerPane: React.FC = () => {
     return (
         <div className="manager-pane">
             <header className="pane-header">
-                <h4>Label Manager</h4>
-                <p>Customize and reorder slots.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <h4>Label Manager</h4>
+                        <p>Customize and reorder slots.</p>
+                    </div>
+                    <button className="icon-btn-text" onClick={resetLabels} title="Reset labels to defaults">
+                        Reset to Defaults
+                    </button>
+                </div>
             </header>
             <div className="manager-list scrollable">
                 <DndContext

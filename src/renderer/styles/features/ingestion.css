@@ -11,12 +11,15 @@
 }
 
 .ingestion-area {
-    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-right: none;
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-canvas);
+    background-image: var(--bg-gradient);
+    /* Uses Blue->White in March Light */
+    overflow: hidden;
+    position: relative;
+    border-right: 1px solid var(--border-color);
 }
 
 .resizer {
@@ -72,8 +75,8 @@
 
 .filter-bar {
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-surface-active);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .filter-pill-container {
@@ -81,14 +84,17 @@
     gap: 6px;
     flex: 1;
     overflow-x: auto;
+    background: transparent;
 }
 
 .filter-pill {
-    padding: 4px 8px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-dim);
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--fg-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    /* Added slight shadow for depth */
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.03rem;
@@ -107,6 +113,12 @@
     color: white;
     border-color: var(--accent-blue);
     font-weight: 600;
+}
+
+[data-base-theme='march'] .filter-pill.active {
+    background: var(--fg-accent);
+    color: white;
+    border-color: var(--fg-accent);
 }
 
 .count-badge {
@@ -137,7 +149,12 @@
     font-size: 10px;
     color: var(--fg-secondary);
     margin-bottom: 8px;
-    opacity: 0.7;
+    opacity: 0.8;
+}
+
+[data-base-theme='march'] .burst-time {
+    color: var(--fg-accent-dark);
+    font-weight: 700;
 }
 
 .thumbnail-grid {
@@ -243,11 +260,12 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 4px;
     background: var(--label-color);
     z-index: 4;
     opacity: 0;
     transition: opacity 0.3s ease;
+    box-shadow: 0 0 8px var(--label-color);
 }
 
 /* Label Colors */
@@ -292,7 +310,7 @@
 }
 
 .thumbnail-wrapper[class*="label-"]:not(.label-0) .label-glow {
-    opacity: 0.8;
+    opacity: 0.5;
 }
 
 .thumbnail-wrapper[class*="label-"]:not(.label-0) .label-bar {
@@ -312,6 +330,7 @@
     height: 100%;
     object-fit: cover;
     transition: transform 0.2s ease;
+    border-radius: 5px;
 }
 
 .thumbnail-wrapper:hover .thumbnail-inner {
@@ -344,8 +363,8 @@
 
 .hover-popover-info {
     padding: 8px 10px;
-    background: rgba(0, 0, 0, 0.4);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--bg-surface-active);
+    border-top: 1px solid var(--border-color);
 }
 
 .hover-image-name {
@@ -400,8 +419,12 @@
     transition: all 0.2s ease;
 }
 
+[data-base-theme='march'] .icon-btn-text {
+    color: var(--fg-accent-dark);
+}
+
 .icon-btn-text:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-surface-hover);
     color: var(--text-main);
 }
 
@@ -415,9 +438,9 @@
     bottom: 50px;
     left: 0;
     width: 200px;
-    background: rgba(25, 25, 25, 0.95);
+    background: var(--bg-secondary);
     backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -444,6 +467,10 @@
     color: var(--accent-blue);
 }
 
+[data-base-theme='march'] .popup-value {
+    color: var(--fg-accent);
+}
+
 .burst-header {
     display: flex;
     justify-content: space-between;
@@ -467,6 +494,10 @@
     letter-spacing: 0.05rem;
 }
 
+[data-base-theme='march'] .burst-source {
+    color: var(--fg-accent);
+}
+
 .burst-date {
     font-size: 0.85rem;
     font-weight: 600;
@@ -477,6 +508,11 @@
     font-size: 0.75rem;
     color: var(--text-dim);
     font-family: 'JetBrains Mono', monospace;
+}
+
+[data-base-theme='march'] .burst-time {
+    color: var(--fg-accent-dark);
+    font-weight: 700;
 }
 
 .burst-slider {
@@ -525,6 +561,8 @@
     pointer-events: none;
     border-radius: 4px;
 }
+
+
 
 .native-drag-indicator .progress-bar {
     position: absolute;

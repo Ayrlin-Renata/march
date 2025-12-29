@@ -1,11 +1,10 @@
-/* Preview Canvas (Center) */
 .preview-canvas {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    /* Center mockup in view */
+    background: transparent;
     padding: 2rem;
 }
 
@@ -13,16 +12,19 @@
     width: 100%;
     max-width: 600px;
     min-width: 300px;
-    /* Mobile width enlarged & responsive */
-    background: #fff;
+    background: var(--bg-mockup);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-    color: #000;
+    color: var(--text-mockup);
     display: flex;
     flex-direction: column;
     z-index: 10;
     transition: width 0.3s ease;
+}
+
+[data-base-theme='march'] .mockup-container {
+    box-shadow: 0 20px 50px rgba(240, 98, 146, 0.15);
 }
 
 .mockup-container.x {
@@ -40,9 +42,8 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background-color: #ddd;
-    opacity: 0.1;
-    /* Further reduced from 0.3 */
+    background-color: var(--fg-secondary);
+    opacity: 0.15;
 }
 
 .mockup-user-info {
@@ -54,19 +55,17 @@
 .mockup-name {
     width: 120px;
     height: 12px;
-    background-color: #ddd;
+    background-color: var(--fg-secondary);
     border-radius: 2px;
-    opacity: 0.1;
-    /* Further reduced from 0.3 */
+    opacity: 0.15;
 }
 
 .mockup-handle {
     width: 70px;
     height: 10px;
-    background-color: #eee;
+    background-color: var(--fg-secondary);
     border-radius: 2px;
     opacity: 0.1;
-    /* Further reduced from 0.3 */
 }
 
 .mockup-text-wrapper {
@@ -87,7 +86,7 @@
     background: transparent;
     color: transparent;
     /* Hide text, show overlay */
-    caret-color: #0f1419;
+    caret-color: var(--accent-blue);
     white-space: pre-wrap;
     word-break: break-word;
     position: relative;
@@ -131,9 +130,11 @@
 }
 
 .hashtag {
-    color: #1d9bf0;
-    font-weight: 400;
-    /* CRITICAL: Must match textarea weight to prevent offset drift */
+    color: var(--accent-blue);
+}
+
+[data-base-theme='march'] .hashtag {
+    color: var(--fg-accent);
 }
 
 /* Simulated Feed Layout */
@@ -146,6 +147,7 @@
     padding: 2rem 0;
     min-height: 100%;
     width: 100%;
+    background: transparent !important;
 }
 
 .placeholder-post {
@@ -155,8 +157,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    opacity: 0.1;
-    /* Reverted to higher 0.1 from 0.05 */
+    opacity: 0.5;
     pointer-events: none;
     display: flex;
     flex-direction: column;
@@ -209,13 +210,10 @@
 .mockup-image-grid {
     display: grid;
     gap: 2px;
-    background-color: #fff;
+    background-color: transparent;
     margin: 0 1rem 12px 1rem;
-    /* Added horizontal margins */
-    border: 1px solid #efefef;
-    /* Subtle border */
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    /* Smoother corners */
     overflow: hidden;
 }
 

@@ -407,17 +407,24 @@ export const HoverOverlay: React.FC = () => {
 
     return (
         <div
-            className={clsx("hover-popover", popoverPos.below && "below")}
+            className={clsx(
+                "hover-popover",
+                popoverPos.below && "below",
+                img.labelIndex && `label-${img.labelIndex}`
+            )}
             style={{
+                left: popoverPos.left,
                 top: popoverPos.below ? popoverPos.top : 'auto',
                 bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
-                left: popoverPos.left,
                 transform: 'translateX(-50%)',
                 zIndex: 2000,
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                opacity: 1
             }}
         >
+            <div className="label-glow" />
             <img src={getThumbnailUrl(img.path, 600)} alt="preview" />
+            <div className="label-bar" />
             <div className="hover-popover-info">
                 <span className="hover-image-name">{img.name}</span>
             </div>
