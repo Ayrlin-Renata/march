@@ -83,7 +83,7 @@ export const useSettingsStore = create<SettingsState>()(
 
             watchedFolders: [],
             textPresets: [
-                { id: '1', name: 'March Tag', content: '#march' }
+                { id: '1', name: 'March', content: 'Trying out #marchphotobox! 📸 ' }
             ],
             labels: [
                 { index: 1, name: 'Red', color: '#ffb4b4' },

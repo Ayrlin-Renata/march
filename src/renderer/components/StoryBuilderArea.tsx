@@ -157,7 +157,7 @@ const StoryBuilderArea: React.FC = () => {
                                         .slice(0, 8)
                                         .map(([tag]) => tag);
 
-                                    const defaults = ['#march'];
+                                    const defaults = ['#marchphotobox'];
                                     return Array.from(new Set([...common, ...defaults])).slice(0, 10);
                                 }, [posts]).map(tag => (
                                     <button key={tag} className="hashtag-chip" onClick={() => {
