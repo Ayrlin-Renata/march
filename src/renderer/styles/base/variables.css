@@ -45,7 +45,7 @@
     --text-main: #ffffff;
     --fg-accent: #1d9bf0;
     --bg-surface-hover: rgba(255, 255, 255, 0.05);
-    --bg-surface-active: rgba(29, 155, 240, 0.1);
+    --bg-surface-active: rgba(121, 121, 121, 0.1);
     --bg-gradient: linear-gradient(135deg, #121212 0%, #1a1a1b 100%);
 
     /* Mockup Sync */

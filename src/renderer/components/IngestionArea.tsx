@@ -13,40 +13,52 @@ import { thumbnailManager } from '../utils/thumbnailManager';
 import { useStoryStore } from '../store/useStoryStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { type PlatformKey } from '../types/stories';
+import { useKeyboardAssignment } from '../hooks/useKeyboardAssignment';
 
 const ImagePlacementIndicator: React.FC<{ imageId: string }> = ({ imageId }) => {
     const posts = useStoryStore(s => s.posts);
     const activePostId = useStoryStore(s => s.activePostId);
 
-    const getPlacement = () => {
+    const activeSlots = React.useMemo(() => {
         const activePost = posts.find(p => p.id === activePostId);
-        if (!activePost) return null;
-
-        // Check active post (all enabled platforms)
+        if (!activePost) return [];
         const activePlatform = activePost.platforms[activePost.activePlatform];
-        const slotIdx = activePlatform.slots.findIndex(s => s.imageId === imageId);
-        if (slotIdx !== -1) {
-            return { type: 'active' as const, slot: slotIdx + 1 };
-        }
+        return activePlatform.slots
+            .map((s, idx) => s.imageId === imageId ? idx + 1 : null)
+            .filter((idx): idx is number => idx !== null);
+    }, [posts, activePostId, imageId]);
 
-        // Check if in ANY post (including other platforms of active post)
+    const isInOther = React.useMemo(() => {
+        // If it's already in the active post, we don't necessarily need the "other" dot
+        // unless you want to see if it's ALSO in other posts. 
+        // Let's keep it simple: show active slots, or show "other" if not in active but in ANY.
+        if (activeSlots.length > 0) return false;
+
         for (const post of posts) {
             for (const platformKey of (Object.keys(post.platforms) as PlatformKey[])) {
+                if (post.id === activePostId && platformKey === posts.find(p => p.id === activePostId)?.activePlatform) continue;
+
                 const config = post.platforms[platformKey];
                 if (config && config.slots.some((s: any) => s?.imageId === imageId)) {
-                    return { type: 'other' as const };
+                    return true;
                 }
             }
         }
-        return null;
-    };
+        return false;
+    }, [posts, activePostId, activeSlots, imageId]);
 
-    const placement = getPlacement();
-    if (!placement) return null;
+    if (activeSlots.length === 0 && !isInOther) return null;
 
     return (
-        <div className={clsx("placement-indicator", placement.type === 'active' ? "active-badge" : "other-dot")}>
-            {placement.type === 'active' && placement.slot}
+        <div className="placement-container">
+            {activeSlots.map(slot => (
+                <div key={slot} className="placement-indicator active-badge">
+                    {slot}
+                </div>
+            ))}
+            {isInOther && (
+                <div className="placement-indicator other-dot" />
+            )}
         </div>
     );
 };
@@ -441,10 +453,39 @@ const IngestionArea: React.FC = React.memo(() => {
     const [visibleCount, setVisibleCount] = React.useState(15);
     const isScrollingRef = React.useRef(false);
     const scrollEndTimerRef = React.useRef<any>(null);
+    const lastMousePosRef = React.useRef({ x: 0, y: 0 });
     const sentinelRef = React.useRef<HTMLDivElement>(null);
 
     const { t } = useTranslation();
     const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
+
+    useKeyboardAssignment();
+
+    const handleHoverAt = React.useCallback((x: number, y: number) => {
+        if (isScrollingRef.current) return;
+
+        const target = document.elementFromPoint(x, y)?.closest('.thumbnail-wrapper');
+        if (target) {
+            const id = target.getAttribute('data-image-id');
+            const state = useIngestionStore.getState();
+            if (id && id !== state.hoveredImageId) {
+                const rect = target.getBoundingClientRect();
+                const showBelow = rect.top < 250;
+                const left = Math.min(window.innerWidth - 260, Math.max(260, rect.left + rect.width / 2));
+
+                state.setHover(id, {
+                    top: showBelow ? rect.bottom + 10 : rect.top - 10,
+                    left,
+                    below: showBelow
+                });
+            }
+        } else {
+            // Check if we were hovering something and clear it
+            if (useIngestionStore.getState().hoveredImageId) {
+                useIngestionStore.getState().setHover(null, null);
+            }
+        }
+    }, []);
 
     const sources = React.useMemo(() => {
         const unique = Array.from(new Set(images.map(img => img.source)));
@@ -532,7 +573,9 @@ const IngestionArea: React.FC = React.memo(() => {
                     if (scrollEndTimerRef.current) clearTimeout(scrollEndTimerRef.current);
                     scrollEndTimerRef.current = setTimeout(() => {
                         isScrollingRef.current = false;
-                    }, 250);
+                        // Re-evaluate what's under the mouse now that we've stopped
+                        handleHoverAt(lastMousePosRef.current.x, lastMousePosRef.current.y);
+                    }, 150);
                 }}
             >
                 {bursts.length === 0 ? (
@@ -540,24 +583,16 @@ const IngestionArea: React.FC = React.memo(() => {
                 ) : (
                     <div
                         className="burst-container"
+                        onMouseMove={(e) => {
+                            lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+                            if (isScrollingRef.current) return;
+                            handleHoverAt(e.clientX, e.clientY);
+                        }}
                         onMouseOver={(e) => {
                             if (isScrollingRef.current) return;
-
                             const target = (e.target as HTMLElement).closest('.thumbnail-wrapper');
                             if (target) {
-                                const id = target.getAttribute('data-image-id');
-                                const state = useIngestionStore.getState();
-                                if (id && id !== state.hoveredImageId) {
-                                    const rect = target.getBoundingClientRect();
-                                    const showBelow = rect.top < 250;
-                                    const left = Math.min(window.innerWidth - 260, Math.max(260, rect.left + rect.width / 2));
-
-                                    state.setHover(id, {
-                                        top: showBelow ? rect.bottom + 10 : rect.top - 10,
-                                        left,
-                                        below: showBelow
-                                    });
-                                }
+                                handleHoverAt(e.clientX, e.clientY);
                             }
                         }}
                         onMouseOut={(e) => {

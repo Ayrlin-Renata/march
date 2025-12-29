@@ -161,8 +161,8 @@
     gap: 6px;
     margin: 0;
     padding: 0 10px;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
 }
 
 .slot-btn {
@@ -195,6 +195,7 @@
 [data-base-theme='march'] .slot-btn.active {
     background: var(--fg-accent);
     border-color: var(--fg-accent);
+    color: white;
 }
 
 [data-base-theme='time'] .slot-btn.active {
@@ -204,8 +205,8 @@
 }
 
 .slot-btn.occupied:not(.active) {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.9);
+    border-color: var(--fg-accent);
+    opacity: 0.8;
 }
 
 .nav-btn {

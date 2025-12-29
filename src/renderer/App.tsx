@@ -384,11 +384,11 @@ const App: React.FC = () => {
                                     <MdSpeakerNotes size={20} />
                                 </button>
                             </div>
-                            <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>
-                                <MdViewSidebar size={20} />
-                            </button>
                             <button className="icon-btn" title="Settings" onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
+                            </button>
+                            <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>
+                                <MdViewSidebar size={20} />
                             </button>
                         </div>
                     </footer>

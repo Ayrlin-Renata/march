@@ -191,7 +191,6 @@
     cursor: pointer;
     border: 2px solid transparent;
     transition: all 0.2s ease;
-    background-color: var(--bg-tertiary);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -203,13 +202,24 @@
 }
 
 /* Placement Indicators */
-.placement-indicator {
+.placement-container {
     position: absolute;
     top: 6px;
     right: 6px;
     z-index: 10;
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    max-height: calc(100% - 12px);
+    overflow: hidden;
+}
+
+.placement-indicator {
+    pointer-events: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
 }
 
 .placement-indicator.active-badge {
@@ -313,6 +323,17 @@
 .label-8 {
     --label-color: #ffffff;
     border-bottom-color: var(--label-color) !important;
+}
+
+.label-1,
+.label-2,
+.label-3,
+.label-4,
+.label-5,
+.label-6,
+.label-7,
+.label-8 {
+    border-bottom-width: 3px !important;
 }
 
 .thumbnail-wrapper[class*="label-"]:not(.label-0) .label-glow {

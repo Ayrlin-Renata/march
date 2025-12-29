@@ -3,7 +3,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useIngestionStore } from '../../store/useIngestionStore';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate } from 'react-icons/md';
+import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate, MdWallpaper, MdAddToPhotos, MdLabel } from 'react-icons/md';
 import { PLATFORMS } from '../../types/stories';
 import clsx from 'clsx';
 import {
@@ -499,17 +499,17 @@ export const ManagerOverlay: React.FC = () => {
                                 <span>Folders</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'settings_ingestion' && "active")} onClick={() => setActiveManager('settings_ingestion')}>
-                                <MdSettings size={20} />
-                                <span>Ingestion Settings</span>
+                                <MdAddToPhotos size={20} />
+                                <span>Ingestion</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'settings_lightbox' && "active")} onClick={() => setActiveManager('settings_lightbox')}>
-                                <MdSmartphone size={20} />
+                                <MdWallpaper size={20} />
                                 <span>Lightbox</span>
                             </button>
 
                             <div className="sidebar-section-title">Story Builder</div>
                             <button className={clsx("sidebar-item", activeManager === 'labels' && "active")} onClick={() => setActiveManager('labels')}>
-                                <MdAdd size={20} />
+                                <MdLabel size={20} />
                                 <span>Labels</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'platforms' && "active")} onClick={() => setActiveManager('platforms')}>
