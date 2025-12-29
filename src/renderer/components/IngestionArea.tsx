@@ -314,6 +314,7 @@ const ImageThumbnail: React.FC<{
                         }}
                     />
                     <div className="label-glow"></div>
+                    <div className="label-bar"></div>
                 </div>
             </div>
         </motion.div>

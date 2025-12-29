@@ -153,6 +153,7 @@
     cursor: pointer;
     overflow: hidden;
     transition: transform 0.2s ease, opacity 0.2s ease;
+    box-sizing: border-box;
 }
 
 .thumbnail-wrapper.dragging {
@@ -168,6 +169,9 @@
     border: 2px solid transparent;
     transition: all 0.2s ease;
     background-color: var(--bg-tertiary);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .thumbnail-card.selected {
@@ -218,6 +222,7 @@
     justify-content: center;
     color: var(--text-dim);
     opacity: 0.3;
+    z-index: 1;
 }
 
 .label-glow {
@@ -225,10 +230,23 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 30%;
+    height: 40%;
     background: linear-gradient(to top, var(--label-color, transparent), transparent);
     opacity: 0;
     pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 3;
+}
+
+.label-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--label-color);
+    z-index: 4;
+    opacity: 0;
     transition: opacity 0.3s ease;
 }
 
@@ -274,11 +292,11 @@
 }
 
 .thumbnail-wrapper[class*="label-"]:not(.label-0) .label-glow {
-    opacity: 0.4;
+    opacity: 0.8;
 }
 
-.thumbnail-wrapper[class*="label-"]:not(.label-0) .thumbnail-card {
-    border-bottom: 3px solid var(--label-color);
+.thumbnail-wrapper[class*="label-"]:not(.label-0) .label-bar {
+    opacity: 1;
 }
 
 .thumbnail-img-container {
@@ -296,7 +314,7 @@
     transition: transform 0.2s ease;
 }
 
-.thumbnail-wrapper:hover .thumbnail-img {
+.thumbnail-wrapper:hover .thumbnail-inner {
     transform: scale(1.05);
 }
 
@@ -546,4 +564,5 @@
     position: relative;
     width: 100%;
     height: 100%;
+    transition: transform 0.2s ease;
 }
