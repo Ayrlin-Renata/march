@@ -4,7 +4,7 @@ import { HoverOverlay as IngestionHoverOverlay, BurstControl as IngestionBurstCo
 import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getThumbnailUrl } from './utils/pathUtils';
-import { MdSettings, MdMenu, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes } from 'react-icons/md';
+import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen } from 'react-icons/md';
 import { useIngestionStore } from './store/useIngestionStore';
 import IngestionArea from './components/IngestionArea';
 import StoryBuilderArea from './components/StoryBuilderArea';
@@ -319,7 +319,7 @@ const App: React.FC = () => {
                     <footer className="app-bottom-bar">
                         <div className="bottom-bar-left">
                             <button className="icon-btn" title="Listening Folders" onClick={() => setActiveManager('folders')}>
-                                <MdMenu size={20} />
+                                <MdFolderOpen size={20} />
                             </button>
                             <IngestionBurstControl />
                         </div>

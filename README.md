@@ -1,73 +1,41 @@
-# React + TypeScript + Vite
+# March Photobox
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+isn't it a pain to sift through all those screenshots and remember all those aspect ratios?   
 
-Currently, two official plugins are available:
+## features
+- view and label all your screenshots in real time
+- plan and crop images for posts while you're still shooting 
+- drag and drop images to discord and other apps easily
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### ingestion
+- **folder watching**: Customize your watched screenshot directories. New images appear instantly at the top of the feed.
+- **burst grouping**: Automatically groups images taken in quick succession. Adjust the grouping sensitivity with the **burst control** slider
+- **easy sharing**: **Hold left-click** on a thumbnail to enable dragging into your browser, discord, or other apps.
 
-## React Compiler
+#### previews
+- **hover preview**: Hover thumbnails for previews.
+- **full window lightbox**: Arrow navigation, pan/zoom, quick label/select.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+#### labeling
+- **right-click cycle**: Quickly apply customizable labels by right-clicking a thumbnail.
+- **reset/clear**: **Hold right-click** on a thumbnail to clear all labels.
 
-## Expanding the ESLint configuration
+### story builder
+- **platform layouts**: Image post layouts for X (formerly Twitter), Bluesky, and more if you ask for it.
+- **image slots**: Drag and drop images into layout slots, or use the 1-9 keys, or 0 to clear.
+- **text preset manager**: Quickly apply frequently used captions and hashtags, or those emoji you have to look up every time.  
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### themes
+- At least 3 themes w/light and dark mode each.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## hotkeys
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Shortcut | Action |
+| --- | --- |
+| **1-9** | Assign/Toggle image to layout slot (Hover or Lightbox) |
+| **0** | Unassign image from all slots in active platform |
+| **Arrows** | Navigate Lightbox Preview |
+| **Esc** | Close Overlays / Lightbox Preview |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# legal
+Ayrlin Renata Copyright 2025 - All rights reserved
