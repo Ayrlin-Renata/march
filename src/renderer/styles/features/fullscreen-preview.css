@@ -28,24 +28,172 @@
 
 .top-center-info {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    gap: 20px;
     background: rgba(0, 0, 0, 0.3);
-    padding: 4px 12px;
-    border-radius: 8px;
+    padding: 6px 20px;
+    border-radius: 100px;
     backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .image-name {
     font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 2px;
+    font-weight: 600;
     color: #fff;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .image-index {
     font-size: 10px;
     color: var(--fg-secondary);
+}
+
+.top-right-tools {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.label-glow-picker {
+    position: absolute;
+    top: 60px;
+    /* Under top bar */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 90;
+    pointer-events: auto;
+}
+
+.label-glow-tab {
+    width: 55px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    opacity: 0.3;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    justify-content: center;
+}
+
+/* The solid line at the very top */
+.label-glow-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 60%;
+    height: 2px;
+    background: var(--label-color, #fff);
+    transition: width 0.3s ease;
+}
+
+/* The gradient glow dropping down */
+.tab-glow {
+    position: absolute;
+    top: 2px;
+    left: 20%;
+    right: 20%;
+    bottom: 0;
+    background: linear-gradient(to bottom, var(--label-color, #fff) 0%, transparent 100%);
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.label-glow-tab:hover {
+    opacity: 0.7;
+    transform: translateY(2px);
+}
+
+.label-glow-tab:hover::before {
+    width: 80%;
+}
+
+.label-glow-tab.active {
+    opacity: 1;
+    width: 70px;
+    transform: translateY(0);
+}
+
+.label-glow-tab.active::before {
+    width: 100%;
+    height: 3px;
+    box-shadow: 0 0 10px var(--label-color, #fff);
+}
+
+.label-glow-tab.active .tab-glow {
+    left: 0;
+    right: 0;
+    opacity: 0.8;
+}
+
+.label-glow-tab.clear::before {
+    background: #666;
+}
+
+.label-glow-tab.clear .tab-glow {
+    background: linear-gradient(to bottom, #666666 0%, transparent 100%);
+}
+
+.dragging-overlay {
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.dragging-overlay .thumbnail-card {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--accent-blue);
+}
+
+/* Slot Selector */
+.slot-selector {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slot-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.slot-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+.slot-btn.active {
+    background: #1d9bf0;
+    border-color: #1d9bf0;
+    color: white;
+    box-shadow: 0 0 12px rgba(29, 155, 240, 0.4);
+}
+
+.slot-btn.occupied:not(.active) {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-btn {

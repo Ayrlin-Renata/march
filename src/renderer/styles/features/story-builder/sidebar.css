@@ -5,7 +5,6 @@
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: row;
-    /* For collapse button */
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
@@ -18,7 +17,6 @@
     width: 24px;
     height: 100%;
     background-color: var(--bg-tertiary);
-    /* Distinct stripe */
     border: none;
     border-right: 1px solid var(--border-color);
     color: var(--fg-secondary);
@@ -32,8 +30,7 @@
 
 .collapse-btn:hover {
     color: var(--fg-primary);
-    background-color: rgba(255, 255, 255, 0.05);
-    /* Highlight on hover */
+    background-color: var(--bg-surface-hover);
 }
 
 .post-sidebar-content {
@@ -41,7 +38,6 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    opacity: 1;
     transition: opacity 0.2s ease;
 }
 
@@ -49,7 +45,6 @@
     opacity: 0;
     pointer-events: none;
     width: 0;
-    /* Prevent layout shift */
 }
 
 .sidebar-header {
@@ -68,6 +63,25 @@
     letter-spacing: 0.05rem;
 }
 
+.sidebar-add-btn {
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.sidebar-add-btn:hover {
+    transform: scale(1.05);
+    background: #0088ee;
+}
+
 .post-list {
     flex: 1;
     overflow-y: auto;
@@ -75,7 +89,7 @@
 
 .post-item {
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--divider-color);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -84,13 +98,12 @@
 }
 
 .post-item:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: var(--bg-surface-hover);
 }
 
 .post-item.active {
-    background: rgba(0, 122, 204, 0.1);
-    /* Accent tint */
-    border-left: 3px solid var(--fg-accent);
+    background: var(--bg-surface-active);
+    border-left: 3px solid var(--accent-blue);
 }
 
 .post-name-text {
@@ -106,7 +119,7 @@
 
 .post-name-input {
     background: var(--bg-primary);
-    border: 1px solid var(--fg-accent);
+    border: 1px solid var(--accent-blue);
     color: var(--fg-primary);
     padding: 4px 8px;
     border-radius: 4px;
@@ -125,59 +138,4 @@
 
 .post-item:hover .delete-btn {
     opacity: 1;
-}
-
-/* Metadata Footer */
-.metadata-bar {
-    height: 60px;
-    background-color: var(--bg-tertiary);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 16px;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.hashtag-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.meta-icon {
-    color: var(--fg-accent);
-}
-
-.hashtag-input {
-    background: none;
-    border: none;
-    color: var(--fg-primary);
-    font-size: 0.85rem;
-    flex: 1;
-    outline: none;
-}
-
-.presets-row {
-    display: flex;
-    gap: 6px;
-}
-
-.preset-pill {
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-dim);
-    cursor: pointer;
-}
-
-.preset-pill:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--fg-primary);
 }

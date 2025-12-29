@@ -1,25 +1,28 @@
 /* Preview Canvas (Center) */
 .preview-canvas {
-    flex: 1;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     /* Center mockup in view */
-    padding: 40px;
-    overflow-y: auto;
+    padding: 2rem;
 }
 
 .mockup-container {
-    width: 380px;
-    /* Mobile width roughly */
+    width: 100%;
+    max-width: 600px;
+    min-width: 300px;
+    /* Mobile width enlarged & responsive */
     background: #fff;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
     color: #000;
     display: flex;
     flex-direction: column;
+    z-index: 10;
+    transition: width 0.3s ease;
 }
 
 .mockup-container.x {
@@ -27,17 +30,19 @@
 }
 
 .mockup-header {
-    padding: 12px;
+    padding: 1rem;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.75rem;
 }
 
 .mockup-avatar {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     background-color: #ddd;
+    opacity: 0.1;
+    /* Further reduced from 0.3 */
 }
 
 .mockup-user-info {
@@ -47,38 +52,166 @@
 }
 
 .mockup-name {
-    width: 100px;
-    height: 10px;
+    width: 120px;
+    height: 12px;
     background-color: #ddd;
     border-radius: 2px;
+    opacity: 0.1;
+    /* Further reduced from 0.3 */
 }
 
 .mockup-handle {
-    width: 60px;
-    height: 8px;
+    width: 70px;
+    height: 10px;
     background-color: #eee;
     border-radius: 2px;
+    opacity: 0.1;
+    /* Further reduced from 0.3 */
+}
+
+.mockup-text-wrapper {
+    position: relative;
+    width: 100%;
 }
 
 .mockup-text-area-inline {
     width: 100%;
     border: none;
     resize: none;
-    padding: 0 12px 12px 12px;
+    padding: 12px 16px;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     line-height: 1.4;
     outline: none;
-    min-height: 60px;
+    min-height: 40px;
     background: transparent;
-    color: #0f1419;
+    color: transparent;
+    /* Hide text, show overlay */
+    caret-color: #0f1419;
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
+    /* Ensure scrollbar doesn't cause shift */
+    scrollbar-width: none;
+}
+
+/* Custom selection color to make it look decent with transparent text */
+.mockup-text-area-inline::selection {
+    background: rgba(29, 155, 240, 0.2);
+    color: transparent;
+}
+
+/* Hide scrollbar for Chrome/Safari */
+.mockup-text-area-inline::-webkit-scrollbar {
+    display: none;
+}
+
+.mockup-text-highlight-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: inherit;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    z-index: 1;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.hashtag {
+    color: #1d9bf0;
+    font-weight: 400;
+    /* CRITICAL: Must match textarea weight to prevent offset drift */
+}
+
+/* Simulated Feed Layout */
+.mockup-feed-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    padding: 2rem 0;
+    min-height: 100%;
+    width: 100%;
+}
+
+.placeholder-post {
+    width: 100%;
+    max-width: 440px;
+    height: 200px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    opacity: 0.1;
+    /* Reverted to higher 0.1 from 0.05 */
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+    flex-shrink: 0;
+    margin: 1rem 0;
+}
+
+.placeholder-post.feed-above {
+    margin-top: -150px;
+    mask-image: linear-gradient(to bottom, transparent, black);
+}
+
+.placeholder-post.feed-below {
+    margin-bottom: -150px;
+    mask-image: linear-gradient(to top, transparent, black);
+}
+
+.placeholder-post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.placeholder-pfp {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--fg-secondary);
+    opacity: 0.3;
+    /* Reverted to 0.3 */
+}
+
+.placeholder-name-bar {
+    width: 80px;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--fg-secondary);
+    opacity: 0.2;
+}
+
+.placeholder-content-box {
+    flex: 1;
+    background: var(--fg-secondary);
+    opacity: 0.1;
+    border-radius: 8px;
 }
 
 .mockup-image-grid {
     display: grid;
     gap: 2px;
     background-color: #fff;
-    margin-bottom: 12px;
+    margin: 0 1rem 12px 1rem;
+    /* Added horizontal margins */
     border: 1px solid #efefef;
     /* Subtle border */
     border-radius: 12px;
@@ -102,39 +235,33 @@
 .mockup-image-grid.layout-2-vertical {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
-    aspect-ratio: 7/8;
+    aspect-ratio: 7/4;
+    /* Each slot is 7:8 (Width/Height) if grid is 14:8 total */
 }
 
-/* .layout-2-horizontal unused */
-
 .mockup-image-grid.layout-3-large-left {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    /* Actually we want the left to be 7:8 and right to be 2x 2:1 */
+    /* If H is 8, Left is 7w. If Right is 2:1 and H is 4 each, Right W is 8. Total W is 15. */
+    /* Let's try to match Twitter's 3-image exactly: Main is square-ish but taller. */
+    grid-template-columns: 7fr 8fr;
     grid-template-rows: 1fr 1fr;
-    aspect-ratio: 1;
+    aspect-ratio: 15/8;
 }
 
 .mockup-image-grid.layout-3-large-left .mockup-slot:first-child {
     grid-row: span 2;
 }
 
-.mockup-image-grid.layout-3-large-top {
-    grid-template-rows: 2fr 1fr;
-    grid-template-columns: 1fr 1fr;
-    aspect-ratio: 1;
-}
-
-.mockup-image-grid.layout-3-large-top .mockup-slot:first-child {
-    grid-column: span 2;
-}
-
 .mockup-image-grid.layout-4-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    aspect-ratio: 2/1;
+    aspect-ratio: 16/9;
+    /* Standard 4-grid on X is roughly 16:9 total */
 }
 
 .mockup-slot {
-    background-color: #f7f9f9;
+    background-color: var(--bg-tertiary);
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -149,7 +276,7 @@
 }
 
 .slot-placeholder {
-    color: #ccc;
+    color: var(--text-dim);
     display: flex;
     flex-direction: column;
     align-items: center;

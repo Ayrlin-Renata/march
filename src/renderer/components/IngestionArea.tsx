@@ -1,11 +1,166 @@
 import React from 'react';
+import clsx from 'clsx';
+import { MdBolt, MdImage } from 'react-icons/md';
 import { useIngestionStore } from '../store/useIngestionStore';
 import type { IngestedImage } from '../types/images';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAssetUrl } from '../utils/pathUtils';
+import { getThumbnailUrl } from '../utils/pathUtils';
 
 import { useDraggable } from '@dnd-kit/core';
+import { thumbnailManager } from '../utils/thumbnailManager';
+
+import { useStoryStore } from '../store/useStoryStore';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { type PlatformKey } from '../types/stories';
+
+const ImagePlacementIndicator: React.FC<{ imageId: string }> = ({ imageId }) => {
+    const posts = useStoryStore(s => s.posts);
+    const activePostId = useStoryStore(s => s.activePostId);
+
+    const getPlacement = () => {
+        const activePost = posts.find(p => p.id === activePostId);
+        if (!activePost) return null;
+
+        // Check active post (all enabled platforms)
+        const activePlatform = activePost.platforms[activePost.activePlatform];
+        const slotIdx = activePlatform.slots.findIndex(s => s.imageId === imageId);
+        if (slotIdx !== -1) {
+            return { type: 'active' as const, slot: slotIdx + 1 };
+        }
+
+        // Check if in ANY post (including other platforms of active post)
+        for (const post of posts) {
+            for (const platformKey of (Object.keys(post.platforms) as PlatformKey[])) {
+                const config = post.platforms[platformKey];
+                if (config && config.slots.some((s: any) => s?.imageId === imageId)) {
+                    return { type: 'other' as const };
+                }
+            }
+        }
+        return null;
+    };
+
+    const placement = getPlacement();
+    if (!placement) return null;
+
+    return (
+        <div className={clsx("placement-indicator", placement.type === 'active' ? "active-badge" : "other-dot")}>
+            {placement.type === 'active' && placement.slot}
+        </div>
+    );
+};
+
+const LazyImage: React.FC<{
+    src: string,
+    alt: string,
+    className?: string,
+    onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void
+}> = ({ src, alt, className, onLoad }) => {
+    const [isNear, setIsNear] = React.useState(false); // Zone for requesting load
+    const [isResident, setIsResident] = React.useState(false); // Zone for keeping in RAM
+    const [isLoadAllowed, setIsLoadAllowed] = React.useState(false);
+    const imgRef = React.useRef<HTMLImageElement>(null);
+    const requestIdRef = React.useRef<string | null>(null);
+    const slotOwnedRef = React.useRef(false);
+
+    const releaseSlot = () => {
+        if (slotOwnedRef.current) {
+            thumbnailManager.notifyFinished(src);
+            slotOwnedRef.current = false;
+        }
+    };
+
+    React.useEffect(() => {
+        if (!imgRef.current) return;
+        const scrollContainer = imgRef.current.closest('.area-body');
+
+        // Observer for Loading (3 screens buffer)
+        const loadObserver = new IntersectionObserver(([entry]) => {
+            setIsNear(entry.isIntersecting);
+        }, {
+            root: scrollContainer,
+            rootMargin: '300% 0px'
+        });
+
+        // Observer for Unloading (10 screens buffer - very conservative)
+        const unloadObserver = new IntersectionObserver(([entry]) => {
+            setIsResident(entry.isIntersecting);
+            if (!entry.isIntersecting) {
+                setIsLoadAllowed(false);
+                releaseSlot();
+                // Also cancel if it was still pending
+                if (requestIdRef.current) {
+                    thumbnailManager.cancelLoad(requestIdRef.current);
+                    requestIdRef.current = null;
+                }
+            }
+        }, {
+            root: scrollContainer,
+            rootMargin: '1000% 0px'
+        });
+
+        loadObserver.observe(imgRef.current);
+        unloadObserver.observe(imgRef.current);
+
+        return () => {
+            loadObserver.disconnect();
+            unloadObserver.disconnect();
+            releaseSlot();
+            if (requestIdRef.current) {
+                thumbnailManager.cancelLoad(requestIdRef.current);
+            }
+        };
+    }, []);
+
+    // Load Management Integration
+    React.useEffect(() => {
+        // If we enter the "Near" zone and aren't loaded yet
+        if (isNear && isResident && !isLoadAllowed && !requestIdRef.current) {
+            const { id, promise } = thumbnailManager.requestLoad(src, 10);
+            requestIdRef.current = id;
+
+            promise.then(() => {
+                // If we are still resident when the slot opens, allow the load
+                if (requestIdRef.current === id) {
+                    setIsLoadAllowed(true);
+                    slotOwnedRef.current = true;
+                    requestIdRef.current = null;
+                } else {
+                    // We were cancelled but got a slot anyway, return it immediately
+                    thumbnailManager.notifyFinished(src);
+                }
+            });
+        }
+        // If we leave the "Near" zone but are still resident, we can cancel the PENDING load
+        else if (!isNear && requestIdRef.current) {
+            thumbnailManager.cancelLoad(requestIdRef.current);
+            requestIdRef.current = null;
+        }
+    }, [isNear, isResident, isLoadAllowed, src]);
+
+    const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+        releaseSlot();
+        if (onLoad) onLoad(e);
+    };
+
+    const handleError = () => {
+        releaseSlot();
+    };
+
+    return (
+        <img
+            ref={imgRef}
+            src={isLoadAllowed ? src : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}
+            alt={alt}
+            className={className}
+            onLoad={isLoadAllowed ? handleLoad : undefined}
+            onError={isLoadAllowed ? handleError : undefined}
+            loading="lazy"
+            draggable={false}
+        />
+    );
+};
 
 const ImageThumbnail: React.FC<{
     img: IngestedImage;
@@ -13,18 +168,30 @@ const ImageThumbnail: React.FC<{
     onSelect: () => void;
     onCycle: () => void;
     onReset: () => void;
-    hoveredImageId: string | null;
-    popoverPos: { top: number, left: number, below: boolean } | null;
-    onMouseEnter: (e: React.MouseEvent) => void;
-    onMouseLeave: () => void;
-}> = ({ img, isSelected, onSelect, onCycle, onReset, hoveredImageId, popoverPos, onMouseEnter, onMouseLeave }) => {
+}> = React.memo(({ img, isSelected, onSelect, onCycle, onReset }) => {
+    const isHovered = useIngestionStore(s => s.hoveredImageId === img.id);
     const timerRef = React.useRef<any>(null);
     const wasResetRef = React.useRef(false);
+
+    const [holdProgress, setHoldProgress] = React.useState(0);
+    const [lockout, setLockout] = React.useState(false);
+    const isNativeReady = holdProgress >= 100;
+    const holdTimerRef = React.useRef<any>(null);
+    const hasTriggeredDragRef = React.useRef(false);
 
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: img.id,
         data: img,
+        disabled: isNativeReady || lockout
     });
+
+    React.useEffect(() => {
+        if (isDragging && holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+            setHoldProgress(0);
+        }
+    }, [isDragging]);
 
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -41,91 +208,235 @@ const ImageThumbnail: React.FC<{
         onCycle();
     };
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (e.button === 2) { // Right click
+    const handleMouseDown = (e: React.PointerEvent) => {
+        setLockout(false); // Reset lockout on new interaction
+        if (e.button === 0) { // Left click: Start hold timer
+            setHoldProgress(0);
+            const startTime = Date.now();
+            const duration = 600;
+
+            holdTimerRef.current = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const p = Math.min(100, (elapsed / duration) * 100);
+                setHoldProgress(p);
+                if (p >= 100) {
+                    clearInterval(holdTimerRef.current);
+                    setLockout(true);
+                }
+            }, 30);
+        } else if (e.button === 2) { // Right click: existing logic
             wasResetRef.current = false;
             timerRef.current = setTimeout(() => {
                 onReset();
                 wasResetRef.current = true;
-            }, 500); // 500ms for long press
+            }, 500);
         }
     };
 
-    const handleMouseUp = (_e: React.MouseEvent) => {
+    const handleMouseMove = (e: React.PointerEvent) => {
+        if (isDragging) return; // Library is in control
+        if ((isNativeReady || lockout) && !hasTriggeredDragRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Threshold met: trigger native drag once
+            hasTriggeredDragRef.current = true;
+            window.electron.startDrag(img.path, '');
+            // We do NOT reset holdProgress here, so the READY message stays visible
+            if (holdTimerRef.current) clearInterval(holdTimerRef.current);
+        } else if (lockout) {
+            // Still locked out, swallow events
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const handleMouseUp = (_e: React.PointerEvent) => {
         if (timerRef.current) {
             clearTimeout(timerRef.current);
             timerRef.current = null;
         }
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
+        hasTriggeredDragRef.current = false;
+        // Note: lockout persists until next handleMouseDown
     };
 
     return (
         <motion.div
             ref={setNodeRef}
             style={style}
-            {...listeners}
             {...attributes}
-            layout
+            {...listeners}
+            data-image-id={img.id}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className={`thumbnail-wrapper ${isSelected ? 'selected' : ''} ${hoveredImageId === img.id ? 'hovered' : ''} label-${img.labelIndex || 0}`}
-            onClick={(_e) => {
-                if (!transform) onSelect();
-            }}
+            className={clsx(
+                "thumbnail-wrapper",
+                isSelected && "selected",
+                isDragging && "dragging",
+                isHovered && "hovered",
+                `label-${img.labelIndex || 0}`
+            )}
+            onClick={onSelect}
             onContextMenu={handleContextMenu}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={() => {
-                onMouseLeave();
-                handleMouseUp(null as any);
+            onPointerDown={handleMouseDown}
+            onPointerMove={handleMouseMove}
+            onPointerUp={handleMouseUp}
+            onPointerLeave={handleMouseUp}
+            onPointerCancel={handleMouseUp}
+            draggable={false}
+        >
+            <ImagePlacementIndicator imageId={img.id} />
+            <div className="thumbnail-inner">
+                {holdProgress > 0 && (
+                    <div className="native-drag-indicator">
+                        <div className="progress-bar" style={{ width: `${holdProgress}%` }} />
+                        {holdProgress >= 100 && <div className="ready-overlay">READY TO DRAG</div>}
+                    </div>
+                )}
+                <div className="thumbnail-card">
+                    <div className="thumbnail-placeholder">
+                        <MdImage size={32} />
+                    </div>
+                    <LazyImage
+                        src={getThumbnailUrl(img.path)}
+                        alt={img.name}
+                        className="thumbnail-img"
+                        onLoad={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (!img.width || !img.height) {
+                                useIngestionStore.getState().updateImageDimensions(img.id, target.naturalWidth, target.naturalHeight);
+                            }
+                        }}
+                    />
+                    <div className="label-glow"></div>
+                </div>
+            </div>
+        </motion.div>
+    );
+});
+
+const BurstGroup: React.FC<{
+    burst: IngestedImage[],
+    cycleLabel: (id: string) => void,
+    resetLabel: (id: string) => void
+}> = React.memo(({ burst, cycleLabel, resetLabel }) => {
+    const selectedImageId = useIngestionStore(s => s.selectedImageId);
+    const setSelectedImageId = useIngestionStore(s => s.setSelectedImageId);
+    const groupRef = React.useRef<HTMLDivElement>(null);
+    const [hasBeenVisible, setHasBeenVisible] = React.useState(false);
+
+    React.useEffect(() => {
+        if (!groupRef.current) return;
+        const scrollContainer = groupRef.current.closest('.area-body');
+
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting && !hasBeenVisible) {
+                setHasBeenVisible(true);
+                // Pre-cache hover thumbnails for this group (low priority)
+                burst.forEach(img => {
+                    thumbnailManager.prefetch(getThumbnailUrl(img.path, 600), 100);
+                });
+            }
+        }, {
+            root: scrollContainer,
+            rootMargin: '300% 0px'
+        });
+
+        observer.observe(groupRef.current);
+        return () => observer.disconnect();
+    }, [burst, hasBeenVisible]);
+
+    return (
+        <div ref={groupRef} className="burst-group">
+            <div className="burst-header">
+                <div className="burst-info-left">
+                    <span className="burst-source">{burst[0].source}</span>
+                    <span className="burst-date">
+                        {(() => {
+                            const date = new Date(burst[0].timestamp);
+                            const now = new Date();
+                            const isToday = date.toDateString() === now.toDateString();
+                            const yesterday = new Date(now);
+                            yesterday.setDate(now.getDate() - 1);
+                            const isYesterday = date.toDateString() === yesterday.toDateString();
+
+                            if (isToday) return 'Today';
+                            if (isYesterday) return 'Yesterday';
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        })()}
+                    </span>
+                </div>
+                <span className="burst-time">
+                    {new Date(burst[0].timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                </span>
+            </div>
+            <div className="thumbnail-grid">
+                <AnimatePresence>
+                    {burst.map((img) => (
+                        <ImageThumbnail
+                            key={img.id}
+                            img={img}
+                            isSelected={selectedImageId === img.id}
+                            onSelect={() => setSelectedImageId(img.id)}
+                            onCycle={() => cycleLabel(img.id)}
+                            onReset={() => resetLabel(img.id)}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
+});
+
+export const HoverOverlay: React.FC = () => {
+    const images = useIngestionStore(s => s.images);
+    const hoveredImageId = useIngestionStore(s => s.hoveredImageId);
+    const popoverPos = useIngestionStore(s => s.hoveredPopoverPos);
+
+    const img = React.useMemo(() =>
+        hoveredImageId ? images.find(i => i.id === hoveredImageId) : null
+        , [images, hoveredImageId]);
+
+    if (!img || !popoverPos) return null;
+
+    return (
+        <div
+            className={clsx("hover-popover", popoverPos.below && "below")}
+            style={{
+                top: popoverPos.below ? popoverPos.top : 'auto',
+                bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
+                left: popoverPos.left,
+                transform: 'translateX(-50%)',
+                zIndex: 2000,
+                pointerEvents: 'none'
             }}
         >
-            <div className="thumbnail-card">
-                <img
-                    src={getAssetUrl(img.path)}
-                    alt={img.name}
-                    loading="lazy"
-                    className="thumbnail-img"
-                    onLoad={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (!img.width || !img.height) {
-                            useIngestionStore.getState().updateImageDimensions(img.id, target.naturalWidth, target.naturalHeight);
-                        }
-                    }}
-                />
-                <div className="label-glow"></div>
+            <img src={getThumbnailUrl(img.path, 600)} alt="preview" />
+            <div className="hover-popover-info">
+                <span className="hover-image-name">{img.name}</span>
             </div>
-            {hoveredImageId === img.id && popoverPos && !isDragging && (
-                <div
-                    className={`hover-popover ${popoverPos.below ? 'below' : ''}`}
-                    style={{
-                        top: popoverPos.below ? popoverPos.top : 'auto',
-                        bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
-                        left: popoverPos.left,
-                        transform: 'translateX(-50%)'
-                    }}
-                >
-                    <img src={getAssetUrl(img.path)} alt="preview" />
-                </div>
-            )}
-        </motion.div>
+        </div>
     );
 };
 
-const IngestionArea: React.FC = () => {
-    const {
-        images,
-        selectedImageId,
-        setSelectedImageId,
-        hoveredImageId,
-        setHoveredImageId,
-        cycleLabel,
-        resetLabel
-    } = useIngestionStore();
+const IngestionArea: React.FC = React.memo(() => {
+    const images = useIngestionStore(s => s.images);
+    const cycleLabel = useIngestionStore(s => s.cycleLabel);
+    const resetLabel = useIngestionStore(s => s.resetLabel);
+
     const [activeSource, setActiveSource] = React.useState('All');
-    const [popoverPos, setPopoverPos] = React.useState<{ top: number, left: number, below: boolean } | null>(null);
+    const [visibleCount, setVisibleCount] = React.useState(15);
+    const isScrollingRef = React.useRef(false);
+    const scrollEndTimerRef = React.useRef<any>(null);
+    const sentinelRef = React.useRef<HTMLDivElement>(null);
+
     const { t } = useTranslation();
+    const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
 
     const sources = React.useMemo(() => {
         const unique = Array.from(new Set(images.map(img => img.source)));
@@ -133,19 +444,54 @@ const IngestionArea: React.FC = () => {
     }, [images]);
 
     const filteredImages = React.useMemo(() => {
-        if (activeSource === 'All') return images;
-        return images.filter(img => img.source === activeSource);
-    }, [images, activeSource]);
+        const now = Date.now();
+        const lookbackMs = ingestLookbackDays * 24 * 60 * 60 * 1000;
 
-    const bursts = filteredImages.reduce((acc, img) => {
-        const lastBurst = acc[acc.length - 1];
-        if (lastBurst && lastBurst[0].burstId === img.burstId) {
-            lastBurst.push(img);
-        } else {
-            acc.push([img]);
+        return images.filter(img => {
+            const matchesSource = activeSource === 'All' || img.source === activeSource;
+            const matchesTime = (now - img.timestamp) <= lookbackMs;
+            return matchesSource && matchesTime;
+        });
+    }, [images, activeSource, ingestLookbackDays]);
+
+    // Safeguard: if active source is removed, reset to All
+    React.useEffect(() => {
+        if (activeSource !== 'All' && !sources.includes(activeSource)) {
+            setActiveSource('All');
         }
-        return acc;
-    }, [] as IngestedImage[][]);
+    }, [sources, activeSource]);
+
+    const bursts = React.useMemo(() => {
+        return filteredImages.reduce((acc, img) => {
+            const lastBurst = acc[acc.length - 1];
+            if (lastBurst && lastBurst[0].burstId === img.burstId) {
+                lastBurst.push(img);
+            } else {
+                acc.push([img]);
+            }
+            return acc;
+        }, [] as IngestedImage[][]);
+    }, [filteredImages]);
+
+    // Reset visible count when filters change
+    React.useEffect(() => {
+        setVisibleCount(15);
+    }, [activeSource]);
+
+    // Progressive mounting observer
+    React.useEffect(() => {
+        if (!sentinelRef.current) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+                setVisibleCount(prev => prev + 15);
+            }
+        }, { rootMargin: '400px' });
+
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [bursts.length]); // Re-attach when list changes
+
+    const visibleBursts = React.useMemo(() => bursts.slice(0, visibleCount), [bursts, visibleCount]);
 
     return (
         <section className="ingestion-area">
@@ -166,57 +512,137 @@ const IngestionArea: React.FC = () => {
                     ))}
                 </div>
             </div>
-            <div className="area-body scrollable">
+            <div
+                className="area-body scrollable"
+                onScroll={() => {
+                    isScrollingRef.current = true;
+                    // Read state directly from store to avoid subscribing IngestionArea to hover changes
+                    if (useIngestionStore.getState().hoveredImageId) {
+                        useIngestionStore.getState().setHover(null, null);
+                    }
+
+                    if (scrollEndTimerRef.current) clearTimeout(scrollEndTimerRef.current);
+                    scrollEndTimerRef.current = setTimeout(() => {
+                        isScrollingRef.current = false;
+                    }, 250);
+                }}
+            >
                 {bursts.length === 0 ? (
                     <p className="placeholder-text">{t('no_images')}</p>
                 ) : (
-                    <div className="burst-container">
-                        {bursts.map((burst) => (
-                            <div key={burst[0].burstId} className="burst-group">
-                                <div className="burst-header">
-                                    <span className="burst-source">{burst[0].source}</span>
-                                    <span className="burst-time">
-                                        {new Date(burst[0].timestamp).toLocaleTimeString()}
-                                    </span>
-                                </div>
-                                <div className="thumbnail-grid">
-                                    <AnimatePresence>
-                                        {burst.map((img) => (
-                                            <ImageThumbnail
-                                                key={img.id}
-                                                img={img}
-                                                isSelected={selectedImageId === img.id}
-                                                onSelect={() => setSelectedImageId(img.id)}
-                                                onCycle={() => cycleLabel(img.id)}
-                                                onReset={() => resetLabel(img.id)}
-                                                hoveredImageId={hoveredImageId}
-                                                popoverPos={popoverPos}
-                                                onMouseEnter={(e) => {
-                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                    const showBelow = rect.top < 250;
-                                                    const left = Math.min(window.innerWidth - 135, Math.max(135, rect.left + rect.width / 2));
-                                                    setPopoverPos({
-                                                        top: showBelow ? rect.bottom + 10 : rect.top - 10,
-                                                        left,
-                                                        below: showBelow
-                                                    });
-                                                    setHoveredImageId(img.id);
-                                                }}
-                                                onMouseLeave={() => {
-                                                    setHoveredImageId(null);
-                                                    setPopoverPos(null);
-                                                }}
-                                            />
-                                        ))}
-                                    </AnimatePresence>
-                                </div>
-                            </div>
+                    <div
+                        className="burst-container"
+                        onMouseOver={(e) => {
+                            if (isScrollingRef.current) return;
+
+                            const target = (e.target as HTMLElement).closest('.thumbnail-wrapper');
+                            if (target) {
+                                const id = target.getAttribute('data-image-id');
+                                const state = useIngestionStore.getState();
+                                if (id && id !== state.hoveredImageId) {
+                                    const rect = target.getBoundingClientRect();
+                                    const showBelow = rect.top < 250;
+                                    const left = Math.min(window.innerWidth - 260, Math.max(260, rect.left + rect.width / 2));
+
+                                    state.setHover(id, {
+                                        top: showBelow ? rect.bottom + 10 : rect.top - 10,
+                                        left,
+                                        below: showBelow
+                                    });
+                                }
+                            }
+                        }}
+                        onMouseOut={(e) => {
+                            const related = e.relatedTarget as HTMLElement;
+                            if (!related || !related.closest('.burst-container')) {
+                                useIngestionStore.getState().setHover(null, null);
+                            }
+                        }}
+                    >
+                        {visibleBursts.map((burst) => (
+                            <BurstGroup
+                                key={burst[0].burstId}
+                                burst={burst}
+                                cycleLabel={cycleLabel}
+                                resetLabel={resetLabel}
+                            />
                         ))}
+                    </div>
+                )}
+                {visibleCount < bursts.length && (
+                    <div ref={sentinelRef} className="progressive-mount-sentinel">
+                        <div className="spinner-mini" />
                     </div>
                 )}
             </div>
         </section>
     );
-};
+});
 
 export default IngestionArea;
+
+export const BurstControl: React.FC = () => {
+    const burstThreshold = useSettingsStore(s => s.burstThreshold);
+    const setBurstThresholdSetting = useSettingsStore(s => s.setBurstThreshold);
+    const reBurst = useIngestionStore(s => s.reBurst);
+    const [isOpen, setIsOpen] = React.useState(false);
+    const containerRef = React.useRef<HTMLDivElement>(null);
+
+    // Close on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const thresholdSec = (burstThreshold / 1000).toFixed(1);
+
+    return (
+        <div className="burst-control-wrapper" ref={containerRef}>
+            <button
+                className={clsx("icon-btn-text", isOpen && "active")}
+                onClick={() => setIsOpen(!isOpen)}
+                title="Burst Threshold"
+            >
+                <MdBolt size={18} />
+                <span>Burst: {thresholdSec}s</span>
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        className="burst-popup"
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    >
+                        <div className="popup-header">
+                            <span className="popup-title">Burst Sensitivity</span>
+                            <span className="popup-value">{thresholdSec}s</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="500"
+                            max="60000"
+                            step="500"
+                            value={burstThreshold}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setBurstThresholdSetting(val);
+                                reBurst(val);
+                            }}
+                            className="burst-slider"
+                        />
+                        <div className="popup-hint">Time between groups</div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};

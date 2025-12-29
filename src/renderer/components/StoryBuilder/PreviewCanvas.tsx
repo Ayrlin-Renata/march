@@ -1,29 +1,48 @@
 import React from 'react';
 import clsx from 'clsx';
-import { type PlatformKey, LAYOUTS } from '../../types/stories';
+import { type PlatformKey, LAYOUTS, PLATFORMS } from '../../types/stories';
 import { useStoryStore } from '../../store/useStoryStore';
 import { DroppableSlot } from './DroppableSlot';
+
+const renderHashtags = (text: string) => {
+    const parts = text.split(/(#\w+)/g);
+    return parts.map((part, i) =>
+        part.startsWith('#') ? <span key={i} className="hashtag">{part}</span> : part
+    );
+};
+
 
 // Updated preview with inline editing
 export const PreviewCanvas: React.FC<{
     postId: string,
     platform: PlatformKey,
+    focusedSlotIndex?: number | null,
     onFocusSlot: (index: number, rect: DOMRect) => void,
     onDeselect: () => void
-}> = ({ postId, platform, onFocusSlot, onDeselect }) => {
+}> = ({ postId, platform, focusedSlotIndex, onFocusSlot, onDeselect }) => {
     const post = useStoryStore(state => state.posts.find(p => p.id === postId));
     const config = post?.platforms[platform];
     const { updatePlatformText } = useStoryStore();
+    const platformData = PLATFORMS.find(p => p.key === platform);
 
     if (!config) return null;
 
     return (
-        <div className="preview-canvas" onClick={(e) => {
-            if (e.target === e.currentTarget) {
-                onDeselect();
-            }
-        }}>
-            <div className={clsx("mockup-container", platform)} onClick={(e) => e.stopPropagation()}>
+        <div
+            className="preview-canvas"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                    onDeselect();
+                }
+            }}
+        >
+            <div className={clsx("mockup-container", platform)}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    backgroundColor: platformData?.bgColor || '#1a1a1a',
+
+                }}
+            >
                 <header className="mockup-header">
                     <div className="mockup-avatar" />
                     <div className="mockup-user-info">
@@ -32,16 +51,27 @@ export const PreviewCanvas: React.FC<{
                     </div>
                 </header>
 
-                <textarea
-                    className="mockup-text-area-inline"
-                    value={config.text.split('\n\n')[0] || ''} // Display only the first part of the text
-                    onChange={(e) => {
-                        const lines = config.text.split('\n\n');
-                        const hashtags = lines[1] || '';
-                        updatePlatformText(postId, platform, `${e.target.value}\n\n${hashtags}`);
-                    }}
-                    placeholder="Story text goes here..."
-                />
+                <div className="mockup-text-wrapper" style={{ color: platformData?.textColor || '#ffffff' }}>
+                    <textarea
+                        className="mockup-text-area-inline"
+                        value={config.text}
+                        onChange={(e) => updatePlatformText(postId, platform, e.target.value)}
+                        placeholder="Story text goes here..."
+                        rows={1}
+                        spellCheck={false}
+                        style={{ color: 'transparent' }}
+                        ref={(el) => {
+                            if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = el.scrollHeight + 'px';
+                            }
+                        }}
+                    />
+                    {/* Visual overlay for hashtags */}
+                    <div className="mockup-text-highlight-overlay" aria-hidden="true">
+                        {renderHashtags(config.text)}
+                    </div>
+                </div>
 
                 <div className={clsx("mockup-image-grid", `layout-${config.layout}`)}>
                     {config.slots.slice(0, LAYOUTS.find(l => l.key === config.layout)?.slots || 1).map((slot, i) => (
@@ -51,6 +81,7 @@ export const PreviewCanvas: React.FC<{
                             slotIndex={i}
                             platform={platform}
                             slotData={slot}
+                            isFocused={focusedSlotIndex === i}
                             onFocus={(rect) => onFocusSlot(i, rect)}
                         />
                     ))}

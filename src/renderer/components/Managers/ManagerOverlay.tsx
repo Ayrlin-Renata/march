@@ -1,0 +1,538 @@
+import React from 'react';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useIngestionStore } from '../../store/useIngestionStore';
+import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate } from 'react-icons/md';
+import { PLATFORMS } from '../../types/stories';
+import clsx from 'clsx';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { MdDragHandle } from 'react-icons/md';
+
+const FolderManagerPane: React.FC = () => {
+    const [newFolderPath, setNewFolderPath] = React.useState('');
+    const [newFolderAlias, setNewFolderAlias] = React.useState('');
+
+    const watchedFolders = useSettingsStore(s => s.watchedFolders);
+    const addWatchedFolder = useSettingsStore(s => s.addWatchedFolder);
+    const removeWatchedFolder = useSettingsStore(s => s.removeWatchedFolder);
+    const removeImagesBySource = useIngestionStore(s => s.removeImagesBySource);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>Watched Folders</h4>
+                <p>Images from these folders will appear in Ingestion.</p>
+            </header>
+            <div className="manager-list scrollable">
+                {watchedFolders.length === 0 && <p className="empty-msg">No folders added yet.</p>}
+                {watchedFolders.map(f => (
+                    <div key={f.path} className="manager-item">
+                        <div className="item-info">
+                            <span className="item-title">{f.alias}</span>
+                            <span className="item-subtitle">{f.path}</span>
+                        </div>
+                        <button className="delete-btn" onClick={() => {
+                            const parts = f.path.split(/[\\/]/).filter(Boolean);
+                            const sourceName = parts[parts.length - 1] || 'Default';
+                            removeWatchedFolder(f.path);
+                            removeImagesBySource(sourceName);
+                            if (window.electron && window.electron.updateWatchedFolders) {
+                                const updated = watchedFolders.filter(wf => wf.path !== f.path);
+                                window.electron.updateWatchedFolders(updated.map(wf => wf.path));
+                            }
+                        }}>
+                            <MdDelete size={18} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+            <footer className="pane-footer">
+                <div className="input-row">
+                    <div className="path-input-wrapper">
+                        <input placeholder="Path (e.g. C:/Photos)" value={newFolderPath} onChange={e => setNewFolderPath(e.target.value)} />
+                        <button className="browse-btn" title="Browse..." onClick={async () => {
+                            if (window.electron && window.electron.selectFolder) {
+                                const folderPath = await window.electron.selectFolder();
+                                if (folderPath) setNewFolderPath(folderPath);
+                            }
+                        }}>
+                            <MdFolder size={18} />
+                        </button>
+                    </div>
+                    <input placeholder="Alias" value={newFolderAlias} onChange={e => setNewFolderAlias(e.target.value)} />
+                    <button className="add-btn" onClick={() => {
+                        if (newFolderPath) {
+                            addWatchedFolder(newFolderPath, newFolderAlias || 'Local Folder');
+                            setNewFolderPath('');
+                            setNewFolderAlias('');
+                            if (window.electron && window.electron.updateWatchedFolders) {
+                                const updated = [...watchedFolders, { path: newFolderPath, alias: newFolderAlias || 'Local Folder' }];
+                                window.electron.updateWatchedFolders(updated.map(f => f.path));
+                            }
+                        }
+                    }}>
+                        <MdAdd size={20} />
+                    </button>
+                </div>
+            </footer>
+        </div>
+    );
+};
+
+const SortablePresetItem: React.FC<{ preset: any, updateTextPreset: any, removeTextPreset: any }> = ({ preset, updateTextPreset, removeTextPreset }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: preset.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 100 : 1,
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className={clsx("manager-item tall sortable-item", isDragging && "dragging")}>
+            <div className="drag-handle" {...attributes} {...listeners}>
+                <MdDragHandle size={20} />
+            </div>
+            <div className="item-info">
+                <input
+                    className="item-title-input"
+                    value={preset.name}
+                    onChange={(e) => updateTextPreset(preset.id, e.target.value, preset.content)}
+                    placeholder="Preset Name"
+                />
+                <textarea
+                    className="item-subtitle-input"
+                    value={preset.content}
+                    onChange={(e) => updateTextPreset(preset.id, preset.name, e.target.value)}
+                    placeholder="Content..."
+                    rows={1}
+                    onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                    }}
+                    ref={(el) => {
+                        if (el) {
+                            el.style.height = 'auto';
+                            el.style.height = el.scrollHeight + 'px';
+                        }
+                    }}
+                />
+            </div>
+            <button className="delete-btn" onClick={() => removeTextPreset(preset.id)}>
+                <MdDelete size={18} />
+            </button>
+        </div>
+    );
+};
+
+const PresetManagerPane: React.FC = () => {
+    const [newPresetName, setNewPresetName] = React.useState('');
+    const [newPresetContent, setNewPresetContent] = React.useState('');
+    const textPresets = useSettingsStore(s => s.textPresets);
+    const addTextPreset = useSettingsStore(s => s.addTextPreset);
+    const updateTextPreset = useSettingsStore(s => s.updateTextPreset);
+    const removeTextPreset = useSettingsStore(s => s.removeTextPreset);
+    const reorderTextPresets = useSettingsStore(s => s.reorderTextPresets);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEndPreset = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = textPresets.findIndex(p => p.id === active.id);
+            const newIndex = textPresets.findIndex(p => p.id === over.id);
+            reorderTextPresets(arrayMove(textPresets, oldIndex, newIndex));
+        }
+    };
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>Text Presets</h4>
+                <p>Saved snippets for quick insertion.</p>
+            </header>
+            <div className="manager-list scrollable">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEndPreset}
+                >
+                    <SortableContext
+                        items={textPresets.map(p => p.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        {textPresets.map(p => (
+                            <SortablePresetItem
+                                key={p.id}
+                                preset={p}
+                                updateTextPreset={updateTextPreset}
+                                removeTextPreset={removeTextPreset}
+                            />
+                        ))}
+                    </SortableContext>
+                </DndContext>
+            </div>
+            <footer className="pane-footer">
+                <div className="input-col">
+                    <input placeholder="New Preset Name" value={newPresetName} onChange={e => setNewPresetName(e.target.value)} />
+                    <textarea placeholder="Content..." value={newPresetContent} onChange={e => setNewPresetContent(e.target.value)} />
+                    <button className="primary-btn" onClick={() => {
+                        if (newPresetName && newPresetContent) {
+                            addTextPreset(newPresetName, newPresetContent);
+                            setNewPresetName('');
+                            setNewPresetContent('');
+                        }
+                    }}>
+                        <MdAdd size={18} /> Add Preset
+                    </button>
+                </div>
+            </footer>
+        </div>
+    );
+};
+
+const IngestionSettingsPane: React.FC = () => {
+    const { t } = useTranslation();
+    const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
+    const setIngestLookbackDays = useSettingsStore(s => s.setIngestLookbackDays);
+    const thumbnailSize = useSettingsStore(s => s.thumbnailSize);
+    const setThumbnailSize = useSettingsStore(s => s.setThumbnailSize);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('ingestion_settings')}</h4>
+            </header>
+            <div className="settings-body">
+                <div className="settings-group">
+                    <label className="settings-label">{t('ingest_lookback')}</label>
+                    <div className="settings-control">
+                        <input type="range" min="1" max="30" step="1" value={ingestLookbackDays} onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))} />
+                        <span>{ingestLookbackDays}<small>{t('days')}</small></span>
+                    </div>
+                </div>
+                <div className="settings-group">
+                    <label className="settings-label">{t('thumbnail_size')}</label>
+                    <div className="settings-control">
+                        <input type="range" min="80" max="300" step="10" value={thumbnailSize} onChange={(e) => setThumbnailSize(parseInt(e.target.value))} />
+                        <span>{thumbnailSize}px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const LightboxSettingsPane: React.FC = () => {
+    const { t } = useTranslation();
+    const scrollSensitivity = useSettingsStore(s => s.scrollSensitivity);
+    const setScrollSensitivity = useSettingsStore(s => s.setScrollSensitivity);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('lightbox_settings')}</h4>
+            </header>
+            <div className="settings-body">
+                <div className="settings-group">
+                    <label className="settings-label">{t('scroll_sensitivity')}</label>
+                    <div className="settings-control">
+                        <input type="range" min="0.1" max="5" step="0.1" value={scrollSensitivity} onChange={(e) => setScrollSensitivity(parseFloat(e.target.value))} />
+                        <span>{scrollSensitivity.toFixed(1)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const LanguageManagerPane: React.FC = () => {
+    const { t, i18n } = useTranslation();
+    const language = useSettingsStore(s => s.language);
+    const setLanguage = useSettingsStore(s => s.setLanguage);
+
+    const changeLanguage = (lang: string) => {
+        setLanguage(lang);
+        i18n.changeLanguage(lang);
+    };
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('language_settings')}</h4>
+            </header>
+            <div className="settings-body">
+                <div className="settings-group">
+                    <label className="settings-label">{t('select_language')}</label>
+                    <div className="manager-list">
+                        <button className={clsx("manager-item", language === 'en' && "active")} onClick={() => changeLanguage('en')}>
+                            <span className="item-title">{t('english')}</span>
+                        </button>
+                        <button className={clsx("manager-item", language === 'ja' && "active")} onClick={() => changeLanguage('ja')}>
+                            <span className="item-title">{t('japanese')}</span>
+                        </button>
+                        <button className={clsx("manager-item", language === 'ko' && "active")} onClick={() => changeLanguage('ko')}>
+                            <span className="item-title">{t('korean')}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const PlatformManagerPane: React.FC = () => {
+    const enabledPlatformKeys = useSettingsStore(s => s.enabledPlatformKeys);
+    const setEnabledPlatformKeys = useSettingsStore(s => s.setEnabledPlatformKeys);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>Platforms</h4>
+                <p>Toggle platforms to show in the Story Builder.</p>
+            </header>
+            <div className="manager-list scrollable">
+                {PLATFORMS.map(p => {
+                    const isEnabled = enabledPlatformKeys.includes(p.key);
+                    return (
+                        <div key={p.key} className="manager-item">
+                            <div className="item-info">
+                                <span className="item-title">{p.name}</span>
+                                <span className="item-subtitle" style={{ color: p.color }}>{p.key}</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                className="platform-toggle"
+                                checked={isEnabled}
+                                onChange={(e) => {
+                                    if (e.target.checked) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
+                                    else setEnabledPlatformKeys(enabledPlatformKeys.filter(k => k !== p.key));
+                                }}
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+const SortableLabelItem: React.FC<{ label: any, images: any[], updateLabel: any, handleExport: any }> = ({ label, images, updateLabel, handleExport }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: label.index.toString() });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 100 : 1,
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className={clsx("manager-item tall sortable-item", isDragging && "dragging")}>
+            <div className="drag-handle" {...attributes} {...listeners}>
+                <MdDragHandle size={20} />
+            </div>
+            <div className="label-edit-row">
+                <input type="color" className="label-color-input" value={label.color} onChange={(e) => updateLabel(label.index, label.name, e.target.value)} />
+                <div className="item-info">
+                    <input className="item-title-input" value={label.name} onChange={(e) => updateLabel(label.index, e.target.value, label.color)} />
+                    <span className="item-subtitle">Label {label.index} • {images.filter(img => img.labelIndex === label.index).length} images</span>
+                </div>
+            </div>
+            <button className="primary-btn square" title="Export copies to folder..." onClick={() => handleExport(label.index)}>
+                <MdFolder size={18} />
+            </button>
+        </div>
+    );
+};
+
+const LabelManagerPane: React.FC = () => {
+    const labels = useSettingsStore(s => s.labels);
+    const updateLabel = useSettingsStore(s => s.updateLabel);
+    const reorderLabels = useSettingsStore(s => s.reorderLabels);
+    const images = useIngestionStore(s => s.images);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEndLabel = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const oldIndex = labels.findIndex(l => l.index.toString() === active.id);
+            const newIndex = labels.findIndex(l => l.index.toString() === over.id);
+            reorderLabels(arrayMove(labels, oldIndex, newIndex));
+        }
+    };
+
+    const handleExport = async (labelIndex: number) => {
+        if (!window.electron || !window.electron.selectFolder || !window.electron.exportImages) return;
+        const targetDir = await window.electron.selectFolder();
+        if (!targetDir) return;
+        const labeledImages = images.filter(img => img.labelIndex === labelIndex);
+        if (labeledImages.length === 0) {
+            alert("No images found with this label.");
+            return;
+        }
+        const paths = labeledImages.map(img => img.path);
+        const success = await window.electron.exportImages(paths, targetDir);
+        if (success) alert(`Successfully exported ${paths.length} images to ${targetDir}`);
+        else alert("Export failed. See console for details.");
+    };
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>Label Manager</h4>
+                <p>Customize and reorder slots.</p>
+            </header>
+            <div className="manager-list scrollable">
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEndLabel}
+                >
+                    <SortableContext
+                        items={labels.map(l => l.index.toString())}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        {labels.map(l => (
+                            <SortableLabelItem
+                                key={l.index}
+                                label={l}
+                                images={images}
+                                updateLabel={updateLabel}
+                                handleExport={handleExport}
+                            />
+                        ))}
+                    </SortableContext>
+                </DndContext>
+            </div>
+        </div>
+    );
+};
+
+export const ManagerOverlay: React.FC = () => {
+    const activeManager = useSettingsStore(s => s.activeManager);
+    const setActiveManager = useSettingsStore(s => s.setActiveManager);
+
+    return (
+        <AnimatePresence>
+            {activeManager && (
+                <motion.div
+                    key="manager-overlay"
+                    className="manager-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setActiveManager(null)}
+                >
+                    <motion.div
+                        className="manager-window"
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <aside className="manager-sidebar">
+                            <div className="sidebar-section-title">App</div>
+                            <button className={clsx("sidebar-item", activeManager === 'settings_language' && "active")} onClick={() => setActiveManager('settings_language')}>
+                                <MdTranslate size={20} />
+                                <span>Language</span>
+                            </button>
+                            <button className={clsx("sidebar-item", activeManager === 'settings_general' && "active")} onClick={() => setActiveManager('settings_general')}>
+                                <MdSettings size={20} />
+                                <span>General</span>
+                            </button>
+
+                            <div className="sidebar-section-title">Ingestion</div>
+                            <button className={clsx("sidebar-item", activeManager === 'folders' && "active")} onClick={() => setActiveManager('folders')}>
+                                <MdFolder size={20} />
+                                <span>Folders</span>
+                            </button>
+                            <button className={clsx("sidebar-item", activeManager === 'settings_ingestion' && "active")} onClick={() => setActiveManager('settings_ingestion')}>
+                                <MdSettings size={20} />
+                                <span>Ingestion Settings</span>
+                            </button>
+                            <button className={clsx("sidebar-item", activeManager === 'settings_lightbox' && "active")} onClick={() => setActiveManager('settings_lightbox')}>
+                                <MdSmartphone size={20} />
+                                <span>Lightbox</span>
+                            </button>
+
+                            <div className="sidebar-section-title">Story Builder</div>
+                            <button className={clsx("sidebar-item", activeManager === 'labels' && "active")} onClick={() => setActiveManager('labels')}>
+                                <MdAdd size={20} />
+                                <span>Labels</span>
+                            </button>
+                            <button className={clsx("sidebar-item", activeManager === 'platforms' && "active")} onClick={() => setActiveManager('platforms')}>
+                                <MdSmartphone size={20} />
+                                <span>Platforms</span>
+                            </button>
+                            <button className={clsx("sidebar-item", activeManager === 'presets' && "active")} onClick={() => setActiveManager('presets')}>
+                                <MdStyle size={20} />
+                                <span>Presets</span>
+                            </button>
+
+                            <div className="sidebar-spacer" />
+                            <button className="sidebar-item close" onClick={() => setActiveManager(null)}>
+                                <MdClose size={20} />
+                                <span>Close</span>
+                            </button>
+                        </aside>
+                        <main className="manager-main">
+                            {activeManager === 'folders' && <FolderManagerPane />}
+                            {activeManager === 'presets' && <PresetManagerPane />}
+                            {activeManager === 'platforms' && <PlatformManagerPane />}
+                            {activeManager === 'labels' && <LabelManagerPane />}
+                            {activeManager === 'settings_ingestion' && <IngestionSettingsPane />}
+                            {activeManager === 'settings_lightbox' && <LightboxSettingsPane />}
+                            {activeManager === 'settings_language' && <LanguageManagerPane />}
+                            {activeManager === 'settings_general' && <div className="manager-pane"><h4>General Settings</h4><p>Global app settings will appear here.</p></div>}
+                        </main>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};

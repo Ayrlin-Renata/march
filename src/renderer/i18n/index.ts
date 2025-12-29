@@ -26,6 +26,17 @@ const resources = {
             "post_content_placeholder": "Write your post content here...",
             "enable_platform": "Enable Platform",
             "hashtags_placeholder": "Add hashtags...",
+            "ingestion_settings": "Ingestion Settings",
+            "lightbox_settings": "Lightbox Settings",
+            "language_settings": "Language Settings",
+            "general_settings": "General Settings",
+            "app_section": "App",
+            "ingestion_section": "Ingestion",
+            "story_builder_section": "Story Builder",
+            "select_language": "Select Language",
+            "english": "English",
+            "japanese": "Japanese",
+            "korean": "Korean",
         }
     }
 };

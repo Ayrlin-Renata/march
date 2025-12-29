@@ -18,12 +18,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
     color: var(--fg-secondary);
 }
 
-.empty-icon {
-    opacity: 0.2;
+.new-story-btn-large {
+    background: var(--accent-blue);
+    color: #fff;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+}
+
+.new-story-btn-large:hover {
+    transform: translateY(-2px);
+    background: #0088ee;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
 }
 
 /* Builder Workspace */
@@ -40,8 +58,18 @@
     flex-direction: column;
     overflow: hidden;
     position: relative;
-    background-color: #121212;
-    /* Darker bg for canvas */
+    background-color: var(--bg-canvas);
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.preview-canvas {
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    overflow: auto;
 }
 
 /* Header */
@@ -55,6 +83,7 @@
     padding: 0 16px;
     flex-shrink: 0;
 }
+
 .builder-header h1 {
     font-size: 0.8rem;
     font-weight: 700;
@@ -71,6 +100,8 @@
 }
 
 .builder-main-view .area-body {
+    flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }

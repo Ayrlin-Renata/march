@@ -44,7 +44,7 @@ export const useStoryStore = create<StoryState>()(
                 const id = Math.random().toString(36).substring(7);
                 const newPost: StoryPost = {
                     id,
-                    name: name || `Story ${get().posts.length + 1} `,
+                    name: name || `Story ${get().posts.length + 1}`,
                     platforms: PLATFORMS.reduce((acc, p) => ({ ...acc, [p.key]: createDefaultPlatformConfig() }), {} as Record<PlatformKey, PlatformConfig>),
                     activePlatform: 'x',
                     createdAt: Date.now(),
@@ -75,6 +75,8 @@ export const useStoryStore = create<StoryState>()(
                     if (p.id !== postId) return p;
                     // Inherit from the currently active platform configuration
                     const currentActive = p.platforms[p.activePlatform];
+                    // If platform is already enabled, we are essentially "cloning" the active state to it
+                    // because the UI will call this on the '+' button even if enabled
                     return {
                         ...p,
                         platforms: {

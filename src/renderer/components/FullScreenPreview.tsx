@@ -5,6 +5,79 @@ import { getAssetUrl } from '../utils/pathUtils';
 import { X, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useStoryStore } from '../store/useStoryStore';
+import clsx from 'clsx';
+
+const SlotSelector: React.FC<{ imageId: string, imagePath: string, width?: number, height?: number }> = ({ imageId, imagePath, width, height }) => {
+    const { posts, activePostId, setSlotImage } = useStoryStore();
+    const activePost = posts.find(p => p.id === activePostId);
+
+    if (!activePost) return null;
+
+    const platformConfig = activePost.platforms[activePost.activePlatform];
+    const slots = platformConfig.slots;
+
+    return (
+        <div className="slot-selector">
+            {[0, 1, 2, 3].map(idx => {
+                const isThisImage = slots[idx]?.imageId === imageId;
+                const isOccupied = !!slots[idx]?.imageId;
+
+                return (
+                    <button
+                        key={idx}
+                        className={clsx(
+                            "slot-btn",
+                            isThisImage && "active",
+                            isOccupied && !isThisImage && "occupied"
+                        )}
+                        onClick={() => {
+                            if (activePostId) {
+                                if (isThisImage) {
+                                    // Toggle off: Clear the slot if it's already this image
+                                    setSlotImage(activePostId, activePost.activePlatform, idx, { id: null as any, path: null as any });
+                                } else {
+                                    // Toggle on: Set the slot to this image
+                                    setSlotImage(activePostId, activePost.activePlatform, idx, { id: imageId, path: imagePath, width, height });
+                                }
+                            }
+                        }}
+                    >
+                        {idx + 1}
+                    </button>
+                );
+            })}
+        </div>
+    );
+};
+
+const LabelPicker: React.FC<{ imageId: string, currentLabel: number }> = ({ imageId, currentLabel }) => {
+    const { labels } = useSettingsStore();
+    const { setLabel } = useIngestionStore();
+
+    return (
+        <div className="label-glow-picker">
+            {labels.map(l => (
+                <button
+                    key={l.index}
+                    className={clsx("label-glow-tab", currentLabel === l.index && "active")}
+                    style={{ '--label-color': l.color } as React.CSSProperties}
+                    onClick={() => setLabel(imageId, l.index)}
+                    title={l.name}
+                >
+                    <div className="tab-glow" />
+                </button>
+            ))}
+            <button
+                className={clsx("label-glow-tab clear", currentLabel === 0 && "active")}
+                onClick={() => setLabel(imageId, 0)}
+                title="Clear Label"
+            >
+                <div className="tab-glow" />
+            </button>
+        </div>
+    );
+};
 
 const PreviewContent: React.FC<{
     selectedImage: any,
@@ -93,20 +166,29 @@ const PreviewContent: React.FC<{
             }}
         >
             <div className="preview-controls-top glassy">
-                <button className="icon-btn close" onClick={() => setSelectedImageId(null)}>
-                    <X size={20} />
-                </button>
                 <div className="top-center-info">
                     <span className="image-name">{selectedImage.name}</span>
+                    <SlotSelector
+                        imageId={selectedImage.id}
+                        imagePath={selectedImage.path}
+                        width={selectedImage.width}
+                        height={selectedImage.height}
+                    />
                     <span className="image-index">{selectedIndex + 1} / {images.length}</span>
                 </div>
-                <button className="icon-btn reset" onClick={() => {
-                    resetTransform();
-                    setCurrentScale(1);
-                }}>
-                    <RotateCcw size={18} />
-                </button>
+                <div className="top-right-tools">
+                    <button className="icon-btn reset" onClick={() => {
+                        resetTransform();
+                        setCurrentScale(1);
+                    }}>
+                        <RotateCcw size={18} />
+                    </button>
+                    <button className="icon-btn close" onClick={() => setSelectedImageId(null)}>
+                        <X size={20} />
+                    </button>
+                </div>
             </div>
+            <LabelPicker imageId={selectedImage.id} currentLabel={selectedImage.labelIndex || 0} />
 
             <div
                 className="preview-viewport-main"

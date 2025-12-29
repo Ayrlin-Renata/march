@@ -205,12 +205,6 @@ export const GlobalCropOverlay: React.FC<{
                 <div
                     className="source-image-boundary"
                     style={constraints.sourceStyle}
-                    ref={(el) => {
-                        if (el) {
-                            const r = el.getBoundingClientRect();
-                            console.log(`[CROP DEBUG] Overlay Boundary: ${r.width.toFixed(1)}x${r.height.toFixed(1)} @ [${r.left.toFixed(1)}, ${r.top.toFixed(1)}]`);
-                        }
-                    }}
                 />
             )}
 

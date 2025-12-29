@@ -2,8 +2,9 @@ import React from 'react';
 import { useStoryStore } from '../store/useStoryStore';
 import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../types/stories';
-import { MdAdd, MdDashboard, MdChevronRight, MdChevronLeft, MdContentCopy, MdCheck, MdDelete } from 'react-icons/md';
+import { MdAdd, MdDashboard, MdChevronRight, MdChevronLeft, MdDelete } from 'react-icons/md';
 import clsx from 'clsx';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { GlobalCropOverlay } from './StoryBuilder/GlobalCropOverlay';
 import { PreviewCanvas } from './StoryBuilder/PreviewCanvas';
 
@@ -20,13 +21,15 @@ const StoryBuilderArea: React.FC = () => {
         enablePlatform,
         setActivePlatform,
         updateLayout,
-        copyToAll,
         updateSlotCrop
     } = useStoryStore();
+
+    const { textPresets } = useSettingsStore();
 
     const [isPostListOpen, setIsPostListOpen] = React.useState(true);
     const [activeSlotRect, setActiveSlotRect] = React.useState<DOMRect | null>(null);
     const [activeEditingPostId, setActiveEditingPostId] = React.useState<string | null>(null);
+    const [focusedSlotIndex, setFocusedSlotIndex] = React.useState<number | null>(null);
 
     const activePost = posts.find(p => p.id === activePostId);
 
@@ -35,11 +38,11 @@ const StoryBuilderArea: React.FC = () => {
             <section className="story-builder-area empty">
                 <div className="empty-state">
                     <MdDashboard size={48} className="empty-icon" />
-                    <h3>{t('no_posts_title')}</h3>
-                    <p>{t('create_your_first')}</p>
-                    <button className="primary-btn" onClick={() => addPost()}>
-                        <MdAdd size={18} />
-                        {t('new_post')}
+                    <h3>No Stories Yet</h3>
+                    <p>Start by creating your first story to organize your images.</p>
+                    <button className="new-story-btn-large" onClick={() => addPost()}>
+                        <MdAdd size={24} />
+                        Create New Story
                     </button>
                 </div>
             </section>
@@ -47,11 +50,6 @@ const StoryBuilderArea: React.FC = () => {
     }
 
     const activePlatform = activePost.platforms[activePost.activePlatform];
-
-    // Helper to find the active slot's crop data
-    // We assume the user is interacting with one slot at a time? 
-    // Actually, we'll need to know WHICH slot is being "overlapped".
-    const [focusedSlotIndex, setFocusedSlotIndex] = React.useState<number | null>(null);
     const focusedSlotData = focusedSlotIndex !== null ? activePlatform.slots[focusedSlotIndex] : null;
 
     return (
@@ -76,23 +74,26 @@ const StoryBuilderArea: React.FC = () => {
                 <div className="builder-header-left">
                     <h1>Story Builder</h1>
                     <div className="platform-tabs">
-                        {PLATFORMS.map(p => {
+                        {PLATFORMS.filter(p => useSettingsStore.getState().enabledPlatformKeys.includes(p.key)).map(p => {
                             const isEnabled = activePost.platforms[p.key].enabled;
                             const isActive = activePost.activePlatform === p.key;
                             return (
                                 <div key={p.key} className="platform-tab-wrapper">
                                     <button
                                         className={clsx("platform-tab", isActive && "active", !isEnabled && "disabled")}
-                                        onClick={() => isEnabled ? setActivePlatform(activePostId, p.key) : null}
+                                        onClick={() => isActive ? null : (isEnabled ? setActivePlatform(activePostId, p.key) : enablePlatform(activePostId, p.key))}
                                     >
                                         <span className="platform-icon" style={{ backgroundColor: p.color }} />
                                         {p.name}
                                     </button>
-                                    {!isEnabled && (
+                                    {!isActive && (
                                         <button
-                                            className="platform-enable-btn"
-                                            onClick={() => enablePlatform(activePostId, p.key)}
-                                            title={t('enable_platform')}
+                                            className={clsx("platform-enable-btn", isEnabled && "is-enabled")}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                enablePlatform(activePostId, p.key);
+                                            }}
+                                            title={isEnabled ? "Copy current to platform" : t('enable_platform')}
                                         >
                                             <MdAdd size={12} />
                                         </button>
@@ -103,12 +104,8 @@ const StoryBuilderArea: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-actions">
-                    <button
-                        className="icon-btn"
-                        title={t('copy_to_all')}
-                        onClick={() => copyToAll(activePostId, activePost.activePlatform)}
-                    >
-                        <MdContentCopy size={16} />
+                    <button className="placeholder-post-btn">
+                        Post Story
                     </button>
                 </div>
             </header>
@@ -130,50 +127,84 @@ const StoryBuilderArea: React.FC = () => {
 
                 {/* Center - Preview Canvas & Metadata Footer */}
                 <div className="builder-main-view">
+                    <div className="metadata-overlay-container">
+                        <div className="metadata-chips-group">
+                            <span className="meta-group-label">Presets</span>
+                            <div className="chips-row">
+                                {textPresets.map(preset => (
+                                    <button key={preset.id} className="preset-chip" onClick={() => {
+                                        const currentText = activePost.platforms[activePost.activePlatform].text;
+                                        if (!currentText.includes(preset.content)) {
+                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${preset.content}`.trim());
+                                        }
+                                    }}>
+                                        {preset.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="metadata-chips-group">
+                            <span className="meta-group-label">Hashtags</span>
+                            <div className="chips-row">
+                                {React.useMemo(() => {
+                                    const allText = posts.flatMap(p => Object.values(p.platforms).map(pl => pl.text)).join(' ');
+                                    const matches = allText.match(/#\w+/g) || [];
+                                    const counts: Record<string, number> = {};
+                                    matches.forEach(tag => { counts[tag] = (counts[tag] || 0) + 1; });
+
+                                    const common = Object.entries(counts)
+                                        .sort(([, a], [, b]) => b - a)
+                                        .slice(0, 8)
+                                        .map(([tag]) => tag);
+
+                                    const defaults = ['#march'];
+                                    return Array.from(new Set([...common, ...defaults])).slice(0, 10);
+                                }, [posts]).map(tag => (
+                                    <button key={tag} className="hashtag-chip" onClick={() => {
+                                        const currentText = activePost.platforms[activePost.activePlatform].text;
+                                        if (!currentText.includes(tag)) {
+                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${tag}`.trim());
+                                        }
+                                    }}>
+                                        {tag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="area-body scrollable" onClick={(e) => {
-                        if (e.target === e.currentTarget || (e.target as Element).classList.contains('preview-canvas')) {
+                        if (e.target === e.currentTarget || (e.target as Element).classList.contains('area-body')) {
                             setFocusedSlotIndex(null);
                         }
                     }}>
-                        <PreviewCanvas
-                            postId={activePostId}
-                            platform={activePost.activePlatform}
-                            onFocusSlot={(idx, rect) => {
-                                setFocusedSlotIndex(idx);
-                                setActiveSlotRect(rect);
-                            }}
-                            onDeselect={() => setFocusedSlotIndex(null)}
-                        />
-                    </div>
-
-                    <footer className="metadata-bar">
-                        {/* Hashtag Bar */}
-                        <div className="hashtag-row">
-                            <MdCheck size={16} className="meta-icon" />
-                            <input
-                                className="hashtag-input"
-                                placeholder={t('hashtags_placeholder')}
-                                value={activePlatform.text.split('\n\n')[1] || ''}
-                                onChange={(e) => {
-                                    const lines = activePlatform.text.split('\n\n');
-                                    const mainText = lines[0] || '';
-                                    useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${mainText}\n\n${e.target.value}`);
+                        <div className="mockup-feed-container">
+                            <div className="placeholder-post feed-above">
+                                <div className="placeholder-post-header">
+                                    <div className="placeholder-pfp" />
+                                    <div className="placeholder-name-bar" />
+                                </div>
+                                <div className="placeholder-content-box" />
+                            </div>
+                            <PreviewCanvas
+                                postId={activePostId}
+                                platform={activePost.activePlatform}
+                                focusedSlotIndex={focusedSlotIndex}
+                                onFocusSlot={(idx, rect) => {
+                                    setFocusedSlotIndex(idx);
+                                    setActiveSlotRect(rect);
                                 }}
+                                onDeselect={() => setFocusedSlotIndex(null)}
                             />
+                            <div className="placeholder-post feed-below">
+                                <div className="placeholder-post-header">
+                                    <div className="placeholder-pfp" />
+                                    <div className="placeholder-name-bar" />
+                                </div>
+                                <div className="placeholder-content-box" />
+                            </div>
                         </div>
-                        <div className="presets-row">
-                            {['#photography', '#daily', '#march', '#devlog'].map(tag => (
-                                <button key={tag} className="preset-pill" onClick={() => {
-                                    const currentText = activePost.platforms[activePost.activePlatform].text;
-                                    if (!currentText.includes(tag)) {
-                                        useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${tag}`);
-                                    }
-                                }}>
-                                    {tag}
-                                </button>
-                            ))}
-                        </div>
-                    </footer>
+                    </div>
                 </div>
 
                 {/* Right Side - Post Manager */}
@@ -184,9 +215,9 @@ const StoryBuilderArea: React.FC = () => {
 
                     <div className="post-sidebar-content">
                         <div className="sidebar-header">
-                            <h3>{t('posts')}</h3>
-                            <button className="icon-btn" onClick={() => addPost()}>
-                                <MdAdd size={16} />
+                            <h3>Stories</h3>
+                            <button className="sidebar-add-btn" onClick={() => addPost()}>
+                                <MdAdd size={18} />
                             </button>
                         </div>
                         <div className="post-list scrollable">

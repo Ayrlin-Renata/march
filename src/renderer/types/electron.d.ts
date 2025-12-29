@@ -4,6 +4,12 @@ export interface ElectronAPI {
     invoke: (channel: string, data: any) => Promise<any>;
     getLabel: (filePath: string) => Promise<number>;
     setLabel: (filePath: string, labelIndex: number) => void;
+    selectFolder: () => Promise<string | null>;
+    updateWatchedFolders: (folders: string[]) => void;
+    exportImages: (paths: string[], targetDir: string) => Promise<boolean>;
+    resizeWindow: (deltaX: number) => void;
+    setWindowWidth: (width: number) => void;
+    startDrag: (filePath: string, iconPath: string) => void;
 }
 
 declare global {

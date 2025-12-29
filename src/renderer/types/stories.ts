@@ -38,12 +38,12 @@ export interface StoryPost {
     createdAt: number;
 }
 
-export const PLATFORMS: { key: PlatformKey; name: string; color: string }[] = [
-    { key: 'x', name: 'X', color: '#1DA1F2' },
-    { key: 'bsky', name: 'BlueSky', color: '#0085FF' },
-    { key: 'threads', name: 'Threads', color: '#ffffff' },
-    { key: 'instagram', name: 'Instagram', color: '#E1306C' },
-    { key: 'facebook', name: 'Facebook', color: '#4267B2' },
+export const PLATFORMS: { key: PlatformKey; name: string; color: string; bgColor: string; textColor: string }[] = [
+    { key: 'x', name: 'X', color: '#1DA1F2', bgColor: '#000000', textColor: '#ffffff' },
+    { key: 'bsky', name: 'BlueSky', color: '#0085FF', bgColor: '#000814', textColor: '#ffffff' },
+    { key: 'threads', name: 'Threads', color: '#ffffff', bgColor: '#101010', textColor: '#ffffff' },
+    { key: 'instagram', name: 'Instagram', color: '#E1306C', bgColor: '#fafafa', textColor: '#000000' },
+    { key: 'facebook', name: 'Facebook', color: '#4267B2', bgColor: '#f0f2f5', textColor: '#000000' },
 ];
 
 export const LAYOUTS: { key: LayoutKey; slots: number; label: string }[] = [

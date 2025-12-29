@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import clsx from 'clsx';
+import { HoverOverlay as IngestionHoverOverlay, BurstControl as IngestionBurstControl } from './components/IngestionArea';
 import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { MdSettings, MdMenu, MdSearch, MdDashboard, MdOutlineLightMode, MdOutlineDarkMode, MdStyle } from 'react-icons/md';
+import { getThumbnailUrl } from './utils/pathUtils';
+import { MdSettings, MdMenu, MdOutlineLightMode, MdOutlineDarkMode, MdStyle } from 'react-icons/md';
 import { useIngestionStore } from './store/useIngestionStore';
 import IngestionArea from './components/IngestionArea';
 import StoryBuilderArea from './components/StoryBuilderArea';
 import FullScreenPreview from './components/FullScreenPreview';
-import SettingsOverlay from './components/SettingsOverlay';
+import { ManagerOverlay } from './components/Managers/ManagerOverlay';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useStoryStore } from './store/useStoryStore';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
+import { MdViewSidebar } from 'react-icons/md';
 
 // Styles
 import './styles/base/variables.css';
@@ -36,6 +40,7 @@ const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className })
     const isResizing = useRef(false);
     const initialPos = useRef(0);
     const initialSize = useRef(0);
+    const [ghostPos, setGhostPos] = React.useState<number | null>(null);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -46,27 +51,46 @@ const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className })
         if (parentElement) {
             initialSize.current = direction === 'horizontal' ? parentElement.offsetWidth : parentElement.offsetHeight;
         }
+        setGhostPos(direction === 'horizontal' ? e.clientX : e.clientY);
     }, [direction]);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isResizing.current) return;
         const currentPos = direction === 'horizontal' ? e.clientX : e.clientY;
+
+        // Validation logic for ghost pos
+        if (direction === 'horizontal') {
+            const delta = currentPos - initialPos.current;
+            const newSize = initialSize.current + delta;
+            const remainingWidth = window.innerWidth - newSize - 1; // -1 for resizer
+
+            if (newSize > 150 && remainingWidth > 450) {
+                setGhostPos(currentPos);
+            }
+        } else {
+            setGhostPos(currentPos);
+        }
+    }, [direction]);
+
+    const handleMouseUp = useCallback((e: MouseEvent) => {
+        if (!isResizing.current) return;
+        isResizing.current = false;
+        document.body.style.cursor = 'default';
+        setGhostPos(null);
+
+        const currentPos = direction === 'horizontal' ? e.clientX : e.clientY;
         const delta = currentPos - initialPos.current;
         const newSize = initialSize.current + delta;
 
         if (direction === 'horizontal') {
-            if (newSize > 200 && newSize < 800) {
+            const remainingWidth = window.innerWidth - newSize - 1;
+            if (newSize > 150 && remainingWidth > 450) {
                 onResize(newSize);
             }
         } else {
             onResize(newSize);
         }
     }, [direction, onResize]);
-
-    const handleMouseUp = useCallback(() => {
-        isResizing.current = false;
-        document.body.style.cursor = 'default';
-    }, []);
 
     useEffect(() => {
         window.addEventListener('mousemove', handleMouseMove);
@@ -78,31 +102,81 @@ const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className })
     }, [handleMouseMove, handleMouseUp]);
 
     return (
-        <div
-            id={id}
-            className={`${className} resizer-${direction}`}
-            onMouseDown={handleMouseDown}
-        />
+        <>
+            <div
+                id={id}
+                className={`${className} resizer-${direction}`}
+                onMouseDown={handleMouseDown}
+            />
+            {ghostPos !== null && (
+                <div
+                    className={clsx("resizer-ghost", `direction-${direction}`)}
+                    style={{
+                        [direction === 'horizontal' ? 'left' : 'top']: ghostPos
+                    } as React.CSSProperties}
+                />
+            )}
+        </>
     );
 };
 
 const App: React.FC = () => {
     const { theme, setTheme } = useTheme();
     const { } = useTranslation();
-    const { addImages } = useIngestionStore();
-    const { ingestionWidth, setIngestionWidth, thumbnailSize, toggleSettings } = useSettingsStore();
+    const addImages = useIngestionStore(s => s.addImages);
+    const ingestionWidth = useSettingsStore(s => s.ingestionWidth);
+    const setIngestionWidth = useSettingsStore(s => s.setIngestionWidth);
+    const thumbnailSize = useSettingsStore(s => s.thumbnailSize);
+    const setActiveManager = useSettingsStore(s => s.setActiveManager);
+    const watchedFolders = useSettingsStore(s => s.watchedFolders);
+    const labels = useSettingsStore(s => s.labels);
+    const isBuilderCollapsed = useSettingsStore(s => s.isBuilderCollapsed);
+    const setBuilderCollapsed = useSettingsStore(s => s.setBuilderCollapsed);
+    const storedWindowWidthCollapsed = useSettingsStore(s => s.storedWindowWidthCollapsed);
+    const storedWindowWidthUncollapsed = useSettingsStore(s => s.storedWindowWidthUncollapsed);
+    const setStoredWindowWidthCollapsed = useSettingsStore(s => s.setStoredWindowWidthCollapsed);
+    const setStoredWindowWidthUncollapsed = useSettingsStore(s => s.setStoredWindowWidthUncollapsed);
 
-    const { activePostId, setSlotImage } = useStoryStore();
+    const activePostId = useStoryStore(s => s.activePostId);
+    const setSlotImage = useStoryStore(s => s.setSlotImage);
+
+    const [activeDragItem, setActiveDragItem] = React.useState<any>(null);
+
+    // Global drag reset failsafe
+    React.useEffect(() => {
+        const handleReset = () => {
+            setActiveDragItem(null);
+        };
+        const handleDragStart = (e: DragEvent) => {
+            // Prevent browser-default drag ghosting
+            e.preventDefault();
+        };
+
+        window.addEventListener('blur', handleReset);
+        window.addEventListener('mouseup', handleReset);
+        window.addEventListener('dragstart', handleDragStart);
+
+        return () => {
+            window.removeEventListener('blur', handleReset);
+            window.removeEventListener('mouseup', handleReset);
+            window.removeEventListener('dragstart', handleDragStart);
+        };
+    }, []);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 8,
+                distance: 15,
             },
         })
     );
 
+    const handleDragStart = (event: any) => {
+        setActiveDragItem(event.active.data.current);
+    };
+
     const handleDragEnd = (event: DragEndEvent) => {
+        setActiveDragItem(null);
         const { active, over } = event;
         if (over && activePostId) {
             const image = active.data.current as any;
@@ -120,60 +194,124 @@ const App: React.FC = () => {
         }
     };
 
+    // Sync initial watched folders and lookback with backend
+    const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
+
+    // Sync settings with backend
+    useEffect(() => {
+        if (window.electron && window.electron.send) {
+            window.electron.send('set-settings', { ingestLookbackDays });
+            window.electron.send('update-watched-folders', watchedFolders.map(f => f.path));
+        }
+    }, [ingestLookbackDays, watchedFolders]);
+
     useEffect(() => {
         if (window.electron && window.electron.on) {
             const cleanup = window.electron.on('file-added', async (data: any) => {
                 const labelIndex = await window.electron.getLabel(data.path);
+                const burstThreshold = useSettingsStore.getState().burstThreshold;
                 addImages([{
                     path: data.path,
                     name: data.name,
                     timestamp: data.timestamp || Date.now(),
                     source: data.source || 'Default',
                     labelIndex: labelIndex || 0
-                }]);
+                }], burstThreshold);
             });
             return () => cleanup();
         }
     }, [addImages]);
 
     useEffect(() => {
+        const handleWindowResize = () => {
+            if (isBuilderCollapsed) {
+                setStoredWindowWidthCollapsed(window.innerWidth);
+            } else {
+                setStoredWindowWidthUncollapsed(window.innerWidth);
+            }
+        };
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, [isBuilderCollapsed, setStoredWindowWidthCollapsed, setStoredWindowWidthUncollapsed]);
+
+    const toggleBuilder = useCallback(() => {
+        const newState = !isBuilderCollapsed;
+
+        // Save current width BEFORE switching
+        if (isBuilderCollapsed) {
+            setStoredWindowWidthCollapsed(window.innerWidth);
+        } else {
+            setStoredWindowWidthUncollapsed(window.innerWidth);
+        }
+
+        if (window.electron && window.electron.setWindowWidth) {
+            if (newState) {
+                // Collapsing: Switch to the stored COLLAPSED width
+                window.electron.setWindowWidth(storedWindowWidthCollapsed);
+            } else {
+                // Expanding: Switch to the stored UNCOLLAPSED width
+                window.electron.setWindowWidth(storedWindowWidthUncollapsed);
+            }
+        }
+
+        setBuilderCollapsed(newState);
+    }, [isBuilderCollapsed, storedWindowWidthCollapsed, storedWindowWidthUncollapsed, setBuilderCollapsed, setStoredWindowWidthCollapsed, setStoredWindowWidthUncollapsed]);
+
+    useEffect(() => {
         if (window.electron && window.electron.send) {
             window.electron.send('renderer-ready', {});
+
+            // On startup, if collapsed, make sure the window is sized correctly
+            if (window.electron && window.electron.setWindowWidth) {
+                if (isBuilderCollapsed) {
+                    window.electron.setWindowWidth(storedWindowWidthCollapsed);
+                } else {
+                    window.electron.setWindowWidth(storedWindowWidthUncollapsed);
+                }
+            }
         }
-    }, []);
+    }, []); // Only on mount
+
+    const dynamicLabelStyles = React.useMemo(() => {
+        return labels.map(l => `
+            .label-${l.index} {
+                --label-color: ${l.color};
+            }
+        `).join('\n');
+    }, [labels]);
 
     return (
-        <div className="layout-root" style={{ '--thumb-size': `${thumbnailSize}px`, '--ingestion-width': `${ingestionWidth}px` } as React.CSSProperties}>
-            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className={clsx("layout-root", isBuilderCollapsed && "builder-collapsed")} style={{ '--thumb-size': `${thumbnailSize}px`, '--ingestion-width': `${ingestionWidth}px` } as React.CSSProperties}>
+            <style>{dynamicLabelStyles}</style>
+            <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="main-layout-wrapper">
                     <main className="main-content">
-                        <section className="ingestion-area-container" style={{ width: ingestionWidth }}>
+                        <section className="ingestion-area-container" style={{ width: isBuilderCollapsed ? '100%' : ingestionWidth }}>
                             <IngestionArea />
                         </section>
 
-                        <Resizer
-                            id="ingestion-resizer"
-                            direction="horizontal"
-                            onResize={setIngestionWidth}
-                            className="layout-resizer"
-                        />
+                        {!isBuilderCollapsed && (
+                            <>
+                                <Resizer
+                                    id="ingestion-resizer"
+                                    direction="horizontal"
+                                    onResize={setIngestionWidth}
+                                    className="layout-resizer"
+                                />
 
-                        <div className="content-grow">
-                            <StoryBuilderArea />
-                        </div>
+                                <div className="content-grow">
+                                    <StoryBuilderArea />
+                                </div>
+                            </>
+                        )}
                     </main>
 
                     <footer className="app-bottom-bar">
                         <div className="bottom-bar-left">
-                            <button className="icon-btn" title="Listening Folders">
+                            <button className="icon-btn" title="Listening Folders" onClick={() => setActiveManager('folders')}>
                                 <MdMenu size={20} />
                             </button>
-                            <button className="icon-btn" title="View">
-                                <MdSearch size={20} />
-                            </button>
-                            <button className="icon-btn" title="Control">
-                                <MdDashboard size={20} />
-                            </button>
+                            <IngestionBurstControl />
                         </div>
 
                         <div className="bottom-bar-center">
@@ -184,19 +322,56 @@ const App: React.FC = () => {
 
                         <div className="bottom-bar-right">
                             <div className="preset-tiny-manager">
-                                <button className="icon-btn" title="Text Preset Manager">
+                                <button className="icon-btn" title="Text Preset Manager" onClick={() => setActiveManager('presets')}>
                                     <MdStyle size={20} />
                                 </button>
                             </div>
-                            <button className="icon-btn" onClick={() => toggleSettings(true)}>
+                            <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>
+                                <MdViewSidebar size={20} />
+                            </button>
+                            <button className="icon-btn" title="Settings" onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
                             </button>
                         </div>
                     </footer>
                 </div>
+
+                <DragOverlay dropAnimation={{
+                    sideEffects: defaultDropAnimationSideEffects({
+                        styles: {
+                            active: {
+                                opacity: '0.5',
+                            },
+                        },
+                    }),
+                }}>
+                    {activeDragItem ? (
+                        <div
+                            className="thumbnail-wrapper dragging-overlay"
+                            style={{
+                                background: 'transparent',
+                                width: thumbnailSize,
+                                height: thumbnailSize
+                            }}
+                        >
+                            <div className="thumbnail-inner">
+                                <div className="thumbnail-card" style={{ background: 'transparent' }}>
+                                    <img
+                                        src={getThumbnailUrl(activeDragItem.path)}
+                                        alt="dragging"
+                                        className="thumbnail-img"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                    <div className="label-glow" style={{ opacity: activeDragItem.labelIndex > 0 ? 0.4 : 0 }}></div>
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
+                </DragOverlay>
             </DndContext>
             <FullScreenPreview />
-            <SettingsOverlay />
+            <ManagerOverlay />
+            <IngestionHoverOverlay />
         </div>
     );
 };

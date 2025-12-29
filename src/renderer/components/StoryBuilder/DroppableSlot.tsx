@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStoryStore } from '../../store/useStoryStore';
-import { type PlatformKey, type ImageSlotData } from '../../types/stories';
+import type { PlatformKey, ImageSlotData } from '../../types/stories';
 import { MdAdd } from 'react-icons/md';
 import clsx from 'clsx';
 import Cropper, { type Point } from 'react-easy-crop';
@@ -13,8 +13,9 @@ export const DroppableSlot: React.FC<{
     slotIndex: number,
     platform: PlatformKey,
     slotData: ImageSlotData,
-    onFocus: (rect: DOMRect) => void
-}> = ({ postId, slotIndex, platform, slotData, onFocus }) => {
+    onFocus: (rect: DOMRect) => void,
+    isFocused?: boolean
+}> = ({ postId, slotIndex, platform, slotData, onFocus, isFocused }) => {
     const { updateSlotCrop, updateSlotDimensions } = useStoryStore();
     const slotRef = React.useRef<HTMLDivElement>(null);
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -35,7 +36,10 @@ export const DroppableSlot: React.FC<{
         if (!node || !slotData.imagePath) return;
 
         const onWheel = (e: WheelEvent) => {
+            if (!isFocused) return;
+
             e.preventDefault();
+            e.stopPropagation();
             const zoomStep = 0.1;
             const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
             const newZoom = Math.max(1, Math.min(10, slotData.crop.scale + delta));
@@ -90,7 +94,7 @@ export const DroppableSlot: React.FC<{
 
         node.addEventListener('wheel', onWheel, { passive: false });
         return () => node.removeEventListener('wheel', onWheel);
-    }, [slotData, postId, platform, slotIndex, updateSlotCrop]);
+    }, [slotData, postId, platform, slotIndex, updateSlotCrop, isFocused]);
 
     const onCropChange = (location: Point) => {
         // location is {x, y} in pixels. Clamp it here too just in case.
@@ -138,30 +142,12 @@ export const DroppableSlot: React.FC<{
         }
     }, [slotData.imagePath]); // Re-check when image changes or on mount
 
-    // Debugging logs for boundary vs image size
-    React.useEffect(() => {
-        const interval = setInterval(() => {
-            const node = slotRef.current;
-            if (!node) return;
-            const img = node.querySelector('.cropper-media-full');
-            if (img) {
-                const slotRect = node.getBoundingClientRect();
-                const imgRect = img.getBoundingClientRect();
-                const style = window.getComputedStyle(img);
-                const transform = style.transform;
-                console.log(`[CROP DEBUG] Slot: ${slotRect.width.toFixed(1)}x${slotRect.height.toFixed(1)} @ [${slotRect.left.toFixed(1)}, ${slotRect.top.toFixed(1)}], Img: ${imgRect.width.toFixed(1)}x${imgRect.height.toFixed(1)} @ [${imgRect.left.toFixed(1)}, ${imgRect.top.toFixed(1)}], Transform: ${transform}`);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
     return (
         <div
             ref={setRefs}
             className={clsx("mockup-slot", isOver && "drag-over")}
             onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
-                console.log(`[CROP DEBUG] Manual Click Rect (Overlay Base):`, rect);
                 onFocus(rect);
             }}
         >
@@ -173,8 +159,8 @@ export const DroppableSlot: React.FC<{
                         zoom={slotData.crop.scale}
                         aspect={slotAspect}
                         objectFit="cover"
-                        onCropChange={onCropChange}
-                        onZoomChange={onZoomChange}
+                        onCropChange={isFocused ? onCropChange : () => { }}
+                        onZoomChange={isFocused ? onZoomChange : () => { }}
                         onMediaLoaded={onMediaLoaded}
                         zoomWithScroll={false}
                         showGrid={false}
@@ -182,6 +168,9 @@ export const DroppableSlot: React.FC<{
                             containerClassName: 'cropper-container',
                             mediaClassName: 'cropper-media-full',
                             cropAreaClassName: 'cropper-crop-area-none', // Hide standard crop area
+                        }}
+                        style={{
+                            containerStyle: { pointerEvents: isFocused ? 'auto' : 'none' } as any
                         }}
                     />
                 </div>

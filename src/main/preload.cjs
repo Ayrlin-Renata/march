@@ -10,4 +10,10 @@ contextBridge.exposeInMainWorld('electron', {
     invoke: (channel, data) => ipcRenderer.invoke(channel, data),
     getLabel: (filePath) => ipcRenderer.invoke('get-label', filePath),
     setLabel: (filePath, labelIndex) => ipcRenderer.send('set-label', { filePath, labelIndex }),
+    selectFolder: () => ipcRenderer.invoke('select-folder'),
+    updateWatchedFolders: (folders) => ipcRenderer.send('update-watched-folders', folders),
+    exportImages: (paths, targetDir) => ipcRenderer.invoke('export-images', { paths, targetDir }),
+    resizeWindow: (deltaX) => ipcRenderer.send('resize-window', deltaX),
+    setWindowWidth: (width) => ipcRenderer.send('set-window-width', width),
+    startDrag: (filePath, iconPath) => ipcRenderer.send('start-drag', { filePath, iconPath }),
 });

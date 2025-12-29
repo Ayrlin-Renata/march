@@ -15,3 +15,13 @@ export const getAssetUrl = (path: string): string => {
 
     return `media://local/${normalized}`;
 };
+
+export const getThumbnailUrl = (path: string, size?: number): string => {
+    if (!path) return '';
+    const normalized = path.replace(/\\/g, '/');
+    const query = size ? `?size=${size}` : '';
+    if (normalized.startsWith('/')) {
+        return `thumb://local${normalized}${query}`;
+    }
+    return `thumb://local/${normalized}${query}`;
+};
