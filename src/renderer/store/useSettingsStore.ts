@@ -40,7 +40,7 @@ interface SettingsState {
     storedWindowWidthCollapsed: number;
     storedWindowWidthUncollapsed: number;
     language: string;
-    baseTheme: 'simple' | 'march';
+    baseTheme: 'simple' | 'march' | 'time';
 
     // Actions
     setScrollSensitivity: (val: number) => void;
@@ -51,7 +51,7 @@ interface SettingsState {
     setThumbnailSize: (size: number) => void;
     setBurstThreshold: (val: number) => void;
     setLanguage: (lang: string) => void;
-    setBaseTheme: (theme: 'simple' | 'march') => void;
+    setBaseTheme: (theme: 'simple' | 'march' | 'time') => void;
 
     setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | null) => void;
     setEnabledPlatformKeys: (keys: PlatformKey[]) => void;

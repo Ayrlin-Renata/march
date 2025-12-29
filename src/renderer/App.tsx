@@ -361,6 +361,17 @@ const App: React.FC = () => {
                                                 </div>
                                                 <span>March</span>
                                             </div>
+                                            <div
+                                                className={clsx("theme-option", baseTheme === 'time' && "selected")}
+                                                onClick={() => { setBaseTheme('time'); setIsThemePopupOpen(false); }}
+                                            >
+                                                <div className="palette time">
+                                                    <span style={{ background: '#0f172a' }}></span>
+                                                    <span style={{ background: '#f0f9ff' }}></span>
+                                                    <span style={{ background: '#d4af37' }}></span>
+                                                </div>
+                                                <span>Time</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

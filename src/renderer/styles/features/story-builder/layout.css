@@ -99,6 +99,10 @@
     color: var(--fg-accent-dark);
 }
 
+[data-base-theme='time'] .builder-header h1 {
+    color: var(--fg-accent);
+}
+
 .builder-main-view .area-body {
     flex: 1;
     display: flex;

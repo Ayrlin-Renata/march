@@ -39,6 +39,10 @@
     color: var(--fg-accent-dark);
 }
 
+[data-base-theme='time'] .icon-btn {
+    color: var(--fg-accent);
+}
+
 .icon-btn:hover {
     background-color: var(--bg-surface-hover);
     color: var(--fg-primary);

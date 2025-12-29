@@ -129,6 +129,11 @@
     opacity: 0.8;
 }
 
+[data-base-theme='time'] .meta-group-label {
+    color: var(--fg-accent);
+    opacity: 0.8;
+}
+
 .chips-row {
     display: flex;
     flex-wrap: wrap;
@@ -154,8 +159,18 @@
     color: var(--fg-accent-dark);
 }
 
+[data-base-theme='time'] .preset-chip {
+    background: var(--bg-primary);
+    border-color: var(--fg-accent);
+    color: var(--fg-accent);
+}
+
 [data-base-theme='march'][data-theme='dark'] .preset-chip {
     background: rgba(240, 98, 146, 0.15);
+}
+
+[data-base-theme='time'][data-theme='dark'] .preset-chip {
+    background: rgba(212, 175, 55, 0.1);
 }
 
 .preset-chip:hover {
@@ -166,6 +181,11 @@
 
 [data-base-theme='march'] .preset-chip:hover {
     border-color: var(--fg-accent);
+}
+
+[data-base-theme='time'] .preset-chip:hover {
+    border-color: var(--fg-accent-dark);
+    background: var(--bg-surface-hover);
 }
 
 .hashtag-chip {
@@ -192,6 +212,11 @@
 [data-base-theme='march'] .hashtag-chip:hover {
     border-color: var(--fg-accent);
     background: rgba(240, 98, 146, 0.1);
+}
+
+[data-base-theme='time'] .hashtag-chip:hover {
+    border-color: var(--fg-accent);
+    background: rgba(212, 175, 55, 0.1);
 }
 
 /* Layout Sidebar Expanded */

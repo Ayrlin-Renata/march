@@ -67,6 +67,10 @@
     color: var(--fg-accent-dark);
 }
 
+[data-base-theme='time'] .sidebar-header h3 {
+    color: var(--fg-accent);
+}
+
 .sidebar-add-btn {
     background: var(--accent-blue);
     color: #fff;
@@ -85,12 +89,20 @@
     background: var(--fg-accent);
 }
 
+[data-base-theme='time'] .sidebar-add-btn {
+    background: var(--fg-accent);
+}
+
 .sidebar-add-btn:hover {
     transform: scale(1.05);
     background: #0088ee;
 }
 
 [data-base-theme='march'] .sidebar-add-btn:hover {
+    background: var(--fg-accent-dark);
+}
+
+[data-base-theme='time'] .sidebar-add-btn:hover {
     background: var(--fg-accent-dark);
 }
 
@@ -123,6 +135,11 @@
 
 [data-base-theme='march'] .post-item.active {
     border-left-color: var(--fg-accent);
+}
+
+[data-base-theme='time'] .post-item.active {
+    border-color: var(--fg-accent);
+    background: var(--bg-surface-active);
 }
 
 .post-name-text {

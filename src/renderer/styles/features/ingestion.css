@@ -121,6 +121,12 @@
     border-color: var(--fg-accent);
 }
 
+[data-base-theme='time'] .filter-pill.active {
+    background: var(--fg-accent);
+    color: var(--bg-primary);
+    border-color: var(--fg-accent);
+}
+
 .count-badge {
     background-color: var(--fg-accent);
     color: #fff;
@@ -421,6 +427,10 @@
 
 [data-base-theme='march'] .icon-btn-text {
     color: var(--fg-accent-dark);
+}
+
+[data-base-theme='time'] .icon-btn-text {
+    color: var(--fg-accent);
 }
 
 .icon-btn-text:hover {

@@ -24,6 +24,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MdDragHandle } from 'react-icons/md';
+import Toggle from '../Common/Toggle';
 
 const FolderManagerPane: React.FC = () => {
     const [newFolderPath, setNewFolderPath] = React.useState('');
@@ -331,12 +332,10 @@ const PlatformManagerPane: React.FC = () => {
                                 <span className="item-title">{p.name}</span>
                                 <span className="item-subtitle" style={{ color: p.color }}>{p.key}</span>
                             </div>
-                            <input
-                                type="checkbox"
-                                className="platform-toggle"
-                                checked={isEnabled}
-                                onChange={(e) => {
-                                    if (e.target.checked) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
+                            <Toggle
+                                enabled={isEnabled}
+                                onChange={(enabled) => {
+                                    if (enabled) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
                                     else setEnabledPlatformKeys(enabledPlatformKeys.filter(k => k !== p.key));
                                 }}
                             />

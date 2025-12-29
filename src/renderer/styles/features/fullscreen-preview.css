@@ -197,6 +197,12 @@
     border-color: var(--fg-accent);
 }
 
+[data-base-theme='time'] .slot-btn.active {
+    background: var(--fg-accent);
+    border-color: var(--fg-accent);
+    color: var(--bg-primary);
+}
+
 .slot-btn.occupied:not(.active) {
     border-color: rgba(255, 255, 255, 0.3);
     color: rgba(255, 255, 255, 0.9);
