@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { setupWatcher, reBroadcastFiles, updateWatchPaths } from './watcher.js';
+import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup } from './watcher.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
 
@@ -66,7 +66,12 @@ function createWindow() {
         reBroadcastFiles(win);
     });
 
+    setLabelLookup((filePath: string) => {
+        return labelStore.get(filePath.replace(/\\/g, '/'), 0);
+    });
+
     ipcMain.handle('get-label', (_event, filePath) => {
+        // Fallback for any legacy code, though we've moved to pre-fetching
         return labelStore.get(filePath.replace(/\\/g, '/'), 0);
     });
 

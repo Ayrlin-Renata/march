@@ -218,22 +218,51 @@ const App: React.FC = () => {
         }
     }, [ingestLookbackDays, watchedFolders]);
 
+    const fileBufferRef = useRef<any[]>([]);
+    const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isFirstBatchRef = useRef(true);
+
     useEffect(() => {
         if (window.electron && window.electron.on) {
-            const cleanup = window.electron.on('file-added', async (data: any) => {
-                const labelIndex = await window.electron.getLabel(data.path);
-                const burstThreshold = useSettingsStore.getState().burstThreshold;
-                addImages([{
+            const cleanup = window.electron.on('file-added', (data: any) => {
+                // Add to buffer
+                fileBufferRef.current.push({
                     path: data.path,
                     name: data.name,
                     timestamp: data.timestamp || Date.now(),
                     source: data.source || 'Default',
-                    labelIndex: labelIndex || 0,
+                    labelIndex: data.labelIndex || 0,
                     width: data.width,
                     height: data.height
-                }], burstThreshold);
+                });
+
+                const flush = () => {
+                    if (fileBufferRef.current.length === 0) return;
+                    const burstThreshold = useSettingsStore.getState().burstThreshold;
+                    addImages([...fileBufferRef.current], burstThreshold);
+                    fileBufferRef.current = [];
+                    if (batchTimerRef.current) {
+                        clearTimeout(batchTimerRef.current);
+                        batchTimerRef.current = null;
+                    }
+                };
+
+                // Fast-track the very first batch of the session to get pixels on screen immediately
+                if (isFirstBatchRef.current) {
+                    isFirstBatchRef.current = false;
+                    flush();
+                    return;
+                }
+
+                // Subsequent files are batched to prevent UI stutter
+                if (!batchTimerRef.current) {
+                    batchTimerRef.current = setTimeout(flush, 50);
+                }
             });
-            return () => cleanup();
+            return () => {
+                cleanup();
+                if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+            };
         }
     }, [addImages]);
 

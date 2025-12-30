@@ -6,6 +6,11 @@ import fs from 'fs';
 const discoveredFiles = new Map<string, any>();
 let activeWatcher: chokidar.FSWatcher | null = null;
 let currentLookbackDays = 3;
+let getLabelFn: (path: string) => number = () => 0;
+
+export function setLabelLookup(fn: (path: string) => number) {
+    getLabelFn = fn;
+}
 
 export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lookbackDays: number = 3) {
     discoveredFiles.clear();
@@ -56,7 +61,8 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                     timestamp,
                     source: path.basename(path.dirname(filePath)),
                     width: size.width,
-                    height: size.height
+                    height: size.height,
+                    labelIndex: getLabelFn(filePath)
                 };
 
                 discoveredFiles.set(filePath, fileData);
@@ -82,13 +88,42 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
         // Sort buffer: Newest First
         initialBuffer.sort((a, b) => b.timestamp - a.timestamp);
 
-        console.log(`Initial scan complete. Sending ${initialBuffer.length} files (Newest First).`);
+        console.log(`Initial scan complete. Found ${initialBuffer.length} files. Starting discovery waves...`);
 
-        // Send in batches to avoid freezing IPC
-        const BATCH_SIZE = 50;
-        for (let i = 0; i < initialBuffer.length; i += BATCH_SIZE) {
-            const batch = initialBuffer.slice(i, i + BATCH_SIZE);
-            batch.forEach(f => mainWindow.webContents.send('file-added', f));
+        // WAVE 0: Instant burst (newest 20 files) - get pixels on screen NOW
+        const WAVE_0_SIZE = 20;
+        const wave0 = initialBuffer.slice(0, WAVE_0_SIZE);
+        wave0.forEach(f => mainWindow.webContents.send('file-added', f));
+
+        // WAVE 1: Main burst (next 130 files) - populate the rest of the visible area
+        const WAVE_1_SIZE = 150;
+        if (initialBuffer.length > WAVE_0_SIZE) {
+            setTimeout(() => {
+                const wave1 = initialBuffer.slice(WAVE_0_SIZE, WAVE_1_SIZE);
+                wave1.forEach(f => mainWindow.webContents.send('file-added', f));
+            }, 60); // Small gap after wave 0
+        }
+
+        // WAVE 2+: Stagger the remaining files
+        if (initialBuffer.length > WAVE_1_SIZE) {
+            const BATCH_SIZE = 100;
+            const STAGGER_MS = 150;
+            let currentOffset = WAVE_1_SIZE;
+
+            const sendNextBatch = () => {
+                const batch = initialBuffer.slice(currentOffset, currentOffset + BATCH_SIZE);
+                if (batch.length === 0) return;
+
+                batch.forEach(f => mainWindow.webContents.send('file-added', f));
+                currentOffset += BATCH_SIZE;
+
+                if (currentOffset < initialBuffer.length) {
+                    setTimeout(sendNextBatch, STAGGER_MS);
+                }
+            };
+
+            // Start staggered wave after a focus period for waves 0-1
+            setTimeout(sendNextBatch, 800);
         }
     });
 

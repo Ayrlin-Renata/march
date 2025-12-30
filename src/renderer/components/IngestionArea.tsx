@@ -573,7 +573,11 @@ const IngestionArea: React.FC = React.memo(() => {
                 }}
             >
                 {bursts.length === 0 ? (
-                    <p className="placeholder-text">{t('no_images')}</p>
+                    <div className="ingestion-empty-state">
+                        <MdImage size={128} className="empty-icon" />
+                        <p>{t('no_images')}</p>
+                        <span className="empty-hint">Add watched folders from below</span>
+                    </div>
                 ) : (
                     <div
                         className="burst-container"
