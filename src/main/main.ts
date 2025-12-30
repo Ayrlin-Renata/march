@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -142,6 +142,75 @@ function createWindow() {
         });
     });
 
+    ipcMain.on('start-drag-cropped', async (event, { filePath, rect }) => {
+        try {
+            console.log(`[Main] start-drag-cropped for ${filePath}`, rect);
+            const img = nativeImage.createFromPath(filePath);
+            if (img.isEmpty()) {
+                console.error('[Main] Image is empty, drag failed');
+                return;
+            }
+
+            const imgSize = img.getSize();
+            console.log(`[Main/Drag] Path: ${filePath}`);
+            console.log(`[Main/Drag] rect: ${JSON.stringify(rect)}`);
+            console.log(`[Main/Drag] Image size: ${imgSize.width}x${imgSize.height}`);
+
+            const cropped = img.crop({
+                x: Math.max(0, Math.round(rect.x)),
+                y: Math.max(0, Math.round(rect.y)),
+                width: Math.min(imgSize.width, Math.round(rect.width)),
+                height: Math.min(imgSize.height, Math.round(rect.height))
+            });
+
+            // Generate a temp file
+            const tempDir = path.join(app.getPath('userData'), 'temp_crops');
+            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+            const fileName = `crop_${crypto.randomBytes(4).toString('hex')}.png`;
+            const tempPath = path.join(tempDir, fileName);
+
+            await fs.promises.writeFile(tempPath, cropped.toPNG());
+
+            const icon = cropped.resize({ width: 100, height: 100, quality: 'better' });
+
+            event.sender.startDrag({
+                file: tempPath,
+                icon: icon,
+            });
+        } catch (err) {
+            console.error('Cropped drag failed:', err);
+        }
+    });
+
+    ipcMain.handle('copy-image', async (_event, { filePath, rect }) => {
+        try {
+            console.log(`[Main] copy-image for ${filePath}`, rect);
+            const img = nativeImage.createFromPath(filePath);
+            if (img.isEmpty()) return false;
+
+            let finalImg = img;
+            if (rect) {
+                const imgSize = img.getSize();
+                console.log(`[Main/Copy] rect: ${JSON.stringify(rect)}`);
+                console.log(`[Main/Copy] Image size: ${imgSize.width}x${imgSize.height}`);
+                finalImg = img.crop({
+                    x: Math.max(0, Math.round(rect.x)),
+                    y: Math.max(0, Math.round(rect.y)),
+                    width: Math.min(imgSize.width, Math.round(rect.width)),
+                    height: Math.min(imgSize.height, Math.round(rect.height))
+                });
+            }
+
+            clipboard.writeImage(finalImg);
+            console.log('[Main] Image copied to clipboard');
+            return true;
+        } catch (err) {
+            console.error('[Main] Copy image failed:', err);
+            return false;
+        }
+    });
+
     if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
         win.loadURL('http://localhost:5173');
         win.webContents.openDevTools();
@@ -184,6 +253,7 @@ app.whenReady().then(() => {
             let filePath = decodeURIComponent(url.pathname);
             const sizeParam = url.searchParams.get('size');
             const targetWidth = sizeParam ? parseInt(sizeParam, 10) : 250;
+            const cropParam = url.searchParams.get('crop'); // format: x,y,w,h
 
             if (url.hostname && url.hostname !== 'local') {
                 filePath = url.hostname + ":" + filePath;
@@ -196,7 +266,7 @@ app.whenReady().then(() => {
             // Check Cache
             const stats = await fs.promises.stat(filePath);
             const cacheKey = crypto.createHash('md5')
-                .update(`${filePath}-${stats.mtimeMs}-${targetWidth}`)
+                .update(`${filePath}-${stats.mtimeMs}-${targetWidth}-${cropParam || 'no-crop'}`)
                 .digest('hex');
             const cachePath = path.join(cacheDir, `${cacheKey}.jpg`);
 
@@ -208,7 +278,19 @@ app.whenReady().then(() => {
             } catch {
                 // Not in cache, generate it
                 const { nativeImage } = await import('electron');
-                const img = nativeImage.createFromPath(filePath);
+                let img = nativeImage.createFromPath(filePath);
+
+                if (cropParam) {
+                    const [cx, cy, cw, ch] = cropParam.split(',').map(v => Math.round(parseFloat(v)));
+                    const imgSize = img.getSize();
+                    console.log(`[Main/Thumb] Crop Request: ${cropParam}, ImgSize: ${imgSize.width}x${imgSize.height}`);
+                    img = img.crop({
+                        x: Math.max(0, cx),
+                        y: Math.max(0, cy),
+                        width: Math.min(imgSize.width - cx, cw),
+                        height: Math.min(imgSize.height - cy, ch)
+                    });
+                }
 
                 // Resize based on provided size or default to 250
                 const thumb = img.resize({ width: targetWidth, quality: 'better' });

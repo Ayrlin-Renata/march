@@ -104,7 +104,10 @@ const StoryBuilderArea: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-actions">
-                    <button className="placeholder-post-btn">
+                    <button className="placeholder-post-btn" onClick={() => {
+                        useStoryStore.getState().finalizeCrops(activePostId);
+                        useStoryStore.getState().setPostMode(true);
+                    }}>
                         Post Story
                     </button>
                 </div>

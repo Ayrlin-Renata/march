@@ -13,6 +13,18 @@ export interface SlotCrop {
         bottom: number;
         left: number;
     };
+    pixelCrop?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    percentCrop?: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
 }
 
 export interface ImageSlotData {
@@ -43,10 +55,10 @@ export const PLATFORMS: { key: PlatformKey; name: string; color: string; bgColor
     { key: 'bsky', name: 'BlueSky', color: '#0085FF', bgColor: '#000814', textColor: '#ffffff' }
 ];
 
-export const LAYOUTS: { key: LayoutKey; slots: number; label: string }[] = [
-    { key: '1-single', slots: 1, label: 'Single (16:9)' },
-    { key: '1-square', slots: 1, label: 'Square (1:1)' },
-    { key: '2-vertical', slots: 2, label: '2 Images (7:8)' },
-    { key: '3-large-left', slots: 3, label: '3 (Main Left)' },
-    { key: '4-grid', slots: 4, label: '4 Grid (2:1)' },
+export const LAYOUTS: { key: LayoutKey; slots: number; label: string; slotAspects: number[] }[] = [
+    { key: '1-single', slots: 1, label: 'Single (16:9)', slotAspects: [16 / 9] },
+    { key: '1-square', slots: 1, label: 'Square (1:1)', slotAspects: [1] },
+    { key: '2-vertical', slots: 2, label: '2 Images (7:8)', slotAspects: [7 / 8, 7 / 8] },
+    { key: '3-large-left', slots: 3, label: '3 (Main Left)', slotAspects: [0.75, 1.5, 1.5] },
+    { key: '4-grid', slots: 4, label: '4 Grid (2:1)', slotAspects: [1.5, 1.5, 1.5, 1.5] },
 ];

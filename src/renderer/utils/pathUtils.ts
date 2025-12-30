@@ -16,10 +16,15 @@ export const getAssetUrl = (path: string): string => {
     return `media://local/${normalized}`;
 };
 
-export const getThumbnailUrl = (path: string, size?: number): string => {
+export const getThumbnailUrl = (path: string, size?: number, crop?: { x: number; y: number; width: number; height: number }): string => {
     if (!path) return '';
     const normalized = path.replace(/\\/g, '/');
-    const query = size ? `?size=${size}` : '';
+    const params = new URLSearchParams();
+    if (size) params.set('size', size.toString());
+    if (crop) params.set('crop', `${crop.x},${crop.y},${crop.width},${crop.height}`);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+
     if (normalized.startsWith('/')) {
         return `thumb://local${normalized}${query}`;
     }

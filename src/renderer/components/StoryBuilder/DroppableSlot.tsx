@@ -3,7 +3,7 @@ import { useStoryStore } from '../../store/useStoryStore';
 import type { PlatformKey, ImageSlotData } from '../../types/stories';
 import { MdAdd } from 'react-icons/md';
 import clsx from 'clsx';
-import Cropper, { type Point } from 'react-easy-crop';
+import Cropper from 'react-easy-crop';
 import { useDroppable } from '@dnd-kit/core';
 import { getAssetUrl } from '../../utils/pathUtils';
 
@@ -31,94 +31,6 @@ export const DroppableSlot: React.FC<{
         (slotRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
     }, [setDroppableRef]);
 
-    React.useEffect(() => {
-        const node = slotRef.current;
-        if (!node || !slotData.imagePath) return;
-
-        const onWheel = (e: WheelEvent) => {
-            if (!isFocused) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            const zoomStep = 0.1;
-            const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
-            const newZoom = Math.max(1, Math.min(10, slotData.crop.scale + delta));
-
-            if (newZoom === slotData.crop.scale) return;
-
-            const rect = node.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            // Anchor point relative to slot center in PIXELS
-            const centerX = mouseX - rect.width / 2;
-            const centerY = mouseY - rect.height / 2;
-
-            const zoomRatio = newZoom / slotData.crop.scale;
-            // Shift x/y by how much the anchor point would move due to zoom
-            let newX = slotData.crop.x - (centerX * (zoomRatio - 1));
-            let newY = slotData.crop.y - (centerY * (zoomRatio - 1));
-
-            // Clamp position to ensure image covers the slot
-            if (slotData.originalWidth && slotData.originalHeight) {
-                const imgAspect = slotData.originalWidth / slotData.originalHeight;
-                const slotAspect = rect.width / rect.height;
-                let baseW, baseH;
-
-                if (imgAspect > slotAspect) {
-                    baseH = rect.height;
-                    baseW = baseH * imgAspect;
-                } else {
-                    baseW = rect.width;
-                    baseH = baseW / imgAspect;
-                }
-
-                const visualW = baseW * newZoom;
-                const visualH = baseH * newZoom;
-
-                // Max offset allowed to keep coverage
-                const maxOffsetX = Math.max(0, (visualW - rect.width) / 2);
-                const maxOffsetY = Math.max(0, (visualH - rect.height) / 2);
-
-                newX = Math.max(-maxOffsetX, Math.min(maxOffsetX, newX));
-                newY = Math.max(-maxOffsetY, Math.min(maxOffsetY, newY));
-            }
-
-            updateSlotCrop(postId, platform, slotIndex, {
-                ...slotData.crop,
-                scale: newZoom,
-                x: newX,
-                y: newY
-            });
-        };
-
-        node.addEventListener('wheel', onWheel, { passive: false });
-        return () => node.removeEventListener('wheel', onWheel);
-    }, [slotData, postId, platform, slotIndex, updateSlotCrop, isFocused]);
-
-    const onCropChange = (location: Point) => {
-        // location is {x, y} in pixels. Clamp it here too just in case.
-        if (slotRef.current && slotData.originalWidth && slotData.originalHeight) {
-            const rect = slotRef.current.getBoundingClientRect();
-            const imgAspect = slotData.originalWidth / slotData.originalHeight;
-            const slotAspect = rect.width / rect.height;
-            let baseW, baseH;
-            if (imgAspect > slotAspect) { baseH = rect.height; baseW = baseH * imgAspect; }
-            else { baseW = rect.width; baseH = baseW / imgAspect; }
-            const visualW = baseW * slotData.crop.scale;
-            const visualH = baseH * slotData.crop.scale;
-            const maxOffsetX = Math.max(0, (visualW - rect.width) / 2);
-            const maxOffsetY = Math.max(0, (visualH - rect.height) / 2);
-
-            const clampedX = Math.max(-maxOffsetX, Math.min(maxOffsetX, location.x));
-            const clampedY = Math.max(-maxOffsetY, Math.min(maxOffsetY, location.y));
-
-            updateSlotCrop(postId, platform, slotIndex, { ...slotData.crop, x: clampedX, y: clampedY });
-        } else {
-            updateSlotCrop(postId, platform, slotIndex, { ...slotData.crop, x: location.x, y: location.y });
-        }
-    };
-
     const onZoomChange = (zoom: number) => {
         updateSlotCrop(postId, platform, slotIndex, { ...slotData.crop, scale: zoom });
     };
@@ -131,16 +43,42 @@ export const DroppableSlot: React.FC<{
     };
 
 
-    // Calculate slot aspect ratio for the Cropper
+    // Calculate slot aspect ratio / size for responsiveness
+    const [slotSize, setSlotSize] = React.useState({ width: 0, height: 0 });
     const [slotAspect, setSlotAspect] = React.useState(1);
+
     React.useEffect(() => {
-        if (slotRef.current) {
-            const rect = slotRef.current.getBoundingClientRect();
-            if (rect.width && rect.height) {
-                setSlotAspect(rect.width / rect.height);
+        if (!slotRef.current) return;
+        const observer = new ResizeObserver((entries) => {
+            const entry = entries[0];
+            if (entry) {
+                const { width, height } = entry.contentRect;
+                if (width && height) {
+                    setSlotSize({ width, height });
+                    setSlotAspect(width / height);
+                }
             }
+        });
+        observer.observe(slotRef.current);
+
+        // Initial measurement
+        const rect = slotRef.current.getBoundingClientRect();
+        if (rect.width && rect.height) {
+            setSlotSize({ width: rect.width, height: rect.height });
+            setSlotAspect(rect.width / rect.height);
         }
-    }, [slotData.imagePath]); // Re-check when image changes or on mount
+
+        return () => observer.disconnect();
+    }, [slotData.imagePath]); // Re-check when image changes
+
+    // Sync UI crop from store percentCrop on resize or mount
+    React.useLayoutEffect(() => {
+        if (!slotRef.current || !slotData.crop.percentCrop || !slotData.originalWidth || !slotData.originalHeight) return;
+
+        // This effect ensures that whenever the layout or slot size changes,
+        // the Cropper remains stable by using the normalized percentages from the store.
+        // The Cropper itself is controlled via percentages converted to the current pixel size of the slot.
+    }, [slotAspect]);
 
     return (
         <div
@@ -155,14 +93,41 @@ export const DroppableSlot: React.FC<{
                 <div className="crop-container">
                     <Cropper
                         image={getAssetUrl(slotData.imagePath)}
-                        crop={{ x: slotData.crop.x, y: slotData.crop.y }}
+                        crop={{
+                            x: slotSize.width ? (slotData.crop.x / 100) * slotSize.width : 0,
+                            y: slotSize.height ? (slotData.crop.y / 100) * slotSize.height : 0
+                        }}
                         zoom={slotData.crop.scale}
                         aspect={slotAspect}
                         objectFit="cover"
-                        onCropChange={isFocused ? onCropChange : () => { }}
+                        onCropChange={(location) => {
+                            if (!isFocused || !slotSize.width || !slotSize.height) return;
+                            // Store as percentage of current visual container
+                            updateSlotCrop(postId, platform, slotIndex, {
+                                ...slotData.crop,
+                                x: (location.x / slotSize.width) * 100,
+                                y: (location.y / slotSize.height) * 100
+                            });
+                        }}
                         onZoomChange={isFocused ? onZoomChange : () => { }}
+                        onCropComplete={(percent, pixels) => {
+                            // Always update pixelCrop and percentCrop so PostView has it, but only if it's different
+                            // to avoid unnecessary store updates.
+                            if (!slotData.crop.pixelCrop ||
+                                slotData.crop.pixelCrop.x !== pixels.x ||
+                                slotData.crop.pixelCrop.y !== pixels.y ||
+                                slotData.crop.pixelCrop.width !== pixels.width ||
+                                slotData.crop.pixelCrop.height !== pixels.height) {
+
+                                updateSlotCrop(postId, platform, slotIndex, {
+                                    ...slotData.crop,
+                                    pixelCrop: pixels,
+                                    percentCrop: percent
+                                });
+                            }
+                        }}
                         onMediaLoaded={onMediaLoaded}
-                        zoomWithScroll={false}
+                        zoomWithScroll={true}
                         showGrid={false}
                         classes={{
                             containerClassName: 'cropper-container',

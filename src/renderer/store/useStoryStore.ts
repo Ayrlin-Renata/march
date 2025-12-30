@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { type StoryPost, type PlatformKey, type LayoutKey, PLATFORMS, type PlatformConfig, type SlotCrop } from '../types/stories';
+import { type StoryPost, type PlatformKey, type LayoutKey, PLATFORMS, LAYOUTS, type PlatformConfig, type SlotCrop } from '../types/stories';
+import { calculatePixelCrop } from '../utils/cropUtils';
 
 interface StoryState {
     posts: StoryPost[];
@@ -21,6 +22,10 @@ interface StoryState {
     updatePlatformText: (postId: string, platform: PlatformKey, text: string) => void;
     duplicatePlatformConfig: (postId: string, from: PlatformKey, to: PlatformKey) => void;
     copyToAll: (postId: string, from: PlatformKey) => void;
+
+    isPostMode: boolean;
+    setPostMode: (enabled: boolean) => void;
+    finalizeCrops: (postId: string) => void;
 }
 
 const createDefaultPlatformConfig = (): PlatformConfig => ({
@@ -39,6 +44,9 @@ export const useStoryStore = create<StoryState>()(
         (set, get) => ({
             posts: [],
             activePostId: null,
+            isPostMode: false,
+
+            setPostMode: (enabled) => set({ isPostMode: enabled }),
 
             addPost: (name) => {
                 const id = Math.random().toString(36).substring(7);
@@ -75,8 +83,6 @@ export const useStoryStore = create<StoryState>()(
                     if (p.id !== postId) return p;
                     // Inherit from the currently active platform configuration
                     const currentActive = p.platforms[p.activePlatform];
-                    // If platform is already enabled, we are essentially "cloning" the active state to it
-                    // because the UI will call this on the '+' button even if enabled
                     return {
                         ...p,
                         platforms: {
@@ -102,7 +108,14 @@ export const useStoryStore = create<StoryState>()(
                         ...p,
                         platforms: {
                             ...p.platforms,
-                            [platform]: { ...p.platforms[platform], layout }
+                            [platform]: {
+                                ...p.platforms[platform],
+                                layout,
+                                slots: p.platforms[platform].slots.map(s => ({
+                                    ...s,
+                                    crop: { ...s.crop, pixelCrop: undefined }
+                                }))
+                            }
                         }
                     };
                 }),
@@ -111,7 +124,6 @@ export const useStoryStore = create<StoryState>()(
             setSlotImage: (postId, platform, slotIndex, image) => set((state) => ({
                 posts: state.posts.map((p) => {
                     if (p.id !== postId) return p;
-                    // Calculate initial "fit" - Center Cover
                     let initialScale = 1;
                     const imgAspect = (image.width && image.height) ? image.width / image.height : 1;
 
@@ -209,9 +221,68 @@ export const useStoryStore = create<StoryState>()(
                     return { ...p, platforms: newPlatforms };
                 }),
             })),
+
+            finalizeCrops: (postId) => set((state) => ({
+                posts: state.posts.map((p) => {
+                    if (p.id !== postId) return p;
+                    const newPlatforms = { ...p.platforms };
+
+                    PLATFORMS.forEach(p => {
+                        const platformKey = p.key;
+                        const config = newPlatforms[platformKey];
+                        if (!config.enabled) return;
+
+                        const layoutInfo = LAYOUTS.find(l => l.key === config.layout);
+                        if (!layoutInfo) return;
+
+                        config.slots = config.slots.map((slot, idx) => {
+                            if (!slot.imageId || !slot.imagePath) return slot;
+
+                            // If layout changed, we cleared pixelCrop, so we recalculate.
+                            if (slot.crop.pixelCrop) return slot;
+
+                            let pixelCrop;
+                            if (slot.crop.percentCrop && slot.originalWidth && slot.originalHeight) {
+                                const { x, y, width: w, height: h } = slot.crop.percentCrop;
+                                pixelCrop = {
+                                    x: Math.round((x / 100) * slot.originalWidth),
+                                    y: Math.round((y / 100) * slot.originalHeight),
+                                    width: Math.round((w / 100) * slot.originalWidth),
+                                    height: Math.round((h / 100) * slot.originalHeight)
+                                };
+                            } else if (slot.originalWidth && slot.originalHeight) {
+                                const targetAspect = layoutInfo.slotAspects[idx] || 1;
+                                pixelCrop = calculatePixelCrop(
+                                    slot.originalWidth,
+                                    slot.originalHeight,
+                                    1000,
+                                    1000 / targetAspect,
+                                    slot.crop
+                                );
+                            } else {
+                                return slot;
+                            }
+
+                            return {
+                                ...slot,
+                                crop: {
+                                    ...slot.crop,
+                                    pixelCrop
+                                }
+                            };
+                        });
+                    });
+
+                    return { ...p, platforms: newPlatforms };
+                })
+            })),
         }),
         {
             name: 'march-stories',
+            partialize: (state) => ({
+                posts: state.posts,
+                activePostId: state.activePostId,
+            }),
         }
     )
 );

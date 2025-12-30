@@ -14,6 +14,7 @@ import { useSettingsStore } from './store/useSettingsStore';
 import { useStoryStore } from './store/useStoryStore';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { MdViewSidebar } from 'react-icons/md';
+import PostView from './components/PostView';
 
 // Styles
 import './styles/base/variables.css';
@@ -28,6 +29,7 @@ import './styles/features/story-builder/canvas.css';
 import './styles/features/story-builder/sidebar.css';
 import './styles/features/story-builder/components.css';
 import './styles/features/story-builder/crop-overlay.css';
+import './styles/features/post-view.css';
 import './styles/components/themes.css';
 
 interface ResizerProps {
@@ -142,6 +144,7 @@ const App: React.FC = () => {
 
     const [isThemePopupOpen, setIsThemePopupOpen] = React.useState(false);
 
+    const isPostMode = useStoryStore(s => s.isPostMode);
     const activePostId = useStoryStore(s => s.activePostId);
     const setSlotImage = useStoryStore(s => s.setSlotImage);
 
@@ -225,7 +228,9 @@ const App: React.FC = () => {
                     name: data.name,
                     timestamp: data.timestamp || Date.now(),
                     source: data.source || 'Default',
-                    labelIndex: labelIndex || 0
+                    labelIndex: labelIndex || 0,
+                    width: data.width,
+                    height: data.height
                 }], burstThreshold);
             });
             return () => cleanup();
@@ -234,7 +239,9 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const handleWindowResize = () => {
-            if (isBuilderCollapsed) {
+            // If we are in Post Mode, resizing the window should update the COLLAPSED width
+            // because Post Mode uses the narrow view.
+            if (isPostMode || isBuilderCollapsed) {
                 setStoredWindowWidthCollapsed(window.innerWidth);
             } else {
                 setStoredWindowWidthUncollapsed(window.innerWidth);
@@ -242,7 +249,7 @@ const App: React.FC = () => {
         };
         window.addEventListener('resize', handleWindowResize);
         return () => window.removeEventListener('resize', handleWindowResize);
-    }, [isBuilderCollapsed, setStoredWindowWidthCollapsed, setStoredWindowWidthUncollapsed]);
+    }, [isPostMode, isBuilderCollapsed, setStoredWindowWidthCollapsed, setStoredWindowWidthUncollapsed]);
 
     const toggleBuilder = useCallback(() => {
         const newState = !isBuilderCollapsed;
@@ -281,6 +288,26 @@ const App: React.FC = () => {
             }
         }
     }, []); // Only on mount
+
+    // Handle Post Mode window size transition
+    useEffect(() => {
+        if (!window.electron || !window.electron.setWindowWidth) return;
+
+        if (isPostMode) {
+            // Save current width if uncollapsed before shrinking
+            if (!isBuilderCollapsed) {
+                setStoredWindowWidthUncollapsed(window.innerWidth);
+            }
+            window.electron.setWindowWidth(storedWindowWidthCollapsed + 150);
+        } else {
+            // Restore appropriate width when exiting post mode
+            if (isBuilderCollapsed) {
+                window.electron.setWindowWidth(storedWindowWidthCollapsed);
+            } else {
+                window.electron.setWindowWidth(storedWindowWidthUncollapsed);
+            }
+        }
+    }, [isPostMode]); // ONLY on mode change
 
     const dynamicLabelStyles = React.useMemo(() => {
         return labels.map(l => `
@@ -430,6 +457,7 @@ const App: React.FC = () => {
             <FullScreenPreview />
             <ManagerOverlay />
             <IngestionHoverOverlay />
+            {isPostMode && <PostView />}
         </div>
     );
 };

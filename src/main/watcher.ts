@@ -1,5 +1,5 @@
 import * as chokidar from 'chokidar';
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, nativeImage } from 'electron';
 import path from 'path';
 import fs from 'fs';
 
@@ -47,11 +47,16 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
             );
 
             if (timestamp >= lookbackThreshold) {
-                const fileData = {
+                const img = nativeImage.createFromPath(filePath);
+                const size = img.getSize();
+
+                const fileData: any = {
                     path: filePath,
                     name: path.basename(filePath),
                     timestamp,
                     source: path.basename(path.dirname(filePath)),
+                    width: size.width,
+                    height: size.height
                 };
 
                 discoveredFiles.set(filePath, fileData);

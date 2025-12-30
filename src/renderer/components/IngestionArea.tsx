@@ -318,12 +318,6 @@ const ImageThumbnail: React.FC<{
                         src={getThumbnailUrl(img.path)}
                         alt={img.name}
                         className="thumbnail-img"
-                        onLoad={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            if (!img.width || !img.height) {
-                                useIngestionStore.getState().updateImageDimensions(img.id, target.naturalWidth, target.naturalHeight);
-                            }
-                        }}
                     />
                     <div className="label-glow"></div>
                     <div className="label-bar"></div>

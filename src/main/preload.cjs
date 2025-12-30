@@ -16,4 +16,6 @@ contextBridge.exposeInMainWorld('electron', {
     resizeWindow: (deltaX) => ipcRenderer.send('resize-window', deltaX),
     setWindowWidth: (width) => ipcRenderer.send('set-window-width', width),
     startDrag: (filePath, iconPath) => ipcRenderer.send('start-drag', { filePath, iconPath }),
+    startDragCropped: (filePath, rect) => ipcRenderer.send('start-drag-cropped', { filePath, rect }),
+    copyImage: (filePath, rect) => ipcRenderer.invoke('copy-image', { filePath, rect }),
 });
