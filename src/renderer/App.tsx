@@ -124,6 +124,7 @@ const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className })
 };
 
 const App: React.FC = () => {
+    const { t } = useTranslation();
     const { theme, setTheme } = useTheme();
     const { } = useTranslation();
     const addImages = useIngestionStore(s => s.addImages);
@@ -143,6 +144,16 @@ const App: React.FC = () => {
     const setBaseTheme = useSettingsStore(s => s.setBaseTheme);
 
     const [isThemePopupOpen, setIsThemePopupOpen] = React.useState(false);
+
+    const { i18n } = useTranslation();
+    const language = useSettingsStore(s => s.language);
+
+    // Sync persisted language on mount
+    React.useEffect(() => {
+        if (language && i18n.language !== language) {
+            i18n.changeLanguage(language);
+        }
+    }, [language, i18n]);
 
     const isPostMode = useStoryStore(s => s.isPostMode);
     const activePostId = useStoryStore(s => s.activePostId);
@@ -374,7 +385,7 @@ const App: React.FC = () => {
 
                     <footer className="app-bottom-bar">
                         <div className="bottom-bar-left">
-                            <button className="icon-btn" title="Listening Folders" onClick={() => setActiveManager('folders')}>
+                            <button className="icon-btn" title={t('listening_folders_tooltip')} onClick={() => setActiveManager('folders')}>
                                 <MdFolderOpen size={20} />
                             </button>
                             <IngestionBurstControl />
@@ -389,7 +400,7 @@ const App: React.FC = () => {
                                     <button
                                         className={clsx("icon-btn", isThemePopupOpen && "active")}
                                         onClick={() => setIsThemePopupOpen(!isThemePopupOpen)}
-                                        title="Select Base Theme"
+                                        title={t('theme_select_tooltip')}
                                     >
                                         <MdStyle size={20} />
                                     </button>
@@ -404,7 +415,7 @@ const App: React.FC = () => {
                                                     <span style={{ background: '#f8f9fa' }}></span>
                                                     <span style={{ background: '#1d9bf0' }}></span>
                                                 </div>
-                                                <span>Simple</span>
+                                                <span>{t('theme_simple')}</span>
                                             </div>
                                             <div
                                                 className={clsx("theme-option", baseTheme === 'march' && "selected")}
@@ -415,7 +426,7 @@ const App: React.FC = () => {
                                                     <span style={{ background: '#fff5f8' }}></span>
                                                     <span style={{ background: '#a7d5f3ff' }}></span>
                                                 </div>
-                                                <span>March</span>
+                                                <span>{t('theme_march')}</span>
                                             </div>
                                             <div
                                                 className={clsx("theme-option", baseTheme === 'time' && "selected")}
@@ -426,7 +437,7 @@ const App: React.FC = () => {
                                                     <span style={{ background: '#f0f9ff' }}></span>
                                                     <span style={{ background: '#d4af37' }}></span>
                                                 </div>
-                                                <span>Time</span>
+                                                <span>{t('theme_time')}</span>
                                             </div>
                                         </div>
                                     )}
@@ -436,11 +447,11 @@ const App: React.FC = () => {
 
                         <div className="bottom-bar-right">
                             <div className="preset-tiny-manager">
-                                <button className="icon-btn" title="Text Preset Manager" onClick={() => setActiveManager('presets')}>
+                                <button className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
                                     <MdSpeakerNotes size={20} />
                                 </button>
                             </div>
-                            <button className="icon-btn" title="Settings" onClick={() => setActiveManager('settings_general')}>
+                            <button className="icon-btn" title={t('settings')} onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
                             </button>
                             <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>

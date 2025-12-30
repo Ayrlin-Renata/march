@@ -75,11 +75,11 @@ const StoryBuilderArea: React.FC = () => {
             <section className="story-builder-area empty">
                 <div className="empty-state">
                     <MdDashboard size={48} className="empty-icon" />
-                    <h3>No Stories Yet</h3>
-                    <p>Start by creating your first story to organize your images.</p>
-                    <button className="new-story-btn-large" onClick={() => addPost()}>
+                    <h3>{t('no_posts_title')}</h3>
+                    <p>{t('create_your_first')}</p>
+                    <button className="new-story-btn-large" onClick={() => addPost(t('story') + ' ' + (posts.length + 1))}>
                         <MdAdd size={24} />
-                        Create New Story
+                        {t('create_new_story')}
                     </button>
                 </div>
             </section>
@@ -146,7 +146,7 @@ const StoryBuilderArea: React.FC = () => {
             {/* Top Navigation - Platform Tabs */}
             <header className="builder-header">
                 <div className="builder-header-left">
-                    <h1>Story Builder</h1>
+                    <h1>{t('story_builder')}</h1>
                     <div className="platform-tabs">
                         {PLATFORMS.filter(p => useSettingsStore.getState().enabledPlatformKeys.includes(p.key)).map(p => {
                             const isEnabled = activePost.platforms[p.key].enabled;
@@ -158,7 +158,7 @@ const StoryBuilderArea: React.FC = () => {
                                         onClick={() => isActive ? null : (isEnabled ? setActivePlatform(activePostId, p.key) : enablePlatform(activePostId, p.key))}
                                     >
                                         <span className="platform-icon" style={{ backgroundColor: p.color }} />
-                                        {p.name}
+                                        {t(p.key as any)}
                                     </button>
                                     {!isActive && (
                                         <button
@@ -167,7 +167,7 @@ const StoryBuilderArea: React.FC = () => {
                                                 e.stopPropagation();
                                                 enablePlatform(activePostId, p.key);
                                             }}
-                                            title={isEnabled ? "Copy current to platform" : t('enable_platform')}
+                                            title={isEnabled ? t('copy_to_platform') : t('enable_platform')}
                                         >
                                             <MdAdd size={12} />
                                         </button>
@@ -182,7 +182,7 @@ const StoryBuilderArea: React.FC = () => {
                         useStoryStore.getState().finalizeCrops(activePostId);
                         useStoryStore.getState().setPostMode(true);
                     }}>
-                        Post Story
+                        {t('post_story')}
                     </button>
                 </div>
             </header>
@@ -197,7 +197,7 @@ const StoryBuilderArea: React.FC = () => {
                             onClick={() => updateLayout(activePostId, activePost.activePlatform, l.key)}
                         >
                             <div className={clsx("layout-icon-preview", l.key)} />
-                            <span className="layout-btn-label">{l.label}</span>
+                            <span className="layout-btn-label">{t(`layout_${l.key}` as any)}</span>
                         </button>
                     ))}
                 </aside>
@@ -206,7 +206,7 @@ const StoryBuilderArea: React.FC = () => {
                 <div className="builder-main-view">
                     <div className="metadata-overlay-container">
                         <div className="metadata-chips-group">
-                            <span className="meta-group-label">Presets</span>
+                            <span className="meta-group-label">{t('presets')}</span>
                             <div className="chips-row">
                                 {textPresets.map(preset => (
                                     <button key={preset.id} className="preset-chip" onClick={() => {
@@ -221,7 +221,7 @@ const StoryBuilderArea: React.FC = () => {
                             </div>
                         </div>
                         <div className="metadata-chips-group">
-                            <span className="meta-group-label">Hashtags</span>
+                            <span className="meta-group-label">{t('hashtags')}</span>
                             <div className="chips-row">
                                 {React.useMemo(() => {
                                     const allText = posts.flatMap(p => Object.values(p.platforms).map(pl => pl.text)).join(' ');
@@ -322,8 +322,8 @@ const StoryBuilderArea: React.FC = () => {
 
                     <div className="post-sidebar-content">
                         <div className="sidebar-header">
-                            <h3>Stories</h3>
-                            <button className="sidebar-add-btn" onClick={() => addPost()}>
+                            <h3>{t('stories')}</h3>
+                            <button className="sidebar-add-btn" onClick={() => addPost(t('story') + ' ' + (posts.length + 1))}>
                                 <MdAdd size={18} />
                             </button>
                         </div>

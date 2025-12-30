@@ -181,6 +181,7 @@ const ImageThumbnail: React.FC<{
     onCycle: () => void;
     onReset: () => void;
 }> = React.memo(({ img, isSelected, onSelect, onCycle, onReset }) => {
+    const { t } = useTranslation();
     const isHovered = useIngestionStore(s => s.hoveredImageId === img.id);
     const timerRef = React.useRef<any>(null);
     const wasResetRef = React.useRef(false);
@@ -307,7 +308,7 @@ const ImageThumbnail: React.FC<{
                 {holdProgress > 0 && (
                     <div className="native-drag-indicator">
                         <div className="progress-bar" style={{ width: `${holdProgress}%` }} />
-                        {holdProgress >= 100 && <div className="ready-overlay">READY TO DRAG</div>}
+                        {holdProgress >= 100 && <div className="ready-overlay">{t('ready_to_drag')}</div>}
                     </div>
                 )}
                 <div className="thumbnail-card">
@@ -332,6 +333,7 @@ const BurstGroup: React.FC<{
     cycleLabel: (id: string) => void,
     resetLabel: (id: string) => void
 }> = React.memo(({ burst, cycleLabel, resetLabel }) => {
+    const { t, i18n } = useTranslation();
     const selectedImageId = useIngestionStore(s => s.selectedImageId);
     const setSelectedImageId = useIngestionStore(s => s.setSelectedImageId);
     const groupRef = React.useRef<HTMLDivElement>(null);
@@ -372,14 +374,14 @@ const BurstGroup: React.FC<{
                             yesterday.setDate(now.getDate() - 1);
                             const isYesterday = date.toDateString() === yesterday.toDateString();
 
-                            if (isToday) return 'Today';
-                            if (isYesterday) return 'Yesterday';
-                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                            if (isToday) return t('today');
+                            if (isYesterday) return t('yesterday');
+                            return date.toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' });
                         })()}
                     </span>
                 </div>
                 <span className="burst-time">
-                    {new Date(burst[0].timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(burst[0].timestamp).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
                 </span>
             </div>
             <div className="thumbnail-grid">
@@ -483,7 +485,7 @@ const IngestionArea: React.FC = React.memo(() => {
 
     const sources = React.useMemo(() => {
         const unique = Array.from(new Set(images.map(img => img.source)));
-        return ['All', ...unique];
+        return ['all', ...unique];
     }, [images]);
 
     const filteredImages = React.useMemo(() => {
@@ -491,7 +493,7 @@ const IngestionArea: React.FC = React.memo(() => {
         const lookbackMs = ingestLookbackDays * 24 * 60 * 60 * 1000;
 
         return images.filter(img => {
-            const matchesSource = activeSource === 'All' || img.source === activeSource;
+            const matchesSource = activeSource === 'all' || img.source === activeSource;
             const matchesTime = (now - img.timestamp) <= lookbackMs;
             return matchesSource && matchesTime;
         });
@@ -499,8 +501,8 @@ const IngestionArea: React.FC = React.memo(() => {
 
     // Safeguard: if active source is removed, reset to All
     React.useEffect(() => {
-        if (activeSource !== 'All' && !sources.includes(activeSource)) {
-            setActiveSource('All');
+        if (activeSource !== 'all' && !sources.includes(activeSource)) {
+            setActiveSource('all');
         }
     }, [sources, activeSource]);
 
@@ -550,7 +552,7 @@ const IngestionArea: React.FC = React.memo(() => {
                             className={`filter-pill ${activeSource === src ? 'active' : ''}`}
                             onClick={() => setActiveSource(src)}
                         >
-                            {src}
+                            {src === 'all' ? t('all') : src}
                         </button>
                     ))}
                 </div>
@@ -576,7 +578,7 @@ const IngestionArea: React.FC = React.memo(() => {
                     <div className="ingestion-empty-state">
                         <MdImage size={128} className="empty-icon" />
                         <p>{t('no_images')}</p>
-                        <span className="empty-hint">Add watched folders from below</span>
+                        <span className="empty-hint">{t('folders_desc')}</span>
                     </div>
                 ) : (
                     <div
@@ -623,6 +625,7 @@ const IngestionArea: React.FC = React.memo(() => {
 export default IngestionArea;
 
 export const BurstControl: React.FC = () => {
+    const { t } = useTranslation();
     const burstThreshold = useSettingsStore(s => s.burstThreshold);
     const setBurstThresholdSetting = useSettingsStore(s => s.setBurstThreshold);
     const reBurst = useIngestionStore(s => s.reBurst);
@@ -649,10 +652,10 @@ export const BurstControl: React.FC = () => {
             <button
                 className={clsx("icon-btn-text", isOpen && "active")}
                 onClick={() => setIsOpen(!isOpen)}
-                title="Burst Threshold"
+                title={t('burst_sensitivity')}
             >
                 <MdBolt size={18} />
-                <span>Burst: {thresholdSec}s</span>
+                <span>{t('burst')}: {thresholdSec}s</span>
             </button>
 
             <AnimatePresence>
@@ -664,7 +667,7 @@ export const BurstControl: React.FC = () => {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     >
                         <div className="popup-header">
-                            <span className="popup-title">Burst Sensitivity</span>
+                            <span className="popup-title">{t('burst_sensitivity')}</span>
                             <span className="popup-value">{thresholdSec}s</span>
                         </div>
                         <input
@@ -680,7 +683,7 @@ export const BurstControl: React.FC = () => {
                             }}
                             className="burst-slider"
                         />
-                        <div className="popup-hint">Time between groups</div>
+                        <div className="popup-hint">{t('time_between_groups')}</div>
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -27,6 +27,7 @@ import { MdDragHandle } from 'react-icons/md';
 import Toggle from '../Common/Toggle';
 
 const FolderManagerPane: React.FC = () => {
+    const { t } = useTranslation();
     const [newFolderPath, setNewFolderPath] = React.useState('');
     const [newFolderAlias, setNewFolderAlias] = React.useState('');
 
@@ -38,11 +39,11 @@ const FolderManagerPane: React.FC = () => {
     return (
         <div className="manager-pane">
             <header className="pane-header">
-                <h4>Watched Folders</h4>
-                <p>Images from these folders will appear in Ingestion.</p>
+                <h4>{t('watched_folders')}</h4>
+                <p>{t('folders_desc')}</p>
             </header>
             <div className="manager-list scrollable">
-                {watchedFolders.length === 0 && <p className="empty-msg">No folders added yet.</p>}
+                {watchedFolders.length === 0 && <p className="empty-msg">{t('no_folders')}</p>}
                 {watchedFolders.map(f => (
                     <div key={f.path} className="manager-item">
                         <div className="item-info">
@@ -67,8 +68,8 @@ const FolderManagerPane: React.FC = () => {
             <footer className="pane-footer">
                 <div className="input-row">
                     <div className="path-input-wrapper">
-                        <input placeholder="Path (e.g. C:/Photos)" value={newFolderPath} onChange={e => setNewFolderPath(e.target.value)} />
-                        <button className="browse-btn" title="Browse..." onClick={async () => {
+                        <input placeholder={t('path_placeholder')} value={newFolderPath} onChange={e => setNewFolderPath(e.target.value)} />
+                        <button className="browse-btn" title={t('browse')} onClick={async () => {
                             if (window.electron && window.electron.selectFolder) {
                                 const folderPath = await window.electron.selectFolder();
                                 if (folderPath) setNewFolderPath(folderPath);
@@ -77,14 +78,14 @@ const FolderManagerPane: React.FC = () => {
                             <MdFolder size={18} />
                         </button>
                     </div>
-                    <input placeholder="Alias" value={newFolderAlias} onChange={e => setNewFolderAlias(e.target.value)} />
+                    <input placeholder={t('alias_placeholder')} value={newFolderAlias} onChange={e => setNewFolderAlias(e.target.value)} />
                     <button className="add-btn" onClick={() => {
                         if (newFolderPath) {
-                            addWatchedFolder(newFolderPath, newFolderAlias || 'Local Folder');
+                            addWatchedFolder(newFolderPath, newFolderAlias || t('local_folder'));
                             setNewFolderPath('');
                             setNewFolderAlias('');
                             if (window.electron && window.electron.updateWatchedFolders) {
-                                const updated = [...watchedFolders, { path: newFolderPath, alias: newFolderAlias || 'Local Folder' }];
+                                const updated = [...watchedFolders, { path: newFolderPath, alias: newFolderAlias || t('local_folder') }];
                                 window.electron.updateWatchedFolders(updated.map(f => f.path));
                             }
                         }
@@ -98,6 +99,7 @@ const FolderManagerPane: React.FC = () => {
 };
 
 const SortablePresetItem: React.FC<{ preset: any, updateTextPreset: any, removeTextPreset: any }> = ({ preset, updateTextPreset, removeTextPreset }) => {
+    const { t } = useTranslation();
     const {
         attributes,
         listeners,
@@ -124,13 +126,13 @@ const SortablePresetItem: React.FC<{ preset: any, updateTextPreset: any, removeT
                     className="item-title-input"
                     value={preset.name}
                     onChange={(e) => updateTextPreset(preset.id, e.target.value, preset.content)}
-                    placeholder="Preset Name"
+                    placeholder={t('new_preset_name')}
                 />
                 <textarea
                     className="item-subtitle-input"
                     value={preset.content}
                     onChange={(e) => updateTextPreset(preset.id, preset.name, e.target.value)}
-                    placeholder="Content..."
+                    placeholder={t('content_placeholder')}
                     rows={1}
                     onInput={(e) => {
                         const target = e.target as HTMLTextAreaElement;
@@ -153,6 +155,7 @@ const SortablePresetItem: React.FC<{ preset: any, updateTextPreset: any, removeT
 };
 
 const PresetManagerPane: React.FC = () => {
+    const { t } = useTranslation();
     const [newPresetName, setNewPresetName] = React.useState('');
     const [newPresetContent, setNewPresetContent] = React.useState('');
     const textPresets = useSettingsStore(s => s.textPresets);
@@ -180,8 +183,8 @@ const PresetManagerPane: React.FC = () => {
     return (
         <div className="manager-pane">
             <header className="pane-header">
-                <h4>Text Presets</h4>
-                <p>Saved snippets for quick insertion.</p>
+                <h4>{t('text_presets')}</h4>
+                <p>{t('presets_desc')}</p>
             </header>
             <div className="manager-list scrollable">
                 <DndContext
@@ -206,8 +209,8 @@ const PresetManagerPane: React.FC = () => {
             </div>
             <footer className="pane-footer">
                 <div className="input-col">
-                    <input placeholder="New Preset Name" value={newPresetName} onChange={e => setNewPresetName(e.target.value)} />
-                    <textarea placeholder="Content..." value={newPresetContent} onChange={e => setNewPresetContent(e.target.value)} />
+                    <input placeholder={t('new_preset_name')} value={newPresetName} onChange={e => setNewPresetName(e.target.value)} />
+                    <textarea placeholder={t('content_placeholder')} value={newPresetContent} onChange={e => setNewPresetContent(e.target.value)} />
                     <button className="primary-btn" onClick={() => {
                         if (newPresetName && newPresetContent) {
                             addTextPreset(newPresetName, newPresetContent);
@@ -215,7 +218,7 @@ const PresetManagerPane: React.FC = () => {
                             setNewPresetContent('');
                         }
                     }}>
-                        <MdAdd size={18} /> Add Preset
+                        <MdAdd size={18} /> {t('add_preset')}
                     </button>
                 </div>
             </footer>
@@ -300,6 +303,12 @@ const LanguageManagerPane: React.FC = () => {
                         <button className={clsx("manager-item", language === 'en' && "active")} onClick={() => changeLanguage('en')}>
                             <span className="item-title">{t('english')}</span>
                         </button>
+                        <button className={clsx("manager-item", language === 'zh' && "active")} onClick={() => changeLanguage('zh')}>
+                            <span className="item-title">{t('chinese')}</span>
+                        </button>
+                        <button className={clsx("manager-item", language === 'id' && "active")} onClick={() => changeLanguage('id')}>
+                            <span className="item-title">{t('indonesian')}</span>
+                        </button>
                         <button className={clsx("manager-item", language === 'ja' && "active")} onClick={() => changeLanguage('ja')}>
                             <span className="item-title">{t('japanese')}</span>
                         </button>
@@ -313,15 +322,40 @@ const LanguageManagerPane: React.FC = () => {
     );
 };
 
+const GeneralManagerPane: React.FC = () => {
+    const { t } = useTranslation();
+    const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
+    const setIngestLookbackDays = useSettingsStore(s => s.setIngestLookbackDays);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('general_settings')}</h4>
+                <p>{t('general_desc')}</p>
+            </header>
+            <div className="settings-body">
+                <div className="settings-group">
+                    <label className="settings-label">{t('ingest_lookback')}</label>
+                    <div className="settings-control">
+                        <input type="range" min="1" max="90" step="1" value={ingestLookbackDays} onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))} />
+                        <span>{ingestLookbackDays}<small> {t('days')}</small></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PlatformManagerPane: React.FC = () => {
+    const { t } = useTranslation();
     const enabledPlatformKeys = useSettingsStore(s => s.enabledPlatformKeys);
     const setEnabledPlatformKeys = useSettingsStore(s => s.setEnabledPlatformKeys);
 
     return (
         <div className="manager-pane">
             <header className="pane-header">
-                <h4>Platforms</h4>
-                <p>Toggle platforms to show in the Story Builder.</p>
+                <h4>{t('platforms')}</h4>
+                <p>{t('platforms_desc')}</p>
             </header>
             <div className="manager-list scrollable">
                 {PLATFORMS.map(p => {
@@ -329,12 +363,12 @@ const PlatformManagerPane: React.FC = () => {
                     return (
                         <div key={p.key} className="manager-item">
                             <div className="item-info">
-                                <span className="item-title">{p.name}</span>
+                                <span className="item-title">{t(p.key as any)}</span>
                                 <span className="item-subtitle" style={{ color: p.color }}>{p.key}</span>
                             </div>
                             <Toggle
                                 enabled={isEnabled}
-                                onChange={(enabled) => {
+                                onChange={(enabled: boolean) => {
                                     if (enabled) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
                                     else setEnabledPlatformKeys(enabledPlatformKeys.filter(k => k !== p.key));
                                 }}
@@ -348,6 +382,7 @@ const PlatformManagerPane: React.FC = () => {
 };
 
 const SortableLabelItem: React.FC<{ label: any, images: any[], updateLabel: any, handleExport: any }> = ({ label, images, updateLabel, handleExport }) => {
+    const { t } = useTranslation();
     const {
         attributes,
         listeners,
@@ -373,10 +408,10 @@ const SortableLabelItem: React.FC<{ label: any, images: any[], updateLabel: any,
                 <input type="color" className="label-color-input" value={label.color} onChange={(e) => updateLabel(label.index, label.name, e.target.value)} />
                 <div className="item-info">
                     <input className="item-title-input" value={label.name} onChange={(e) => updateLabel(label.index, e.target.value, label.color)} />
-                    <span className="item-subtitle">Label {label.index} • {images.filter(img => img.labelIndex === label.index).length} images</span>
+                    <span className="item-subtitle">{t('label_prefix')} {label.index} • {t('images_count', { count: images.filter(img => img.labelIndex === label.index).length })}</span>
                 </div>
             </div>
-            <button className="primary-btn square" title="Export copies to folder..." onClick={() => handleExport(label.index)}>
+            <button className="primary-btn square" title={t('export_tooltip')} onClick={() => handleExport(label.index)}>
                 <MdFolder size={18} />
             </button>
         </div>
@@ -384,6 +419,7 @@ const SortableLabelItem: React.FC<{ label: any, images: any[], updateLabel: any,
 };
 
 const LabelManagerPane: React.FC = () => {
+    const { t } = useTranslation();
     const labels = useSettingsStore(s => s.labels);
     const updateLabel = useSettingsStore(s => s.updateLabel);
     const reorderLabels = useSettingsStore(s => s.reorderLabels);
@@ -412,13 +448,13 @@ const LabelManagerPane: React.FC = () => {
         if (!targetDir) return;
         const labeledImages = images.filter(img => img.labelIndex === labelIndex);
         if (labeledImages.length === 0) {
-            alert("No images found with this label.");
+            alert(t('no_labeled_images'));
             return;
         }
         const paths = labeledImages.map(img => img.path);
         const success = await window.electron.exportImages(paths, targetDir);
-        if (success) alert(`Successfully exported ${paths.length} images to ${targetDir}`);
-        else alert("Export failed. See console for details.");
+        if (success) alert(t('export_success', { count: paths.length, path: targetDir }));
+        else alert(t('export_fail'));
     };
 
     return (
@@ -426,11 +462,11 @@ const LabelManagerPane: React.FC = () => {
             <header className="pane-header">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                        <h4>Label Manager</h4>
-                        <p>Customize and reorder slots.</p>
+                        <h4>{t('label_manager')}</h4>
+                        <p>{t('labels_desc')}</p>
                     </div>
-                    <button className="icon-btn-text" onClick={resetLabels} title="Reset labels to defaults">
-                        Reset to Defaults
+                    <button className="icon-btn-text" onClick={resetLabels} title={t('reset_defaults')}>
+                        {t('reset_defaults')}
                     </button>
                 </div>
             </header>
@@ -461,6 +497,7 @@ const LabelManagerPane: React.FC = () => {
 };
 
 export const ManagerOverlay: React.FC = () => {
+    const { t } = useTranslation();
     const activeManager = useSettingsStore(s => s.activeManager);
     const setActiveManager = useSettingsStore(s => s.setActiveManager);
 
@@ -483,48 +520,48 @@ export const ManagerOverlay: React.FC = () => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <aside className="manager-sidebar">
-                            <div className="sidebar-section-title">App</div>
+                            <div className="sidebar-section-title">{t('app_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'settings_language' && "active")} onClick={() => setActiveManager('settings_language')}>
                                 <MdTranslate size={20} />
-                                <span>Language</span>
+                                <span>{t('language_settings')}</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'settings_general' && "active")} onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
-                                <span>General</span>
+                                <span>{t('general_settings')}</span>
                             </button>
 
-                            <div className="sidebar-section-title">Ingestion</div>
+                            <div className="sidebar-section-title">{t('ingestion_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'folders' && "active")} onClick={() => setActiveManager('folders')}>
                                 <MdFolder size={20} />
-                                <span>Folders</span>
+                                <span>{t('folders')}</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'settings_ingestion' && "active")} onClick={() => setActiveManager('settings_ingestion')}>
                                 <MdAddToPhotos size={20} />
-                                <span>Ingestion</span>
+                                <span>{t('ingestion_settings')}</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'settings_lightbox' && "active")} onClick={() => setActiveManager('settings_lightbox')}>
                                 <MdWallpaper size={20} />
-                                <span>Lightbox</span>
+                                <span>{t('lightbox_settings')}</span>
                             </button>
 
-                            <div className="sidebar-section-title">Story Builder</div>
+                            <div className="sidebar-section-title">{t('story_builder_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'labels' && "active")} onClick={() => setActiveManager('labels')}>
                                 <MdLabel size={20} />
-                                <span>Labels</span>
+                                <span>{t('labels')}</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'platforms' && "active")} onClick={() => setActiveManager('platforms')}>
                                 <MdSmartphone size={20} />
-                                <span>Platforms</span>
+                                <span>{t('platforms')}</span>
                             </button>
                             <button className={clsx("sidebar-item", activeManager === 'presets' && "active")} onClick={() => setActiveManager('presets')}>
                                 <MdStyle size={20} />
-                                <span>Presets</span>
+                                <span>{t('presets')}</span>
                             </button>
 
                             <div className="sidebar-spacer" />
                             <button className="sidebar-item close" onClick={() => setActiveManager(null)}>
                                 <MdClose size={20} />
-                                <span>Close</span>
+                                <span>{t('close')}</span>
                             </button>
                         </aside>
                         <main className="manager-main">
@@ -535,7 +572,7 @@ export const ManagerOverlay: React.FC = () => {
                             {activeManager === 'settings_ingestion' && <IngestionSettingsPane />}
                             {activeManager === 'settings_lightbox' && <LightboxSettingsPane />}
                             {activeManager === 'settings_language' && <LanguageManagerPane />}
-                            {activeManager === 'settings_general' && <div className="manager-pane"><h4>General Settings</h4><p>Global app settings will appear here.</p></div>}
+                            {activeManager === 'settings_general' && <GeneralManagerPane />}
                         </main>
                     </motion.div>
                 </motion.div>

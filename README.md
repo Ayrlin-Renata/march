@@ -37,5 +37,8 @@ isn't it a pain to sift through all those screenshots and remember all those asp
 | **Arrows** | Navigate Lightbox Preview |
 | **Esc** | Close Overlays / Lightbox Preview |
 
+# languages
+Written in English, machine translation to support Chinese, Indonesian, Japanese, and Korean. Please notify me of any poor quality translations. 
+
 # legal
 Ayrlin Renata Copyright 2025 - All rights reserved

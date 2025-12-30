@@ -1,11 +1,13 @@
 import React from 'react';
 import { useStoryStore } from '../store/useStoryStore';
+import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../types/stories';
 import { MdArrowBack, MdContentCopy, MdCheck, MdImage } from 'react-icons/md';
 import { getThumbnailUrl } from '../utils/pathUtils';
 import clsx from 'clsx';
 
 const PostView: React.FC = () => {
+    const { t } = useTranslation();
     const { posts, activePostId, setPostMode } = useStoryStore();
     const activePost = posts.find(p => p.id === activePostId);
 
@@ -50,10 +52,10 @@ const PostView: React.FC = () => {
     return (
         <div className="post-view">
             <header className="post-view-header">
-                <h2>Post Story: {activePost.name}</h2>
+                <h2>{t('post_story')}: {activePost.name}</h2>
                 <button className="back-btn" onClick={() => setPostMode(false)}>
                     <MdArrowBack size={20} />
-                    Back to Editor
+                    {t('back_to_editor')}
                 </button>
             </header>
 
@@ -66,7 +68,7 @@ const PostView: React.FC = () => {
                         <div key={p.key} className="platform-post-section">
                             <div className="platform-section-header">
                                 <div className="platform-badge" style={{ background: p.color }} />
-                                <span className="platform-name">{p.name} Post Checkout</span>
+                                <span className="platform-name">{t(p.key as any)} {t('post_checkout')}</span>
                             </div>
 
                             <div className="post-sequence-list">
@@ -80,10 +82,10 @@ const PostView: React.FC = () => {
                                             <button
                                                 className={clsx("action-btn tiny", copiedPlatform === `${p.key}-text` && "copy-success")}
                                                 onClick={() => handleCopyText(config.text, `${p.key}-text`)}
-                                                title="Copy Caption"
+                                                title={t('copy_caption_tooltip')}
                                             >
                                                 {copiedPlatform === `${p.key}-text` ? <MdCheck size={16} /> : <MdContentCopy size={16} />}
-                                                <span>Copy Text</span>
+                                                <span>{t('copy_text')}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -104,11 +106,11 @@ const PostView: React.FC = () => {
                                                     <div
                                                         className="post-image-preview-box"
                                                         onMouseDown={(e) => handleNativeDrag(e, slot.imagePath!, slot.crop)}
-                                                        title="Drag to post"
+                                                        title={t('drag_to_post')}
                                                     >
                                                         <img src={getThumbnailUrl(slot.imagePath!, 400, slot.crop?.pixelCrop)} alt={`Slot ${idx + 1}`} />
                                                         <div className="slot-index-badge">{idx + 1}</div>
-                                                        <div className="native-drag-hint">DRAG TO POST</div>
+                                                        <div className="native-drag-hint">{t('drag_to_post')}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -116,10 +118,10 @@ const PostView: React.FC = () => {
                                                 <button
                                                     className={clsx("action-btn tiny", copiedPlatform === `${p.key}-img-${idx}` && "copy-success")}
                                                     onClick={() => handleCopyImage(slot.imagePath!, slot.crop, `${p.key}-img-${idx}`)}
-                                                    title="Copy Image to Clipboard"
+                                                    title={t('copy_image_tooltip')}
                                                 >
                                                     {copiedPlatform === `${p.key}-img-${idx}` ? <MdCheck size={16} /> : <MdImage size={16} />}
-                                                    <span>Copy Image</span>
+                                                    <span>{t('copy_image')}</span>
                                                 </button>
                                             </div>
                                         </div>
