@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "author": {
+    "name": "Ayrlin Renata"
+  },
+  "icon": "logo.png",
+  "description": "Image management and editing application.",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
