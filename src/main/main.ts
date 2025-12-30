@@ -51,6 +51,10 @@ function createWindow() {
         icon: path.join(__dirname, 'logo.png'),
     });
 
+    if (app.isPackaged) {
+        win.setMenu(null);
+    }
+
     win.on('close', () => {
         saveWindowState(win);
     });
