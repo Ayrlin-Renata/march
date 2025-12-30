@@ -136,7 +136,9 @@ const App: React.FC = () => {
     const thumbnailSize = useSettingsStore(s => s.thumbnailSize);
     const setActiveManager = useSettingsStore(s => s.setActiveManager);
     const watchedFolders = useSettingsStore(s => s.watchedFolders);
+    const textPresets = useSettingsStore(s => s.textPresets);
     const labels = useSettingsStore(s => s.labels);
+    const hydrateSettings = useSettingsStore(s => s.hydrateSettings);
     const isBuilderCollapsed = useSettingsStore(s => s.isBuilderCollapsed);
     const setBuilderCollapsed = useSettingsStore(s => s.setBuilderCollapsed);
     const storedWindowWidthCollapsed = useSettingsStore(s => s.storedWindowWidthCollapsed);
@@ -158,6 +160,11 @@ const App: React.FC = () => {
             i18n.changeLanguage(language);
         }
     }, [language, i18n]);
+
+    // Hydrate all settings from main process on mount
+    React.useEffect(() => {
+        hydrateSettings();
+    }, [hydrateSettings]);
 
     const isPostMode = useStoryStore(s => s.isPostMode);
     const activePostId = useStoryStore(s => s.activePostId);
@@ -228,10 +235,16 @@ const App: React.FC = () => {
     // Sync settings with backend
     useEffect(() => {
         if (window.electron && window.electron.send) {
-            window.electron.send('set-settings', { ingestLookbackDays });
-            window.electron.send('update-watched-folders', watchedFolders.map(f => f.path));
+            window.electron.send('set-settings', {
+                ingestLookbackDays,
+                textPresets,
+                labels,
+                watchedFolders
+            });
+            // Also notify watcher about paths
+            window.electron.send('update-watched-folders', watchedFolders);
         }
-    }, [ingestLookbackDays, watchedFolders]);
+    }, [ingestLookbackDays, watchedFolders, textPresets, labels]);
 
     const fileBufferRef = useRef<any[]>([]);
     const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -471,7 +484,7 @@ const App: React.FC = () => {
                             <button className="icon-btn" title={t('settings')} onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
                             </button>
-                            <button className={clsx("icon-btn", isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>
+                            <button className={clsx("icon-btn", !isBuilderCollapsed && "active")} title="Toggle Story Builder" onClick={toggleBuilder}>
                                 <MdViewSidebar size={20} />
                             </button>
                         </div>

@@ -34,7 +34,7 @@ interface SettingsState {
     textPresets: TextPreset[];
     labels: LabelConfig[];
     enabledPlatformKeys: PlatformKey[];
-    activeManager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | null;
+    activeManager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | null;
     isBuilderCollapsed: boolean;
     lastBuilderWidth: number;
     storedWindowWidthCollapsed: number;
@@ -54,7 +54,7 @@ interface SettingsState {
     setLanguage: (lang: string) => void;
     setBaseTheme: (theme: 'simple' | 'march' | 'time') => void;
 
-    setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | null) => void;
+    setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | null) => void;
     setEnabledPlatformKeys: (keys: PlatformKey[]) => void;
     setBuilderCollapsed: (collapsed: boolean) => void;
     setLastBuilderWidth: (width: number) => void;
@@ -70,6 +70,7 @@ interface SettingsState {
     reorderTextPresets: (presets: TextPreset[]) => void;
     removeTextPreset: (id: string) => void;
     resetLabels: () => void;
+    hydrateSettings: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -160,6 +161,23 @@ export const useSettingsStore = create<SettingsState>()(
                     { index: 8, name: 'White', color: '#8a8a8aff' },
                 ]
             }),
+            hydrateSettings: async () => {
+                if (window.electron && window.electron.getSettings) {
+                    try {
+                        const settings = await window.electron.getSettings();
+                        if (settings) {
+                            set({
+                                ingestLookbackDays: settings.ingestLookbackDays ?? 3,
+                                watchedFolders: settings.watchedFolders ?? [],
+                                textPresets: settings.textPresets ?? [],
+                                labels: settings.labels ?? []
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Failed to hydrate settings:', err);
+                    }
+                }
+            },
         }),
         {
             name: 'march-settings',

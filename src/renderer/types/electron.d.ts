@@ -12,6 +12,9 @@ export interface ElectronAPI {
     startDrag: (filePath: string, iconPath: string) => void;
     startDragCropped: (filePath: string, rect: { x: number; y: number; width: number; height: number }) => void;
     copyImage: (filePath: string, rect?: { x: number; y: number; width: number; height: number }) => Promise<boolean>;
+    getSettings: () => Promise<any>;
+    getAppVersion: () => Promise<string>;
+    openExternal: (url: string) => Promise<void>;
 }
 
 declare global {

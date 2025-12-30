@@ -1,9 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const { contextBridge, ipcRenderer } = require('electron');
-
 contextBridge.exposeInMainWorld('electron', {
     send: (channel, data) => ipcRenderer.send(channel, data),
     on: (channel, func) => {
-        const subscription = (event, ...args) => func(...args);
+        const subscription = (_event, ...args) => func(...args);
         ipcRenderer.on(channel, subscription);
         return () => ipcRenderer.removeListener(channel, subscription);
     },
@@ -18,4 +19,7 @@ contextBridge.exposeInMainWorld('electron', {
     startDrag: (filePath, iconPath) => ipcRenderer.send('start-drag', { filePath, iconPath }),
     startDragCropped: (filePath, rect) => ipcRenderer.send('start-drag-cropped', { filePath, rect }),
     copyImage: (filePath, rect) => ipcRenderer.invoke('copy-image', { filePath, rect }),
+    getSettings: () => ipcRenderer.invoke('get-settings'),
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
 });

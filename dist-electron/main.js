@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard, shell } from 'electron';
+import { updateElectronApp } from 'update-electron-app';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -6,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup } from './watcher.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
+updateElectronApp();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Register protocol before app ready
 protocol.registerSchemesAsPrivileged([
@@ -15,7 +17,21 @@ protocol.registerSchemesAsPrivileged([
 const settings = new ElectronStore({
     name: 'settings',
     defaults: {
-        ingestLookbackDays: 3
+        ingestLookbackDays: 3,
+        watchedFolders: [],
+        textPresets: [
+            { id: '1', name: 'March', content: 'Trying out #marchphotobox! 📸 ' }
+        ],
+        labels: [
+            { index: 1, name: 'Red', color: '#ff7979ff' },
+            { index: 2, name: 'Orange', color: '#ffae78ff' },
+            { index: 3, name: 'Yellow', color: '#ffe289ff' },
+            { index: 4, name: 'Green', color: '#80ff80ff' },
+            { index: 5, name: 'Blue', color: '#74b9ffff' },
+            { index: 6, name: 'Purple', color: '#ba75ffff' },
+            { index: 7, name: 'Pink', color: '#ff7affff' },
+            { index: 8, name: 'White', color: '#8a8a8aff' },
+        ]
     }
 });
 const labelStore = new ElectronStore({ name: 'image-labels' });
@@ -30,6 +46,7 @@ function createWindow() {
         height: windowState.height,
         x: windowState.x,
         y: windowState.y,
+        show: false, // Don't show until we've applied maximization if needed
         webPreferences: {
             preload: path.join(__dirname, 'preload.cjs'),
             nodeIntegration: false,
@@ -39,9 +56,19 @@ function createWindow() {
         backgroundColor: '#1e1e1e',
         icon: path.join(__dirname, 'logo.png'),
     });
+    if (windowState.isMaximized) {
+        win.maximize();
+    }
+    win.show();
     if (app.isPackaged) {
         win.setMenu(null);
     }
+    win.on('maximize', () => {
+        saveWindowState(win);
+    });
+    win.on('unmaximize', () => {
+        saveWindowState(win);
+    });
     win.on('close', () => {
         saveWindowState(win);
     });
@@ -64,10 +91,28 @@ function createWindow() {
     ipcMain.on('set-label', (_event, { filePath, labelIndex }) => {
         labelStore.set(filePath.replace(/\\/g, '/'), labelIndex);
     });
+    ipcMain.handle('get-settings', () => {
+        return settings.store;
+    });
     ipcMain.on('set-settings', (_event, newSettings) => {
         if (newSettings.ingestLookbackDays !== undefined) {
             settings.set('ingestLookbackDays', newSettings.ingestLookbackDays);
         }
+        if (newSettings.textPresets !== undefined) {
+            settings.set('textPresets', newSettings.textPresets);
+        }
+        if (newSettings.labels !== undefined) {
+            settings.set('labels', newSettings.labels);
+        }
+        if (newSettings.watchedFolders !== undefined) {
+            settings.set('watchedFolders', newSettings.watchedFolders);
+        }
+    });
+    ipcMain.handle('get-app-version', () => {
+        return app.getVersion();
+    });
+    ipcMain.handle('open-external', (_event, url) => {
+        return shell.openExternal(url);
     });
     ipcMain.handle('select-folder', async () => {
         const result = await dialog.showOpenDialog(win, {
@@ -78,7 +123,23 @@ function createWindow() {
         return result.filePaths[0];
     });
     ipcMain.on('update-watched-folders', (_event, folders) => {
-        updateWatchPaths(win, folders);
+        if (!Array.isArray(folders)) {
+            console.error('[Main] update-watched-folders received non-array:', folders);
+            return;
+        }
+        // 'folders' might be a list of strings (paths) or FolderConfigs from renderer
+        const paths = folders.map(f => {
+            if (typeof f === 'string')
+                return f;
+            if (f && typeof f === 'object' && 'path' in f)
+                return f.path;
+            return null;
+        }).filter((p) => typeof p === 'string');
+        updateWatchPaths(win, paths);
+        // If they are full objects, we save them to the store
+        if (folders.length > 0 && typeof folders[0] !== 'string') {
+            settings.set('watchedFolders', folders);
+        }
     });
     ipcMain.handle('export-images', async (_event, { paths, targetDir }) => {
         try {
@@ -193,8 +254,19 @@ function createWindow() {
         win.loadFile(path.join(__dirname, '../dist/index.html'));
     }
     // Initial setup with lookback
+    // Initial setup with lookback
     const lookbackDays = settings.get('ingestLookbackDays');
-    setupWatcher(win, [], lookbackDays);
+    const folderData = settings.get('watchedFolders') || [];
+    const watchedPaths = folderData
+        .map(f => {
+        if (typeof f === 'string')
+            return f;
+        if (f && typeof f === 'object' && 'path' in f)
+            return f.path;
+        return null;
+    })
+        .filter((p) => typeof p === 'string');
+    setupWatcher(win, watchedPaths, lookbackDays);
 }
 app.whenReady().then(() => {
     // Modern protocol handling for high-performance image loading

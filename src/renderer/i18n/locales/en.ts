@@ -116,5 +116,9 @@ export default {
     "tutorial_presets_desc": "Save those emoji you have to search up every time as presets in the preset manager.",
     "tutorial_post_title": "Post & Export",
     "tutorial_post_desc": "Once you're ready, click here to assemble your posting checklist.",
-    "reset_tutorial_prompt": "Reset Tutorial Prompt (Debug)"
+    "reset_tutorial_prompt": "Reset Tutorial Prompt (Debug)",
+    "about": "About",
+    "about_title": "About March Photobox",
+    "about_desc": "Information about the application.",
+    "about_description_text": "I made March Photobox to help me with my own struggles, I hope you find it convienient too!"
 };

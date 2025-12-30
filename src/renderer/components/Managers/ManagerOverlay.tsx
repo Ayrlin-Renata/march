@@ -3,9 +3,10 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useIngestionStore } from '../../store/useIngestionStore';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate, MdWallpaper, MdAddToPhotos, MdLabel } from 'react-icons/md';
+import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate, MdWallpaper, MdAddToPhotos, MdLabel, MdInfo } from 'react-icons/md';
 import { PLATFORMS } from '../../types/stories';
 import clsx from 'clsx';
+import logo from '../../../assets/logo.png';
 import {
     DndContext,
     closestCenter,
@@ -366,6 +367,43 @@ const GeneralManagerPane: React.FC = () => {
     );
 };
 
+const AboutManagerPane: React.FC = () => {
+    const { t } = useTranslation();
+    const [appVersion, setAppVersion] = React.useState('0.0.0');
+
+    React.useEffect(() => {
+        if (window.electron && window.electron.getAppVersion) {
+            window.electron.getAppVersion().then(v => setAppVersion(v));
+        }
+    }, []);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('about_title')}</h4>
+                <p>{t('about_desc')}</p>
+            </header>
+            <div className="settings-body about-pane">
+                <div className="about-branding">
+                    <img src={logo} alt="March Logo" className="about-logo" style={{ width: 64, height: 64, marginBottom: 16 }} />
+                    <div className="about-info">
+                        <h2 style={{ margin: 0 }}>March</h2>
+                        <p className="version-tag" style={{ opacity: 0.6, margin: '4px 0 0 0' }}>v{appVersion}</p>
+                    </div>
+                </div>
+                <div className="about-details" style={{ marginTop: 24 }}>
+                    <p style={{ lineHeight: 1.5, opacity: 0.8 }}>{t('about_description_text')}</p>
+                    <div className="about-links" style={{ marginTop: 24 }}>
+                        <button className="icon-btn-text" onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march')}>
+                            GitHub Repository
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PlatformManagerPane: React.FC = () => {
     const { t } = useTranslation();
     const enabledPlatformKeys = useSettingsStore(s => s.enabledPlatformKeys);
@@ -549,6 +587,10 @@ export const ManagerOverlay: React.FC = () => {
                                 <MdSettings size={20} />
                                 <span>{t('general_settings')}</span>
                             </button>
+                            <button className={clsx("sidebar-item", activeManager === 'settings_about' && "active")} onClick={() => setActiveManager('settings_about')}>
+                                <MdInfo size={20} />
+                                <span>{t('about')}</span>
+                            </button>
 
                             <div className="sidebar-section-title">{t('ingestion_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'folders' && "active")} onClick={() => setActiveManager('folders')}>
@@ -593,6 +635,7 @@ export const ManagerOverlay: React.FC = () => {
                             {activeManager === 'settings_lightbox' && <LightboxSettingsPane />}
                             {activeManager === 'settings_language' && <LanguageManagerPane />}
                             {activeManager === 'settings_general' && <GeneralManagerPane />}
+                            {activeManager === 'settings_about' && <AboutManagerPane />}
                         </main>
                     </motion.div>
                 </motion.div>
