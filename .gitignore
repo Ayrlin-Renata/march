@@ -13,7 +13,7 @@ dist-ssr
 *.local
 
 # build files
-dist*
+dist
 test*
 
 # Editor directories and files
