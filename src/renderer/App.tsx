@@ -22,6 +22,7 @@ import './styles/base/reset.css';
 import './styles/layout/layout.css';
 import './styles/components/buttons.css';
 import './styles/features/ingestion.css';
+import './styles/components/empty-state.css';
 import './styles/features/fullscreen-preview.css';
 import './styles/features/settings.css';
 import './styles/features/story-builder/layout.css';

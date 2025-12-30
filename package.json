@@ -11,10 +11,10 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run electron:dev\"",
-    "electron:dev": "wait-on http://localhost:5173 && npm run compile:electron && node -e \"require('fs').copyFileSync('src/main/preload.cjs', 'dist-electron/preload.cjs')\" && electron .",
+    "electron:dev": "wait-on http://localhost:5173 && npm run compile:electron && node -e \"require('fs').copyFileSync('src/main/preload.cjs', 'dist-electron/preload.cjs'); require('fs').copyFileSync('src/assets/logo.png', 'dist-electron/logo.png')\" && electron .",
     "compile:renderer": "tsc -p tsconfig.app.json",
     "compile:electron": "tsc -p tsconfig.electron.json",
-    "build": "npm run compile:renderer && vite build && npm run compile:electron",
+    "build": "npm run compile:renderer && vite build && npm run compile:electron && node -e \"require('fs').copyFileSync('src/main/preload.cjs', 'dist-electron/preload.cjs'); require('fs').copyFileSync('src/assets/logo.png', 'dist-electron/logo.png')\"",
     "dist": "npm run build && electron-builder",
     "preview": "vite preview"
   },

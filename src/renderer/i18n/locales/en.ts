@@ -47,7 +47,7 @@ export default {
     "presets": "Presets",
     "hashtags": "Hashtags",
     "watched_folders": "Watched Folders",
-    "folders_desc": "Images from these folders will appear in Ingestion.",
+    "folders_desc": "Set up watch folders from the icon below.",
     "no_folders": "No folders added yet.",
     "path_placeholder": "Path (e.g. C:/Photos)",
     "alias_placeholder": "Alias",

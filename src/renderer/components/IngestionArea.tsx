@@ -575,10 +575,10 @@ const IngestionArea: React.FC = React.memo(() => {
                 }}
             >
                 {bursts.length === 0 ? (
-                    <div className="ingestion-empty-state">
-                        <MdImage size={128} className="empty-icon" />
-                        <p>{t('no_images')}</p>
-                        <span className="empty-hint">{t('folders_desc')}</span>
+                    <div className="empty-state-container">
+                        <MdImage size={128} className="empty-state-icon" />
+                        <h3 className="empty-state-title">{t('no_images')}</h3>
+                        <p className="empty-state-description">{t('folders_desc')}</p>
                     </div>
                 ) : (
                     <div

@@ -69,28 +69,11 @@ const StoryBuilderArea: React.FC = () => {
     const [focusedSlotIndex, setFocusedSlotIndex] = React.useState<number | null>(null);
 
     const activePost = posts.find(p => p.id === activePostId);
-
-    if (!activePostId || !activePost) {
-        return (
-            <section className="story-builder-area empty">
-                <div className="empty-state">
-                    <MdDashboard size={48} className="empty-icon" />
-                    <h3>{t('no_posts_title')}</h3>
-                    <p>{t('create_your_first')}</p>
-                    <button className="new-story-btn-large" onClick={() => addPost(t('story') + ' ' + (posts.length + 1))}>
-                        <MdAdd size={24} />
-                        {t('create_new_story')}
-                    </button>
-                </div>
-            </section>
-        );
-    }
-
-    const activePlatform = activePost.platforms[activePost.activePlatform];
-    const focusedSlotData = focusedSlotIndex !== null ? activePlatform.slots[focusedSlotIndex] : null;
+    const activePlatform = activePost ? activePost.platforms[activePost.activePlatform] : undefined;
+    const focusedSlotData = focusedSlotIndex !== null && activePlatform ? activePlatform.slots[focusedSlotIndex] : null;
 
     const handleResizeExpansion = React.useCallback((newExp: ImageSlotData['crop']['expansion']) => {
-        if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect) return;
+        if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect || !activePost) return;
 
         const oldExp = focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
         const oldW = activeSlotRect.width + oldExp.left + oldExp.right;
@@ -124,14 +107,45 @@ const StoryBuilderArea: React.FC = () => {
         const newX = (newXpx / newW) * 100;
         const newY = (newYpx / newH) * 100;
 
-        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+        updateSlotCrop(activePostId!, activePost.activePlatform, focusedSlotIndex, {
             ...focusedSlotData.crop,
             expansion: newExp,
             scale: newScale,
             x: newX,
             y: newY
         });
-    }, [activePostId, activePost.activePlatform, focusedSlotIndex, focusedSlotData, activeSlotRect, updateSlotCrop]);
+    }, [activePostId, activePost?.activePlatform, focusedSlotIndex, focusedSlotData, activeSlotRect, updateSlotCrop]);
+
+    const hashtags = React.useMemo(() => {
+        const allText = posts.flatMap(p => Object.values(p.platforms).map(pl => pl.text)).join(' ');
+        const matches = allText.match(/#\w+/g) || [];
+        const counts: Record<string, number> = {};
+        matches.forEach(tag => { counts[tag] = (counts[tag] || 0) + 1; });
+
+        const common = Object.entries(counts)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 8)
+            .map(([tag]) => tag);
+
+        const defaults = ['#marchphotobox'];
+        return Array.from(new Set([...common, ...defaults])).slice(0, 10);
+    }, [posts]);
+
+    if (!activePostId || !activePost) {
+        return (
+            <section className="story-builder-area">
+                <div className="empty-state-container">
+                    <MdDashboard size={128} className="empty-state-icon" />
+                    <h3 className="empty-state-title">{t('no_posts_title')}</h3>
+                    <p className="empty-state-description">{t('create_your_first')}</p>
+                    <button className="empty-state-cta-btn" onClick={() => addPost(t('story') + ' ' + (posts.length + 1))}>
+                        <MdAdd size={20} />
+                        {t('create_new_story')}
+                    </button>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section className="story-builder-area">
@@ -193,7 +207,7 @@ const StoryBuilderArea: React.FC = () => {
                     {LAYOUTS.map(l => (
                         <button
                             key={l.key}
-                            className={clsx("layout-btn", activePlatform.layout === l.key && "active")}
+                            className={clsx("layout-btn", activePlatform!.layout === l.key && "active")}
                             onClick={() => updateLayout(activePostId, activePost.activePlatform, l.key)}
                         >
                             <div className={clsx("layout-icon-preview", l.key)} />
@@ -223,20 +237,7 @@ const StoryBuilderArea: React.FC = () => {
                         <div className="metadata-chips-group">
                             <span className="meta-group-label">{t('hashtags')}</span>
                             <div className="chips-row">
-                                {React.useMemo(() => {
-                                    const allText = posts.flatMap(p => Object.values(p.platforms).map(pl => pl.text)).join(' ');
-                                    const matches = allText.match(/#\w+/g) || [];
-                                    const counts: Record<string, number> = {};
-                                    matches.forEach(tag => { counts[tag] = (counts[tag] || 0) + 1; });
-
-                                    const common = Object.entries(counts)
-                                        .sort(([, a], [, b]) => b - a)
-                                        .slice(0, 8)
-                                        .map(([tag]) => tag);
-
-                                    const defaults = ['#marchphotobox'];
-                                    return Array.from(new Set([...common, ...defaults])).slice(0, 10);
-                                }, [posts]).map(tag => (
+                                {hashtags.map(tag => (
                                     <button key={tag} className="hashtag-chip" onClick={() => {
                                         const currentText = activePost.platforms[activePost.activePlatform].text;
                                         if (!currentText.includes(tag)) {
