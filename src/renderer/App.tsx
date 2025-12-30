@@ -191,7 +191,7 @@ const App: React.FC = () => {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 15,
+                distance: 3,
             },
         })
     );

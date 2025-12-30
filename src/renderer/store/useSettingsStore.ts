@@ -79,7 +79,7 @@ export const useSettingsStore = create<SettingsState>()(
             isSettingsOpen: false,
             ingestionWidth: 350,
             thumbnailSize: 120,
-            burstThreshold: 5000,
+            burstThreshold: 12000,
 
             watchedFolders: [],
             textPresets: [

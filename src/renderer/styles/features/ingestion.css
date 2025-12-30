@@ -268,7 +268,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    z-index: 3;
+    z-index: 10;
 }
 
 .label-bar {
@@ -278,7 +278,7 @@
     right: 0;
     height: 4px;
     background: var(--label-color);
-    z-index: 4;
+    z-index: 11;
     opacity: 0;
     transition: opacity 0.3s ease;
     box-shadow: 0 0 8px var(--label-color);
@@ -584,7 +584,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.4);
-    z-index: 100;
+    z-index: 50;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -619,12 +619,12 @@
 
 @keyframes nativeReadyPulse {
     from {
-        transform: scale(0.95);
+        transform: scale(0.90);
         opacity: 0.8;
     }
 
     to {
-        transform: scale(1.1);
+        transform: scale(1.05);
         opacity: 1;
     }
 }

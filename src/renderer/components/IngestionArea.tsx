@@ -192,6 +192,10 @@ const ImageThumbnail: React.FC<{
     const holdTimerRef = React.useRef<any>(null);
     const hasTriggeredDragRef = React.useRef(false);
 
+    const initialPointerPosRef = React.useRef<{ x: number; y: number } | null>(null);
+    const initialPointerEventRef = React.useRef<React.PointerEvent | null>(null);
+    const hasBridgedToDndRef = React.useRef(false);
+
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: img.id,
         data: img,
@@ -205,6 +209,25 @@ const ImageThumbnail: React.FC<{
             setHoldProgress(0);
         }
     }, [isDragging]);
+
+    const globalReset = React.useCallback(() => {
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
+        hasTriggeredDragRef.current = false;
+        // Do NOT reset lockout here - it resets on onPointerDown
+    }, []);
+
+    React.useEffect(() => {
+        window.addEventListener('pointerup', globalReset);
+        window.addEventListener('blur', globalReset);
+        return () => {
+            window.removeEventListener('pointerup', globalReset);
+            window.removeEventListener('blur', globalReset);
+        };
+    }, [globalReset]);
 
     const style = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -223,6 +246,11 @@ const ImageThumbnail: React.FC<{
 
     const handleMouseDown = (e: React.PointerEvent) => {
         setLockout(false); // Reset lockout on new interaction
+        hasBridgedToDndRef.current = false;
+        initialPointerPosRef.current = { x: e.clientX, y: e.clientY };
+        e.persist();
+        initialPointerEventRef.current = e;
+
         if (e.button === 0) { // Left click: Start hold timer
             setHoldProgress(0);
             const startTime = Date.now();
@@ -235,6 +263,9 @@ const ImageThumbnail: React.FC<{
                 if (p >= 100) {
                     clearInterval(holdTimerRef.current);
                     setLockout(true);
+                    // CRITICAL: Forcefully cancel any pending dnd-kit activation
+                    // by dispatching a global pointercancel.
+                    window.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
                 }
             }, 30);
         } else if (e.button === 2) { // Right click: existing logic
@@ -247,23 +278,58 @@ const ImageThumbnail: React.FC<{
     };
 
     const handleMouseMove = (e: React.PointerEvent) => {
+        // Bridge to dnd-kit ONLY if we have already crossed the threshold and handed off control
+        if (hasBridgedToDndRef.current) {
+            listeners?.onPointerMove?.(e);
+            return;
+        }
+
         if (isDragging) return; // Library is in control
-        if ((isNativeReady || lockout) && !hasTriggeredDragRef.current) {
+
+        if (isNativeReady || lockout) {
+            // Swallow events when in native mode or locked out
             e.preventDefault();
             e.stopPropagation();
-            // Threshold met: trigger native drag once
-            hasTriggeredDragRef.current = true;
-            window.electron.startDrag(img.path, '');
-            // We do NOT reset holdProgress here, so the READY message stays visible
-            if (holdTimerRef.current) clearInterval(holdTimerRef.current);
-        } else if (lockout) {
-            // Still locked out, swallow events
-            e.preventDefault();
-            e.stopPropagation();
+
+            if (!hasTriggeredDragRef.current) {
+                // Double-tap cancel just before handover to OS
+                window.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+
+                hasTriggeredDragRef.current = true;
+                window.electron.startDrag(img.path, '');
+                if (holdTimerRef.current) {
+                    clearInterval(holdTimerRef.current);
+                    holdTimerRef.current = null;
+                }
+            }
+            return; // Swallowing movement events while in native/lockout mode
+        }
+
+        // Gatekeeper logic: Detect movement > 15px BEFORE hold timer finishes
+        // We use buttons === 1 to ensure left mouse is held
+        if (initialPointerPosRef.current && (e.buttons & 1)) {
+            const dx = e.clientX - initialPointerPosRef.current.x;
+            const dy = e.clientY - initialPointerPosRef.current.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Threshold matched and timer NOT finished (because we returned early above if isNativeReady)
+            if (dist > 15) {
+                hasBridgedToDndRef.current = true;
+                if (initialPointerEventRef.current) {
+                    listeners?.onPointerDown?.(initialPointerEventRef.current);
+                }
+                // Call move twice: once at original position to settle library, once at current pos to trigger drag
+                listeners?.onPointerMove?.(e);
+            }
         }
     };
 
-    const handleMouseUp = (_e: React.PointerEvent) => {
+    const handleMouseUp = (e: React.PointerEvent) => {
+        // Bridge to dnd-kit ONLY if we handed off
+        if (hasBridgedToDndRef.current) {
+            listeners?.onPointerUp?.(e);
+        }
+
         if (timerRef.current) {
             clearTimeout(timerRef.current);
             timerRef.current = null;
@@ -282,7 +348,6 @@ const ImageThumbnail: React.FC<{
             ref={setNodeRef}
             style={style}
             {...attributes}
-            {...listeners}
             data-image-id={img.id}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -305,12 +370,6 @@ const ImageThumbnail: React.FC<{
         >
             <ImagePlacementIndicator imageId={img.id} />
             <div className="thumbnail-inner">
-                {holdProgress > 0 && (
-                    <div className="native-drag-indicator">
-                        <div className="progress-bar" style={{ width: `${holdProgress}%` }} />
-                        {holdProgress >= 100 && <div className="ready-overlay">{t('ready_to_drag')}</div>}
-                    </div>
-                )}
                 <div className="thumbnail-card">
                     <div className="thumbnail-placeholder">
                         <MdImage size={32} />
@@ -320,10 +379,18 @@ const ImageThumbnail: React.FC<{
                         alt={img.name}
                         className="thumbnail-img"
                     />
-                    <div className="label-glow"></div>
-                    <div className="label-bar"></div>
                 </div>
             </div>
+
+            {/* Stationary Overlays */}
+            {holdProgress > 0 && (
+                <div className="native-drag-indicator">
+                    <div className="progress-bar" style={{ width: `${holdProgress}%` }} />
+                    {holdProgress >= 100 && <div className="ready-overlay">{t('ready_to_drag')}</div>}
+                </div>
+            )}
+            <div className="label-glow" />
+            <div className="label-bar" />
         </motion.div>
     );
 });
@@ -336,6 +403,13 @@ const BurstGroup: React.FC<{
     const { t, i18n } = useTranslation();
     const selectedImageId = useIngestionStore(s => s.selectedImageId);
     const setSelectedImageId = useIngestionStore(s => s.setSelectedImageId);
+    const watchedFolders = useSettingsStore(s => s.watchedFolders);
+
+    const sourceAlias = React.useMemo(() => {
+        const folder = watchedFolders.find(f => f.path === burst[0].source);
+        return folder ? folder.alias : burst[0].source;
+    }, [watchedFolders, burst]);
+
     const groupRef = React.useRef<HTMLDivElement>(null);
     const [hasBeenVisible, setHasBeenVisible] = React.useState(false);
 
@@ -364,7 +438,7 @@ const BurstGroup: React.FC<{
         <div ref={groupRef} className="burst-group">
             <div className="burst-header">
                 <div className="burst-info-left">
-                    <span className="burst-source">{burst[0].source}</span>
+                    <span className="burst-source">{sourceAlias}</span>
                     <span className="burst-date">
                         {(() => {
                             const date = new Date(burst[0].timestamp);
