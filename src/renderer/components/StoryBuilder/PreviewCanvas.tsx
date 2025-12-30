@@ -5,7 +5,7 @@ import { useStoryStore } from '../../store/useStoryStore';
 import { DroppableSlot } from './DroppableSlot';
 
 const renderHashtags = (text: string) => {
-    const parts = text.split(/(#\w+)/g);
+    const parts = text.split(/(#[\p{L}\p{N}_]+)/gu);
     return parts.map((part, i) =>
         part.startsWith('#') ? <span key={i} className="hashtag">{part}</span> : part
     );

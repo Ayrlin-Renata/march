@@ -177,3 +177,24 @@
     --preview-bg-bsky: #000814;
     --preview-text-bsky: #ffffff;
 }
+
+/* Base-agnostic High Contrast Override */
+[data-theme='high-contrast'] {
+    --bg-primary: #000000;
+    --bg-secondary: #000000;
+    --bg-tertiary: #111111;
+    --bg-canvas: #000000;
+    --bg-card: #000000;
+    --border-color: #ffffff;
+    --divider-color: #ffffff;
+    --fg-primary: #ffffff;
+    --fg-secondary: #ffffff;
+    --text-dim: #ffff00;
+    --text-main: #ffffff;
+    --fg-accent: #ffff00;
+    --bg-surface-hover: rgba(255, 255, 255, 0.2);
+    --bg-surface-active: rgba(255, 255, 255, 0.4);
+    --bg-gradient: none;
+    --bg-mockup: #000000;
+    --text-mockup: #ffffff;
+}

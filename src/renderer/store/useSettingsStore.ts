@@ -41,6 +41,7 @@ interface SettingsState {
     storedWindowWidthUncollapsed: number;
     language: string;
     baseTheme: 'simple' | 'march' | 'time';
+    hasSeenTutorialPrompt: boolean;
 
     // Actions
     setScrollSensitivity: (val: number) => void;
@@ -59,6 +60,7 @@ interface SettingsState {
     setLastBuilderWidth: (width: number) => void;
     setStoredWindowWidthCollapsed: (width: number) => void;
     setStoredWindowWidthUncollapsed: (width: number) => void;
+    setHasSeenTutorialPrompt: (val: boolean) => void;
     reorderLabels: (newLabels: LabelConfig[]) => void;
     updateLabel: (index: number, name: string, color: string) => void;
     addWatchedFolder: (path: string, alias: string) => void;
@@ -103,6 +105,7 @@ export const useSettingsStore = create<SettingsState>()(
             storedWindowWidthUncollapsed: 1200,
             language: 'en',
             baseTheme: 'simple',
+            hasSeenTutorialPrompt: false,
 
             setScrollSensitivity: (val) => set({ scrollSensitivity: val }),
             setIngestLookbackDays: (val) => set({ ingestLookbackDays: val }),
@@ -123,6 +126,7 @@ export const useSettingsStore = create<SettingsState>()(
             setLastBuilderWidth: (width) => set({ lastBuilderWidth: width }),
             setStoredWindowWidthCollapsed: (width) => set({ storedWindowWidthCollapsed: width }),
             setStoredWindowWidthUncollapsed: (width) => set({ storedWindowWidthUncollapsed: width }),
+            setHasSeenTutorialPrompt: (val: boolean) => set({ hasSeenTutorialPrompt: val }),
             reorderLabels: (newLabels: LabelConfig[]) => set({ labels: newLabels }),
             updateLabel: (index: number, name: string, color: string) => set((state) => ({
                 labels: state.labels.map(l => l.index === index ? { ...l, name, color } : l)
@@ -176,6 +180,7 @@ export const useSettingsStore = create<SettingsState>()(
                 storedWindowWidthUncollapsed: state.storedWindowWidthUncollapsed,
                 language: state.language,
                 baseTheme: state.baseTheme,
+                hasSeenTutorialPrompt: state.hasSeenTutorialPrompt,
             }),
         }
     )

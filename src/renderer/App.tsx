@@ -15,6 +15,7 @@ import { useStoryStore } from './store/useStoryStore';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 import { MdViewSidebar } from 'react-icons/md';
 import PostView from './components/PostView';
+import { TutorialPrompt } from './components/TutorialPrompt';
 
 // Styles
 import './styles/base/variables.css';
@@ -27,6 +28,7 @@ import './styles/features/fullscreen-preview.css';
 import './styles/features/settings.css';
 import './styles/features/story-builder/layout.css';
 import './styles/features/story-builder/canvas.css';
+import './styles/components/tutorial.css';
 import './styles/features/story-builder/sidebar.css';
 import './styles/features/story-builder/components.css';
 import './styles/features/story-builder/crop-overlay.css';
@@ -126,7 +128,7 @@ const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className })
 
 const App: React.FC = () => {
     const { t } = useTranslation();
-    const { theme, setTheme } = useTheme();
+    const { theme, toggleTheme } = useTheme();
     const { } = useTranslation();
     const addImages = useIngestionStore(s => s.addImages);
     const ingestionWidth = useSettingsStore(s => s.ingestionWidth);
@@ -399,16 +401,17 @@ const App: React.FC = () => {
 
                     <footer className="app-bottom-bar">
                         <div className="bottom-bar-left">
-                            <button className="icon-btn" title={t('listening_folders_tooltip')} onClick={() => setActiveManager('folders')}>
+                            <button className="icon-btn" id="tutorial-folders-manager-btn" title={t('listening_folders_tooltip')} onClick={() => setActiveManager('folders')}>
                                 <MdFolderOpen size={20} />
                             </button>
                             <IngestionBurstControl />
                         </div>
 
                         <div className="bottom-bar-center">
-                            <div className="theme-controls">
-                                <button className="icon-btn theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                                    {theme === 'dark' ? <MdOutlineLightMode size={20} /> : <MdOutlineDarkMode size={20} />}
+                            <div className="theme-controls" id="tutorial-theme-controls">
+                                <button className="icon-btn theme-toggle" onClick={toggleTheme}>
+                                    {theme === 'dark' && <MdOutlineDarkMode size={20} />}
+                                    {theme === 'light' && <MdOutlineLightMode size={20} />}
                                 </button>
                                 <div className="theme-picker-wrapper">
                                     <button
@@ -461,7 +464,7 @@ const App: React.FC = () => {
 
                         <div className="bottom-bar-right">
                             <div className="preset-tiny-manager">
-                                <button className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
+                                <button id="tutorial-presets-manager-btn" className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
                                     <MdSpeakerNotes size={20} />
                                 </button>
                             </div>
@@ -512,6 +515,7 @@ const App: React.FC = () => {
             <ManagerOverlay />
             <IngestionHoverOverlay />
             {isPostMode && <PostView />}
+            <TutorialPrompt />
         </div>
     );
 };

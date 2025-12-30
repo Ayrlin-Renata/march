@@ -1,0 +1,103 @@
+/* Driver.js Custom Theming */
+
+.driver-popover.driverjs-theme {
+    background-color: var(--bg-secondary);
+    color: var(--fg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    font-family: inherit;
+    backdrop-filter: blur(10px);
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fg-primary);
+    margin-bottom: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+    color: var(--text-dim);
+    transition: color 0.2s ease;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+    color: var(--fg-error);
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow {
+    border-color: transparent;
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-top {
+    border-top-color: var(--bg-secondary);
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-bottom {
+    border-bottom-color: var(--bg-secondary);
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-left {
+    border-left-color: var(--bg-secondary);
+}
+
+.driver-popover.driverjs-theme .driver-popover-arrow-side-right {
+    border-right-color: var(--bg-secondary);
+}
+
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.driver-popover.driverjs-theme .driver-popover-navigation-btns {
+    margin-top: 16px;
+    gap: 8px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn,
+.driver-popover.driverjs-theme .driver-popover-prev-btn {
+    background: var(--bg-tertiary);
+    color: var(--fg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: none;
+    transition: all 0.2s ease;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:hover,
+.driver-popover.driverjs-theme .driver-popover-prev-btn:hover {
+    background: var(--bg-surface-hover);
+    border-color: var(--fg-accent);
+}
+
+/* Highlight Overlay */
+.driver-overlay {
+    fill: rgba(0, 0, 0, 0.4);
+}
+
+/* Tutorial Prompt Window Refinements */
+.tutorial-prompt {
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.tutorial-prompt h2 {
+    color: var(--fg-primary);
+}
+
+.tutorial-prompt p {
+    color: var(--text-dim);
+}

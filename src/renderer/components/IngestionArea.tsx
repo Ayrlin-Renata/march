@@ -619,7 +619,7 @@ const IngestionArea: React.FC = React.memo(() => {
     const visibleBursts = React.useMemo(() => bursts.slice(0, visibleCount), [bursts, visibleCount]);
 
     return (
-        <section className="ingestion-area">
+        <section className="ingestion-area" id="tutorial-ingestion-area">
             <header className="area-header">
                 <h2>{t('ingestion')}</h2>
                 <span className="count-badge">{filteredImages.length}</span>

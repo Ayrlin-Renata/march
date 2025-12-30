@@ -118,7 +118,7 @@ const StoryBuilderArea: React.FC = () => {
 
     const hashtags = React.useMemo(() => {
         const allText = posts.flatMap(p => Object.values(p.platforms).map(pl => pl.text)).join(' ');
-        const matches = allText.match(/#\w+/g) || [];
+        const matches = allText.match(/#[\p{L}\p{N}_]+/gu) || [];
         const counts: Record<string, number> = {};
         matches.forEach(tag => { counts[tag] = (counts[tag] || 0) + 1; });
 
@@ -148,7 +148,7 @@ const StoryBuilderArea: React.FC = () => {
     }
 
     return (
-        <section className="story-builder-area">
+        <section className="story-builder-area" id="tutorial-story-builder-area">
             <GlobalCropOverlay
                 activeSlotRect={activeSlotRect}
                 crop={focusedSlotData?.crop || null}
@@ -161,7 +161,7 @@ const StoryBuilderArea: React.FC = () => {
             <header className="builder-header">
                 <div className="builder-header-left">
                     <h1>{t('story_builder')}</h1>
-                    <div className="platform-tabs">
+                    <div className="platform-tabs" id="tutorial-platform-tabs">
                         {PLATFORMS.filter(p => useSettingsStore.getState().enabledPlatformKeys.includes(p.key)).map(p => {
                             const isEnabled = activePost.platforms[p.key].enabled;
                             const isActive = activePost.activePlatform === p.key;
@@ -192,7 +192,7 @@ const StoryBuilderArea: React.FC = () => {
                     </div>
                 </div>
                 <div className="header-actions">
-                    <button className="placeholder-post-btn" onClick={() => {
+                    <button className="placeholder-post-btn" id="tutorial-post-story-btn" onClick={() => {
                         useStoryStore.getState().finalizeCrops(activePostId);
                         useStoryStore.getState().setPostMode(true);
                     }}>

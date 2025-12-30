@@ -21,7 +21,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     const toggleTheme = () => {
-        const themes: Theme[] = ['dark', 'light', 'high-contrast'];
+        const themes: Theme[] = ['dark', 'light'];
         const currentIndex = themes.indexOf(theme);
         const nextIndex = (currentIndex + 1) % themes.length;
         setTheme(themes[nextIndex]);

@@ -46,6 +46,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "chokidar": "^5.0.0",
     "clsx": "^2.1.1",
+    "driver.js": "^1.4.0",
     "electron-store": "^11.0.2",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",

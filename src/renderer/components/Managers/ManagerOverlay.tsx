@@ -242,7 +242,7 @@ const IngestionSettingsPane: React.FC = () => {
                 <div className="settings-group">
                     <label className="settings-label">{t('ingest_lookback')}</label>
                     <div className="settings-control">
-                        <input type="range" min="1" max="30" step="1" value={ingestLookbackDays} onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))} />
+                        <input type="range" min="1" max="90" step="1" value={ingestLookbackDays} onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))} />
                         <span>{ingestLookbackDays}<small>{t('days')}</small></span>
                     </div>
                 </div>
@@ -322,10 +322,25 @@ const LanguageManagerPane: React.FC = () => {
     );
 };
 
+import { useTutorial } from '../../hooks/useTutorial';
+
 const GeneralManagerPane: React.FC = () => {
     const { t } = useTranslation();
-    const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
-    const setIngestLookbackDays = useSettingsStore(s => s.setIngestLookbackDays);
+    const { startTutorial } = useTutorial();
+    const setActiveManager = useSettingsStore(s => s.setActiveManager);
+    const setHasSeenTutorialPrompt = useSettingsStore(s => s.setHasSeenTutorialPrompt);
+
+    const handleReplayTutorial = () => {
+        setActiveManager(null);
+        // Small delay to allow manager to close for better tutorial focus
+        setTimeout(() => {
+            startTutorial();
+        }, 300);
+    };
+
+    const handleResetPrompt = () => {
+        setHasSeenTutorialPrompt(false);
+    };
 
     return (
         <div className="manager-pane">
@@ -335,10 +350,15 @@ const GeneralManagerPane: React.FC = () => {
             </header>
             <div className="settings-body">
                 <div className="settings-group">
-                    <label className="settings-label">{t('ingest_lookback')}</label>
-                    <div className="settings-control">
-                        <input type="range" min="1" max="90" step="1" value={ingestLookbackDays} onChange={(e) => setIngestLookbackDays(parseInt(e.target.value))} />
-                        <span>{ingestLookbackDays}<small> {t('days')}</small></span>
+                    <label className="settings-label">{t('tutorial')}</label>
+                    <div className="settings-control" style={{ gap: '8px' }}>
+                        <button className="icon-btn-text" onClick={handleReplayTutorial}>
+                            {t('replay_tutorial')}
+                        </button>
+                        <span style={{ opacity: 0.3 }}>|</span>
+                        <button className="icon-btn-text" onClick={handleResetPrompt}>
+                            {t('reset_tutorial_prompt')}
+                        </button>
                     </div>
                 </div>
             </div>
