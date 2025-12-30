@@ -635,3 +635,36 @@
     height: 100%;
     transition: transform 0.2s ease;
 }
+
+/* Loading States */
+.spinner-icon {
+    animation: simple-spin 1.5s linear infinite;
+}
+
+@keyframes simple-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.top-loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}

@@ -143,6 +143,7 @@ const App: React.FC = () => {
     const setStoredWindowWidthUncollapsed = useSettingsStore(s => s.setStoredWindowWidthUncollapsed);
     const baseTheme = useSettingsStore(s => s.baseTheme);
     const setBaseTheme = useSettingsStore(s => s.setBaseTheme);
+    const setIsDiscovering = useIngestionStore(s => s.setIsDiscovering);
 
     const [isThemePopupOpen, setIsThemePopupOpen] = React.useState(false);
 
@@ -266,9 +267,10 @@ const App: React.FC = () => {
                     return;
                 }
 
-                // Subsequent files are batched to prevent UI stutter
+                // Subsequent files are batched more conservatively to preserve UI responsiveness
                 if (!batchTimerRef.current) {
-                    batchTimerRef.current = setTimeout(flush, 50);
+                    // Constant 200ms batch window allows for smooth window dragging/interaction
+                    batchTimerRef.current = setTimeout(flush, 200);
                 }
             });
             return () => {
@@ -277,6 +279,17 @@ const App: React.FC = () => {
             };
         }
     }, [addImages]);
+
+    useEffect(() => {
+        if (window.electron && window.electron.on) {
+            const unsubStart = window.electron.on('discovery-started', () => setIsDiscovering(true));
+            const unsubEnd = window.electron.on('discovery-finished', () => setIsDiscovering(false));
+            return () => {
+                unsubStart();
+                unsubEnd();
+            };
+        }
+    }, [setIsDiscovering]);
 
     useEffect(() => {
         const handleWindowResize = () => {

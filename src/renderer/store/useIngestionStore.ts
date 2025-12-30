@@ -17,6 +17,8 @@ interface IngestionState {
     resetLabel: (id: string) => void;
     updateImageDimensions: (id: string, width: number, height: number) => void;
     removeImagesBySource: (source: string) => void;
+    isDiscovering: boolean;
+    setIsDiscovering: (val: boolean) => void;
 }
 
 export const useIngestionStore = create<IngestionState>((set, get) => ({
@@ -28,11 +30,12 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
     addImages: (newImages, burstThreshold) => {
         const { images } = get();
         let updatedImages = [...images];
+        const existingPaths = new Set(images.map(img => img.path));
 
         newImages.forEach((img) => {
             if (!img.path) return;
-            // Prevent duplicates
-            if (updatedImages.some(existing => existing.path === img.path)) return;
+            // Prevent duplicates using Set O(1)
+            if (existingPaths.has(img.path)) return;
 
             const timestamp = img.timestamp || Date.now();
             const id = img.id || Math.random().toString(36).substring(7);
@@ -49,6 +52,7 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
             };
 
             updatedImages.push(newImg);
+            existingPaths.add(img.path);
         });
 
         // 1. Sort the entire set chronologically (asc) for burst calculation
@@ -178,5 +182,7 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
         set((state) => ({
             images: state.images.filter(img => img.source !== source)
         }));
-    }
+    },
+    isDiscovering: false,
+    setIsDiscovering: (val) => set({ isDiscovering: val })
 }));

@@ -26,6 +26,10 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
         return;
     }
 
+    if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('discovery-started');
+    }
+
     const watcher = chokidar.watch(watchPaths, {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
@@ -33,18 +37,22 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
     });
 
     const lookbackThreshold = Date.now() - (lookbackDays * 24 * 60 * 60 * 1000);
-
     const initialBuffer: any[] = [];
     let isReady = false;
+    let pendingFiles = 0;
 
-    const processFile = (filePath: string, isInitial: boolean = false) => {
+    const processFile = async (filePath: string, isInitial: boolean = false) => {
         try {
+            pendingFiles++;
             // Check if it's an image
             const ext = path.extname(filePath).toLowerCase();
             const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
-            if (!imageExtensions.includes(ext)) return;
+            if (!imageExtensions.includes(ext)) {
+                pendingFiles--;
+                return;
+            }
 
-            const stats = fs.statSync(filePath);
+            const stats = await fs.promises.stat(filePath);
             // Use the earliest available timestamp to catch true "Creation"
             const timestamp = Math.min(
                 stats.birthtimeMs > 0 ? stats.birthtimeMs : Infinity,
@@ -55,11 +63,14 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                 const img = nativeImage.createFromPath(filePath);
                 const size = img.getSize();
 
+                const normPath = path.normalize(filePath);
+                const sourceRoot = watchPaths.find(p => normPath.startsWith(path.normalize(p))) || path.dirname(filePath);
+
                 const fileData: any = {
                     path: filePath,
                     name: path.basename(filePath),
                     timestamp,
-                    source: path.basename(path.dirname(filePath)),
+                    source: sourceRoot,
                     width: size.width,
                     height: size.height,
                     labelIndex: getLabelFn(filePath)
@@ -69,22 +80,25 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
 
                 if (isInitial) {
                     initialBuffer.push(fileData);
-                } else {
+                } else if (!mainWindow.isDestroyed()) {
                     // Live updates sent immediately
                     mainWindow.webContents.send('file-added', fileData);
                 }
             }
         } catch (err) {
             console.error(`Error reading file stats for ${filePath}:`, err);
+        } finally {
+            pendingFiles--;
+            // If we were waiting for the initial batch to finish
+            if (isReady && pendingFiles === 0) {
+                finalizeInitialScan();
+            }
         }
     };
 
-    watcher.on('add', (filePath) => {
-        processFile(filePath, !isReady);
-    });
+    const finalizeInitialScan = () => {
+        if (initialBuffer.length === 0) return;
 
-    watcher.on('ready', () => {
-        isReady = true;
         // Sort buffer: Newest First
         initialBuffer.sort((a, b) => b.timestamp - a.timestamp);
 
@@ -93,24 +107,29 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
         // WAVE 0: Instant burst (newest 20 files) - get pixels on screen NOW
         const WAVE_0_SIZE = 20;
         const wave0 = initialBuffer.slice(0, WAVE_0_SIZE);
-        wave0.forEach(f => mainWindow.webContents.send('file-added', f));
+        if (!mainWindow.isDestroyed()) {
+            wave0.forEach(f => mainWindow.webContents.send('file-added', f));
+        }
 
-        // WAVE 1: Main burst (next 130 files) - populate the rest of the visible area
-        const WAVE_1_SIZE = 150;
+        // WAVE 1: Second burst (next 20 files) - get enough pixels to scroll slightly
+        const WAVE_1_SIZE = 40;
         if (initialBuffer.length > WAVE_0_SIZE) {
             setTimeout(() => {
                 const wave1 = initialBuffer.slice(WAVE_0_SIZE, WAVE_1_SIZE);
-                wave1.forEach(f => mainWindow.webContents.send('file-added', f));
-            }, 60); // Small gap after wave 0
+                if (!mainWindow.isDestroyed()) {
+                    wave1.forEach(f => mainWindow.webContents.send('file-added', f));
+                }
+            }, 300); // Give Wave 0 time to render fully
         }
 
-        // WAVE 2+: Stagger the remaining files
+        // WAVE 2+: Stagger the remaining files much more slowly
         if (initialBuffer.length > WAVE_1_SIZE) {
             const BATCH_SIZE = 100;
-            const STAGGER_MS = 150;
+            const STAGGER_MS = 600; // Much slower batches to allow UI interaction
             let currentOffset = WAVE_1_SIZE;
 
             const sendNextBatch = () => {
+                if (mainWindow.isDestroyed()) return;
                 const batch = initialBuffer.slice(currentOffset, currentOffset + BATCH_SIZE);
                 if (batch.length === 0) return;
 
@@ -122,8 +141,24 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                 }
             };
 
-            // Start staggered wave after a focus period for waves 0-1
-            setTimeout(sendNextBatch, 800);
+            // Start staggered wave after a long breath to let the user move the window
+            setTimeout(sendNextBatch, 1500);
+        }
+
+        if (!mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('discovery-finished');
+        }
+    };
+
+    watcher.on('add', (filePath) => {
+        processFile(filePath, !isReady);
+    });
+
+    watcher.on('ready', () => {
+        isReady = true;
+        // If all pending file stats are already done (unlikely for big folders), finalize now
+        if (pendingFiles === 0) {
+            finalizeInitialScan();
         }
     });
 

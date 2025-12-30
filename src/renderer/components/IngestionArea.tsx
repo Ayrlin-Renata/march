@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { MdBolt, MdImage } from 'react-icons/md';
+import { MdBolt, MdImage, MdRefresh } from 'react-icons/md';
 import { useIngestionStore } from '../store/useIngestionStore';
 import type { IngestedImage } from '../types/images';
 import { useTranslation } from 'react-i18next';
@@ -407,7 +407,11 @@ const BurstGroup: React.FC<{
 
     const sourceAlias = React.useMemo(() => {
         const folder = watchedFolders.find(f => f.path === burst[0].source);
-        return folder ? folder.alias : burst[0].source;
+        if (folder) return folder.alias;
+
+        // Fallback: just the folder name from the path
+        const parts = burst[0].source.split(/[\\/]/);
+        return parts[parts.length - 1] || burst[0].source;
     }, [watchedFolders, burst]);
 
     const groupRef = React.useRef<HTMLDivElement>(null);
@@ -518,6 +522,7 @@ const IngestionArea: React.FC = React.memo(() => {
     const images = useIngestionStore(s => s.images);
     const cycleLabel = useIngestionStore(s => s.cycleLabel);
     const resetLabel = useIngestionStore(s => s.resetLabel);
+    const isDiscovering = useIngestionStore(s => s.isDiscovering);
 
     const [activeSource, setActiveSource] = React.useState('All');
     const [visibleCount, setVisibleCount] = React.useState(15);
@@ -528,6 +533,7 @@ const IngestionArea: React.FC = React.memo(() => {
 
     const { t } = useTranslation();
     const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
+    const watchedFolders = useSettingsStore(s => s.watchedFolders);
 
     useKeyboardAssignment();
 
@@ -620,15 +626,21 @@ const IngestionArea: React.FC = React.memo(() => {
             </header>
             <div className="filter-bar">
                 <div className="filter-pill-container scrollable-hidden">
-                    {sources.map(src => (
-                        <button
-                            key={src}
-                            className={`filter-pill ${activeSource === src ? 'active' : ''}`}
-                            onClick={() => setActiveSource(src)}
-                        >
-                            {src === 'all' ? t('all') : src}
-                        </button>
-                    ))}
+                    {sources.map(src => {
+                        const isAll = src === 'all';
+                        const folder = watchedFolders.find(f => f.path === src);
+                        const label = isAll ? t('all') : (folder ? folder.alias : (src.split(/[\\/]/).pop() || src));
+
+                        return (
+                            <button
+                                key={src}
+                                className={`filter-pill ${activeSource === src ? 'active' : ''}`}
+                                onClick={() => setActiveSource(src)}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
             <div
@@ -650,9 +662,19 @@ const IngestionArea: React.FC = React.memo(() => {
             >
                 {bursts.length === 0 ? (
                     <div className="empty-state-container">
-                        <MdImage size={128} className="empty-state-icon" />
-                        <h3 className="empty-state-title">{t('no_images')}</h3>
-                        <p className="empty-state-description">{t('folders_desc')}</p>
+                        {isDiscovering ? (
+                            <>
+                                <MdRefresh size={128} className="empty-state-icon spinner-icon" />
+                                <h3 className="empty-state-title">{t('discovering_images')}</h3>
+                                <p className="empty-state-description">{t('discovering_desc')}</p>
+                            </>
+                        ) : (
+                            <>
+                                <MdImage size={128} className="empty-state-icon" />
+                                <h3 className="empty-state-title">{t('no_images')}</h3>
+                                <p className="empty-state-description">{t('folders_desc')}</p>
+                            </>
+                        )}
                     </div>
                 ) : (
                     <div
@@ -676,6 +698,12 @@ const IngestionArea: React.FC = React.memo(() => {
                             }
                         }}
                     >
+                        {isDiscovering && (
+                            <div className="top-loading-indicator">
+                                <MdRefresh size={20} className="spinner-icon" />
+                                <span>{t('discovering_more')}</span>
+                            </div>
+                        )}
                         {visibleBursts.map((burst) => (
                             <BurstGroup
                                 key={burst[0].burstId}
