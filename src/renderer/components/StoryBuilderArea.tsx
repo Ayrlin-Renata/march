@@ -2,11 +2,48 @@ import React from 'react';
 import { useStoryStore } from '../store/useStoryStore';
 import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../types/stories';
+import type { ImageSlotData } from '../types/stories';
 import { MdAdd, MdDashboard, MdChevronRight, MdChevronLeft, MdDelete } from 'react-icons/md';
 import clsx from 'clsx';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { GlobalCropOverlay } from './StoryBuilder/GlobalCropOverlay';
 import { PreviewCanvas } from './StoryBuilder/PreviewCanvas';
+import { clampCrop } from '../utils/cropUtils';
+import { AnimatePresence, motion } from 'framer-motion';
+
+
+const CropZoomSlider: React.FC<{
+    scale: number,
+    onChange: (newScale: number) => void
+}> = ({ scale, onChange }) => {
+    // Note: 10^((val-50)/50) gives 0.1 at 0, 1 at 50, 10 at 100.
+    const logScaleMap = (v: number) => Math.pow(10, (v - 50) / 50);
+    const logValMap = (s: number) => Math.log10(s) * 50 + 50;
+
+    return (
+        <motion.div
+            className="crop-zoom-slider-container glassy"
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            onClick={(e) => e.stopPropagation()}
+        >
+            <input
+                type="range"
+                min="50"
+                max="100"
+                step="1"
+                value={logValMap(scale)}
+                onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    onChange(logScaleMap(val));
+                }}
+                className="zoom-slider-input"
+            />
+            <span className="zoom-percent">{scale.toFixed(1)}x</span>
+        </motion.div>
+    );
+};
 
 
 const StoryBuilderArea: React.FC = () => {
@@ -52,6 +89,50 @@ const StoryBuilderArea: React.FC = () => {
     const activePlatform = activePost.platforms[activePost.activePlatform];
     const focusedSlotData = focusedSlotIndex !== null ? activePlatform.slots[focusedSlotIndex] : null;
 
+    const handleResizeExpansion = React.useCallback((newExp: ImageSlotData['crop']['expansion']) => {
+        if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect) return;
+
+        const oldExp = focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
+        const oldW = activeSlotRect.width + oldExp.left + oldExp.right;
+        const oldH = activeSlotRect.height + oldExp.top + oldExp.bottom;
+        const newW = activeSlotRect.width + newExp.left + newExp.right;
+        const newH = activeSlotRect.height + newExp.top + newExp.bottom;
+
+        if (oldW <= 0 || oldH <= 0 || newW <= 0 || newH <= 0) return;
+
+        const imgW = focusedSlotData.originalWidth || oldW;
+        const imgH = focusedSlotData.originalHeight || oldH;
+        const imgAspect = imgW / imgH;
+
+        // Calculate base width (physical width at scale=1) for both geometries
+        const oldBaseW = Math.max(oldW, oldH * imgAspect);
+        const newBaseW = Math.max(newW, newH * imgAspect);
+
+        // Compensate scale so physical image size stays constant
+        const newScale = focusedSlotData.crop.scale * (oldBaseW / newBaseW);
+
+        // Compensate x/y so physical image position in viewport stays constant
+        const oldXpx = (focusedSlotData.crop.x / 100) * oldW;
+        const oldYpx = (focusedSlotData.crop.y / 100) * oldH;
+
+        const centerInSlotX = (oldW / 2) + oldXpx - oldExp.left;
+        const centerInSlotY = (oldH / 2) + oldYpx - oldExp.top;
+
+        const newXpx = centerInSlotX + newExp.left - (newW / 2);
+        const newYpx = centerInSlotY + newExp.top - (newH / 2);
+
+        const newX = (newXpx / newW) * 100;
+        const newY = (newYpx / newH) * 100;
+
+        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+            ...focusedSlotData.crop,
+            expansion: newExp,
+            scale: newScale,
+            x: newX,
+            y: newY
+        });
+    }, [activePostId, activePost.activePlatform, focusedSlotIndex, focusedSlotData, activeSlotRect, updateSlotCrop]);
+
     return (
         <section className="story-builder-area">
             <GlobalCropOverlay
@@ -59,14 +140,7 @@ const StoryBuilderArea: React.FC = () => {
                 crop={focusedSlotData?.crop || null}
                 originalWidth={focusedSlotData?.originalWidth}
                 originalHeight={focusedSlotData?.originalHeight}
-                onResizeExpansion={(newExp) => {
-                    if (focusedSlotIndex !== null && focusedSlotData) {
-                        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
-                            ...focusedSlotData.crop,
-                            expansion: newExp
-                        });
-                    }
-                }}
+                onResizeExpansion={handleResizeExpansion}
                 onDeselect={() => setFocusedSlotIndex(null)}
             />
             {/* Top Navigation - Platform Tabs */}
@@ -199,6 +273,36 @@ const StoryBuilderArea: React.FC = () => {
                                 }}
                                 onDeselect={() => setFocusedSlotIndex(null)}
                             />
+
+                            <AnimatePresence>
+                                {focusedSlotIndex !== null && focusedSlotData && (
+                                    <CropZoomSlider
+                                        scale={focusedSlotData.crop.scale}
+                                        onChange={(newScale) => {
+                                            const exp = focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
+                                            const blueBoxW = (activeSlotRect?.width || 0) + exp.left + exp.right;
+                                            const blueBoxH = (activeSlotRect?.height || 0) + exp.top + exp.bottom;
+
+                                            const clamped = clampCrop(
+                                                focusedSlotData.originalWidth || 0,
+                                                focusedSlotData.originalHeight || 0,
+                                                blueBoxW,
+                                                blueBoxH,
+                                                newScale,
+                                                focusedSlotData.crop
+                                            );
+
+                                            updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+                                                ...focusedSlotData.crop,
+                                                scale: newScale,
+                                                x: clamped.x,
+                                                y: clamped.y
+                                            });
+                                        }}
+                                    />
+                                )}
+                            </AnimatePresence>
+
                             <div className="placeholder-post feed-below">
                                 <div className="placeholder-post-header">
                                     <div className="placeholder-pfp" />

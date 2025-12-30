@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import Cropper from 'react-easy-crop';
 import { useDroppable } from '@dnd-kit/core';
 import { getAssetUrl } from '../../utils/pathUtils';
+import { clampCrop } from '../../utils/cropUtils';
 
 // Helper for Mockup slots with interactive editing
 export const DroppableSlot: React.FC<{
@@ -32,7 +33,20 @@ export const DroppableSlot: React.FC<{
     }, [setDroppableRef]);
 
     const onZoomChange = (zoom: number) => {
-        updateSlotCrop(postId, platform, slotIndex, { ...slotData.crop, scale: zoom });
+        const clamped = clampCrop(
+            slotData.originalWidth || 0,
+            slotData.originalHeight || 0,
+            blueBoxW,
+            blueBoxH,
+            zoom,
+            slotData.crop
+        );
+        updateSlotCrop(postId, platform, slotIndex, {
+            ...slotData.crop,
+            scale: zoom,
+            x: clamped.x,
+            y: clamped.y
+        });
     };
 
     const onMediaLoaded = (mediaSize: { width: number; height: number }) => {
@@ -71,48 +85,63 @@ export const DroppableSlot: React.FC<{
         return () => observer.disconnect();
     }, [slotData.imagePath]); // Re-check when image changes
 
-    // Sync UI crop from store percentCrop on resize or mount
-    React.useLayoutEffect(() => {
-        if (!slotRef.current || !slotData.crop.percentCrop || !slotData.originalWidth || !slotData.originalHeight) return;
+    // Calculate blue box size for the crop area
+    const exp = slotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
+    const blueBoxW = (slotSize.width || 0) + exp.left + exp.right;
+    const blueBoxH = (slotSize.height || 0) + exp.top + exp.bottom;
+    const blueBoxAspect = blueBoxW / (blueBoxH || 1);
 
-        // This effect ensures that whenever the layout or slot size changes,
-        // the Cropper remains stable by using the normalized percentages from the store.
-        // The Cropper itself is controlled via percentages converted to the current pixel size of the slot.
-    }, [slotAspect]);
+    // Re-report rect to StoryBuilderArea when size changes while focused
+    React.useLayoutEffect(() => {
+        if (isFocused && slotRef.current) {
+            const rect = slotRef.current.getBoundingClientRect();
+            onFocus(rect);
+        }
+    }, [isFocused, slotSize.width, slotSize.height, slotAspect]);
 
     return (
         <div
             ref={setRefs}
-            className={clsx("mockup-slot", isOver && "drag-over")}
+            className={clsx("mockup-slot", isOver && "drag-over", isFocused && "is-focused")}
+            style={{ overflow: isFocused ? 'visible' : 'hidden' } as any}
             onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 onFocus(rect);
             }}
         >
             {slotData.imagePath ? (
-                <div className="crop-container">
+                <div
+                    className="crop-container"
+                    style={{
+                        position: 'absolute',
+                        top: -exp.top,
+                        left: -exp.left,
+                        width: blueBoxW,
+                        height: blueBoxH,
+                        zIndex: 1
+                    } as any}
+                >
                     <Cropper
                         image={getAssetUrl(slotData.imagePath)}
                         crop={{
-                            x: slotSize.width ? (slotData.crop.x / 100) * slotSize.width : 0,
-                            y: slotSize.height ? (slotData.crop.y / 100) * slotSize.height : 0
+                            x: blueBoxW ? (slotData.crop.x / 100) * blueBoxW : 0,
+                            y: blueBoxH ? (slotData.crop.y / 100) * blueBoxH : 0
                         }}
                         zoom={slotData.crop.scale}
-                        aspect={slotAspect}
+                        aspect={blueBoxAspect}
                         objectFit="cover"
                         onCropChange={(location) => {
-                            if (!isFocused || !slotSize.width || !slotSize.height) return;
-                            // Store as percentage of current visual container
+                            if (!isFocused || !blueBoxW || !blueBoxH) return;
+                            // Store as percentage of current visual container (Blue Box)
                             updateSlotCrop(postId, platform, slotIndex, {
                                 ...slotData.crop,
-                                x: (location.x / slotSize.width) * 100,
-                                y: (location.y / slotSize.height) * 100
+                                x: (location.x / blueBoxW) * 100,
+                                y: (location.y / blueBoxH) * 100
                             });
                         }}
                         onZoomChange={isFocused ? onZoomChange : () => { }}
                         onCropComplete={(percent, pixels) => {
-                            // Always update pixelCrop and percentCrop so PostView has it, but only if it's different
-                            // to avoid unnecessary store updates.
+                            // Since the Cropper now matches the blue box, these ARE the final export crops!
                             if (!slotData.crop.pixelCrop ||
                                 slotData.crop.pixelCrop.x !== pixels.x ||
                                 slotData.crop.pixelCrop.y !== pixels.y ||
@@ -128,6 +157,7 @@ export const DroppableSlot: React.FC<{
                         }}
                         onMediaLoaded={onMediaLoaded}
                         zoomWithScroll={true}
+                        minZoom={1}
                         showGrid={false}
                         classes={{
                             containerClassName: 'cropper-container',

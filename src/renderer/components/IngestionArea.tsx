@@ -556,7 +556,7 @@ const IngestionArea: React.FC = React.memo(() => {
                 </div>
             </div>
             <div
-                className="area-body scrollable"
+                className="area-body"
                 onScroll={() => {
                     isScrollingRef.current = true;
                     // Read state directly from store to avoid subscribing IngestionArea to hover changes
