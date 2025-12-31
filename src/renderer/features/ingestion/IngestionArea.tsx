@@ -189,12 +189,13 @@ export const IngestionArea: React.FC = React.memo(() => {
                                 <span>{t('discovering_more')}</span>
                             </div>
                         )}
-                        {visibleBursts.map((burst) => (
+                        {visibleBursts.map((burst, index) => (
                             <BurstGroup
                                 key={burst[0].burstId}
                                 burst={burst}
                                 cycleLabel={cycleLabel}
                                 resetLabel={resetLabel}
+                                priority={index < 3}
                             />
                         ))}
                     </div>

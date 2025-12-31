@@ -11,8 +11,9 @@ import { ImageThumbnail } from './ImageThumbnail';
 export const BurstGroup: React.FC<{
     burst: IngestedImage[],
     cycleLabel: (id: string) => void,
-    resetLabel: (id: string) => void
-}> = React.memo(({ burst, cycleLabel, resetLabel }) => {
+    resetLabel: (id: string) => void,
+    priority?: boolean
+}> = React.memo(({ burst, cycleLabel, resetLabel, priority = false }) => {
     const { t, i18n } = useTranslation();
     const selectedImageId = useIngestionStore(s => s.selectedImageId);
     const setSelectedImageId = useIngestionStore(s => s.setSelectedImageId);
@@ -83,6 +84,7 @@ export const BurstGroup: React.FC<{
                             onSelect={() => setSelectedImageId(img.id)}
                             onCycle={() => cycleLabel(img.id)}
                             onReset={() => resetLabel(img.id)}
+                            priority={priority}
                         />
                     ))}
                 </AnimatePresence>

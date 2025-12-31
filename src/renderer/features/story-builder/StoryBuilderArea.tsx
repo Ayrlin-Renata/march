@@ -1,10 +1,11 @@
 import React from 'react';
 import { useStoryStore } from '../../store/useStoryStore';
 import { useTranslation } from 'react-i18next';
-import { MdAdd, MdDashboard } from 'react-icons/md';
+import { MdAdd, MdDashboard, MdDelete, MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { getConstrainedPixelCrop } from '../../utils/cropUtils';
 import type { ImageSlotData } from '../../types/stories';
+import clsx from 'clsx';
 
 // Components
 import { GlobalCropOverlay } from './components/GlobalCropOverlay';
@@ -19,6 +20,9 @@ const StoryBuilderArea: React.FC = () => {
         posts,
         activePostId,
         addPost,
+        removePost,
+        setActivePostId,
+        updatePostName,
         enablePlatform,
         setActivePlatform,
         updateLayout,
@@ -30,7 +34,9 @@ const StoryBuilderArea: React.FC = () => {
     const [activeSlotRect, setActiveSlotRect] = React.useState<DOMRect | null>(null);
     const [isSymmetric, setIsSymmetric] = React.useState(true);
     const [isFitConstraint, setIsFitConstraint] = React.useState(true);
+    const [isPostListOpen, setIsPostListOpen] = React.useState(true);
     const [focusedSlotIndex, setFocusedSlotIndex] = React.useState<number | null>(null);
+    const [activeEditingPostId, setActiveEditingPostId] = React.useState<string | null>(null);
 
     const transientCropRef = React.useRef<{ pixelCrop: any, expansion: any } | null>(null);
 
@@ -271,6 +277,68 @@ const StoryBuilderArea: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Right Side - Post Manager */}
+                <aside className={clsx("post-sidebar", !isPostListOpen && "collapsed")}>
+                    <button className="collapse-btn" onClick={() => setIsPostListOpen(!isPostListOpen)}>
+                        {isPostListOpen ? <MdChevronRight size={16} /> : <MdChevronLeft size={16} />}
+                    </button>
+
+                    <div className="post-sidebar-content">
+                        <div className="sidebar-header">
+                            <h3>{t('stories')}</h3>
+                            <button className="sidebar-add-btn" onClick={() => addPost(t('story') + ' ' + (posts.length + 1))}>
+                                <MdAdd size={18} />
+                            </button>
+                        </div>
+                        <div className="post-list scrollable">
+                            {posts.map(p => {
+                                const isActive = p.id === activePostId;
+                                const isEditing = activeEditingPostId === p.id;
+
+                                return (
+                                    <div
+                                        key={p.id}
+                                        className={clsx("post-item", isActive && "active")}
+                                        onClick={() => {
+                                            if (!isActive) {
+                                                setActivePostId(p.id);
+                                                setActiveEditingPostId(null);
+                                            } else {
+                                                setActiveEditingPostId(p.id);
+                                            }
+                                        }}
+                                    >
+                                        {isEditing ? (
+                                            <input
+                                                autoFocus
+                                                className="post-name-input"
+                                                value={p.name}
+                                                onChange={(e) => updatePostName(p.id, e.target.value)}
+                                                onBlur={() => setActiveEditingPostId(null)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') setActiveEditingPostId(null);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <span className="post-name-text">{p.name}</span>
+                                        )}
+                                        <button
+                                            className="delete-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removePost(p.id);
+                                            }}
+                                        >
+                                            <MdDelete size={14} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </aside>
             </div>
         </section>
     );

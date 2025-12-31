@@ -16,7 +16,8 @@ export const ImageThumbnail: React.FC<{
     onSelect: () => void;
     onCycle: () => void;
     onReset: () => void;
-}> = React.memo(({ img, isSelected, onSelect, onCycle, onReset }) => {
+    priority?: boolean;
+}> = React.memo(({ img, isSelected, onSelect, onCycle, onReset, priority = false }) => {
     const { t } = useTranslation();
     const isHovered = useIngestionStore(s => s.hoveredImageId === img.id);
     const timerRef = React.useRef<any>(null);
@@ -202,6 +203,7 @@ export const ImageThumbnail: React.FC<{
                         src={getThumbnailUrl(img.path)}
                         alt={img.name}
                         className="thumbnail-img"
+                        priority={priority}
                     />
                 </div>
             </div>

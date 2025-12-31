@@ -5,8 +5,9 @@ export const LazyImage: React.FC<{
     src: string,
     alt: string,
     className?: string,
+    priority?: boolean,
     onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void
-}> = ({ src, alt, className, onLoad }) => {
+}> = ({ src, alt, className, priority = false, onLoad }) => {
     const [isNear, setIsNear] = React.useState(false); // Zone for requesting load
     const [isResident, setIsResident] = React.useState(false); // Zone for keeping in RAM
     const [isLoadAllowed, setIsLoadAllowed] = React.useState(false);
@@ -101,7 +102,7 @@ export const LazyImage: React.FC<{
             className={className}
             onLoad={isLoadAllowed ? handleLoad : undefined}
             onError={isLoadAllowed ? handleError : undefined}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
             draggable={false}
         />
     );

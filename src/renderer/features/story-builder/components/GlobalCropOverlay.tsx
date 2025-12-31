@@ -97,12 +97,19 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
         };
     }, [activeSlotRect, crop, originalWidth, originalHeight]);
 
+    // Use a ref to access the latest calculated state in event listeners without re-binding
+    const latestStateRef = React.useRef<ReturnType<typeof calculateState>>(null);
+
+    // Calculate state in render
+    const state = calculateState();
+    latestStateRef.current = state; // Keep ref in sync with render
+
     // Updated Dismissal Logic: Only close if clicking OUTSIDE the image boundary
     React.useEffect(() => {
         const handleMouseDown = (e: MouseEvent) => {
-            const state = calculateState();
-            if (state) {
-                const { left, top, width, height } = state.globalSourceRect;
+            const currentState = latestStateRef.current;
+            if (currentState) {
+                const { left, top, width, height } = currentState.globalSourceRect;
                 isMouseDownInsideImage.current = (
                     e.clientX >= left && e.clientX <= left + width &&
                     e.clientY >= top && e.clientY <= top + height
@@ -123,9 +130,9 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             if (target.closest('.crop-zoom-slider-container')) return;
 
             // Check if outside image boundary
-            const state = calculateState();
-            if (state) {
-                const { left, top, width, height } = state.globalSourceRect;
+            const currentState = latestStateRef.current;
+            if (currentState) {
+                const { left, top, width, height } = currentState.globalSourceRect;
                 if (e.clientX >= left && e.clientX <= left + width &&
                     e.clientY >= top && e.clientY <= top + height) {
                     return; // Inside image boundary, don't close
@@ -147,12 +154,11 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             window.removeEventListener('mousedown', handleMouseDown);
             window.removeEventListener('mouseup', handleGlobalMouseUp);
         };
-    }, [onDeselect, calculateState]);
+    }, [onDeselect]);
 
     if (!activeSlotRect) return null;
     const { top: slotTop, left: slotLeft, width: slotWidth, height: slotHeight } = activeSlotRect;
 
-    const state = calculateState();
     if (!state || !crop) return null;
 
     const { cropBox, sourceStyle, scale, max } = state;
@@ -170,6 +176,7 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
         // Ignore if clicking on buttons/controls
         if ((e.target as HTMLElement).closest('.expansion-handle')) return;
         if ((e.target as HTMLElement).closest('.crop-top-bar')) return;
+        if ((e.target as HTMLElement).closest('.top-bar-full')) return; // Added check for top-bar-full
         if ((e.target as HTMLElement).closest('.crop-bottom-zoom-bar')) return;
 
         hasDraggedSinceDown.current = false;
@@ -304,6 +311,10 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             className="global-crop-overlay-root"
             onPointerDown={handlePointerDown}
             onWheel={handleWheel}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                onDeselect();
+            }}
         >
             <div className="top-bar-full">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
