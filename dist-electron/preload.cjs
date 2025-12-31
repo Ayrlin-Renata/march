@@ -22,4 +22,8 @@ contextBridge.exposeInMainWorld('electron', {
     getSettings: () => ipcRenderer.invoke('get-settings'),
     getAppVersion: () => ipcRenderer.invoke('get-app-version'),
     openExternal: (url) => ipcRenderer.invoke('open-external', url),
+    // Bsky
+    saveBskyCredentials: (handle, password) => ipcRenderer.invoke('save-bsky-credentials', { handle, password }),
+    hasBskyCredentials: () => ipcRenderer.invoke('has-bsky-credentials'),
+    postToBsky: (content) => ipcRenderer.invoke('post-to-bsky', content),
 });

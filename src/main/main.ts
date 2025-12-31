@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup } from './watcher.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
+import { saveBskyCredentials, hasBskyCredentials, postToBsky } from './platforms/bsky.js';
 
 updateElectronApp();
 
@@ -200,6 +201,19 @@ function createWindow() {
             console.error('Export failed:', err);
             return false;
         }
+    });
+
+    // --- Bsky Integration ---
+    ipcMain.handle('save-bsky-credentials', (_event, { handle, password }) => {
+        return saveBskyCredentials(handle, password);
+    });
+
+    ipcMain.handle('has-bsky-credentials', () => {
+        return hasBskyCredentials();
+    });
+
+    ipcMain.handle('post-to-bsky', (_event, content) => {
+        return postToBsky(content);
     });
 
     ipcMain.on('resize-window', (_event, deltaX: number) => {

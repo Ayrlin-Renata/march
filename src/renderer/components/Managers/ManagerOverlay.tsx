@@ -3,7 +3,7 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { useIngestionStore } from '../../store/useIngestionStore';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate, MdWallpaper, MdAddToPhotos, MdLabel, MdInfo } from 'react-icons/md';
+import { MdClose, MdFolder, MdStyle, MdSettings, MdAdd, MdDelete, MdSmartphone, MdTranslate, MdWallpaper, MdAddToPhotos, MdLabel, MdInfo, MdCheck, MdError, MdImage } from 'react-icons/md';
 import { PLATFORMS } from '../../types/stories';
 import clsx from 'clsx';
 import logo from '../../../assets/logo.png';
@@ -282,6 +282,26 @@ const LightboxSettingsPane: React.FC = () => {
     );
 };
 
+const SharingImagesManagerPane: React.FC = () => {
+    const { t } = useTranslation();
+    const scaleImagesToPlatforms = useSettingsStore(s => s.scaleImagesToPlatforms);
+    const setPlatformScaleImages = useSettingsStore(s => s.setPlatformScaleImages);
+
+    return (
+        <div className="manager-pane">
+            <header className="pane-header">
+                <h4>{t('sharing_images_settings') || 'Sharing: Images'}</h4>
+            </header>
+            <div className="settings-body">
+                <div className="settings-group">
+                    <label className="settings-label">{t('scale_images_to_platform') || 'Scale image resolution to platform constraints'}</label>
+                    <Toggle enabled={scaleImagesToPlatforms} onChange={setPlatformScaleImages} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const LanguageManagerPane: React.FC = () => {
     const { t, i18n } = useTranslation();
     const language = useSettingsStore(s => s.language);
@@ -387,14 +407,14 @@ const AboutManagerPane: React.FC = () => {
                 <div className="about-branding">
                     <img src={logo} alt="March Logo" className="about-logo" style={{ width: 64, height: 64, marginBottom: 16 }} />
                     <div className="about-info">
-                        <h2 style={{ margin: 0 }}>March</h2>
+                        <h2 style={{ margin: 0 }}>March Photobox</h2>
                         <p className="version-tag" style={{ opacity: 0.6, margin: '4px 0 0 0' }}>v{appVersion}</p>
                     </div>
                 </div>
                 <div className="about-details" style={{ marginTop: 24 }}>
                     <p style={{ lineHeight: 1.5, opacity: 0.8 }}>{t('about_description_text')}</p>
                     <div className="about-links" style={{ marginTop: 24 }}>
-                        <button className="icon-btn-text" onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march')}>
+                        <button className="icon-btn-text" style={{ padding: "1em 2em" }} onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march')}>
                             GitHub Repository
                         </button>
                     </div>
@@ -408,6 +428,35 @@ const PlatformManagerPane: React.FC = () => {
     const { t } = useTranslation();
     const enabledPlatformKeys = useSettingsStore(s => s.enabledPlatformKeys);
     const setEnabledPlatformKeys = useSettingsStore(s => s.setEnabledPlatformKeys);
+    const platformPreferences = useSettingsStore(s => s.platformPreferences);
+    const setPlatformAutoPost = useSettingsStore(s => s.setPlatformAutoPost);
+
+    // Bsky State
+    const [bskyHandle, setBskyHandle] = React.useState('');
+    const [bskyPassword, setBskyPassword] = React.useState('');
+    const [hasBskyCreds, setHasBskyCreds] = React.useState(false);
+    const [isSaving, setIsSaving] = React.useState(false);
+
+    React.useEffect(() => {
+        if (window.electron && window.electron.hasBskyCredentials) {
+            window.electron.hasBskyCredentials().then(setHasBskyCreds);
+        }
+    }, []);
+
+    const handleSaveBsky = async () => {
+        if (!bskyHandle || !bskyPassword) return;
+        setIsSaving(true);
+        try {
+            const success = await window.electron.saveBskyCredentials(bskyHandle, bskyPassword);
+            if (success) {
+                setHasBskyCreds(true);
+                setBskyPassword(''); // Clear from memory
+                setPlatformAutoPost('bsky', true);
+            }
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="manager-pane">
@@ -419,18 +468,60 @@ const PlatformManagerPane: React.FC = () => {
                 {PLATFORMS.map(p => {
                     const isEnabled = enabledPlatformKeys.includes(p.key);
                     return (
-                        <div key={p.key} className="manager-item">
-                            <div className="item-info">
-                                <span className="item-title">{t(p.key as any)}</span>
-                                <span className="item-subtitle" style={{ color: p.color }}>{p.key}</span>
+                        <div key={p.key} className={clsx("manager-item-platform", isEnabled && "expanded")}>
+                            <div className="manager-item">
+                                <div className="item-info">
+                                    <span className="item-title">{t(p.key as any)}</span>
+                                    <span className="item-subtitle" style={{ color: p.color }}>{p.key}</span>
+                                </div>
+                                <Toggle
+                                    enabled={isEnabled}
+                                    onChange={(enabled: boolean) => {
+                                        if (enabled) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
+                                        else setEnabledPlatformKeys(enabledPlatformKeys.filter(k => k !== p.key));
+                                    }}
+                                />
                             </div>
-                            <Toggle
-                                enabled={isEnabled}
-                                onChange={(enabled: boolean) => {
-                                    if (enabled) setEnabledPlatformKeys([...enabledPlatformKeys, p.key]);
-                                    else setEnabledPlatformKeys(enabledPlatformKeys.filter(k => k !== p.key));
-                                }}
-                            />
+
+                            {isEnabled && p.key === 'bsky' && (
+                                <div className="platform-config">
+                                    {/* Auto Post Toggle */}
+                                    <div className="input-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                                        <label style={{ margin: 0 }}>{t('auto_post_mode')}</label>
+                                        <Toggle
+                                            enabled={platformPreferences['bsky']?.autoPostEnabled || false}
+                                            onChange={(val) => setPlatformAutoPost('bsky', val)}
+                                        />
+                                    </div>
+                                    <div className="config-status">
+                                        {hasBskyCreds ? (
+                                            <div className="status-badge success"><MdCheck size={14} /> {t('credentials_saved')}</div>
+                                        ) : (
+                                            <div className="status-badge warning"><MdError size={14} /> {t('credentials_missing')}</div>
+                                        )}
+                                    </div>
+                                    <div className="input-group">
+                                        <label>Handle</label>
+                                        <input
+                                            placeholder="example.bsky.social"
+                                            value={bskyHandle}
+                                            onChange={e => setBskyHandle(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>App Password</label>
+                                        <input
+                                            type="password"
+                                            placeholder="xxxx-xxxx-xxxx-xxxx"
+                                            value={bskyPassword}
+                                            onChange={e => setBskyPassword(e.target.value)}
+                                        />
+                                    </div>
+                                    <button className="secondary-btn" onClick={handleSaveBsky} disabled={isSaving || !bskyHandle || !bskyPassword}>
+                                        {isSaving ? 'Saving...' : 'Save Credentials'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -605,12 +696,12 @@ export const ManagerOverlay: React.FC = () => {
                                 <MdWallpaper size={20} />
                                 <span>{t('lightbox_settings')}</span>
                             </button>
-
-                            <div className="sidebar-section-title">{t('story_builder_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'labels' && "active")} onClick={() => setActiveManager('labels')}>
                                 <MdLabel size={20} />
                                 <span>{t('labels')}</span>
                             </button>
+
+                            <div className="sidebar-section-title">{t('story_builder_section')}</div>
                             <button className={clsx("sidebar-item", activeManager === 'platforms' && "active")} onClick={() => setActiveManager('platforms')}>
                                 <MdSmartphone size={20} />
                                 <span>{t('platforms')}</span>
@@ -618,6 +709,12 @@ export const ManagerOverlay: React.FC = () => {
                             <button className={clsx("sidebar-item", activeManager === 'presets' && "active")} onClick={() => setActiveManager('presets')}>
                                 <MdStyle size={20} />
                                 <span>{t('presets')}</span>
+                            </button>
+
+                            <div className="sidebar-section-title">{t('sharing_section') || 'Sharing'}</div>
+                            <button className={clsx("sidebar-item", activeManager === 'sharing_images' && "active")} onClick={() => setActiveManager('sharing_images')}>
+                                <MdImage size={20} />
+                                <span>{t('images') || 'Images'}</span>
                             </button>
 
                             <div className="sidebar-spacer" />
@@ -636,6 +733,7 @@ export const ManagerOverlay: React.FC = () => {
                             {activeManager === 'settings_language' && <LanguageManagerPane />}
                             {activeManager === 'settings_general' && <GeneralManagerPane />}
                             {activeManager === 'settings_about' && <AboutManagerPane />}
+                            {activeManager === 'sharing_images' && <SharingImagesManagerPane />}
                         </main>
                     </motion.div>
                 </motion.div>

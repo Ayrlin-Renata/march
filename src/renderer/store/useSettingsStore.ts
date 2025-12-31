@@ -34,7 +34,8 @@ interface SettingsState {
     textPresets: TextPreset[];
     labels: LabelConfig[];
     enabledPlatformKeys: PlatformKey[];
-    activeManager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | null;
+    platformPreferences: Record<string, { autoPostEnabled: boolean }>; // New preferences
+    activeManager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | 'sharing_images' | null;
     isBuilderCollapsed: boolean;
     lastBuilderWidth: number;
     storedWindowWidthCollapsed: number;
@@ -42,6 +43,7 @@ interface SettingsState {
     language: string;
     baseTheme: 'simple' | 'march' | 'time';
     hasSeenTutorialPrompt: boolean;
+    scaleImagesToPlatforms: boolean;
 
     // Actions
     setScrollSensitivity: (val: number) => void;
@@ -54,8 +56,10 @@ interface SettingsState {
     setLanguage: (lang: string) => void;
     setBaseTheme: (theme: 'simple' | 'march' | 'time') => void;
 
-    setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | null) => void;
+    setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | 'sharing_images' | null) => void;
     setEnabledPlatformKeys: (keys: PlatformKey[]) => void;
+    setPlatformAutoPost: (key: string, enabled: boolean) => void;
+    setPlatformScaleImages: (enabled: boolean) => void;
     setBuilderCollapsed: (collapsed: boolean) => void;
     setLastBuilderWidth: (width: number) => void;
     setStoredWindowWidthCollapsed: (width: number) => void;
@@ -99,6 +103,7 @@ export const useSettingsStore = create<SettingsState>()(
                 { index: 8, name: 'White', color: '#8a8a8aff' },
             ],
             enabledPlatformKeys: ['x', 'bsky'],
+            platformPreferences: {}, // Init empty
             activeManager: null,
             isBuilderCollapsed: false,
             lastBuilderWidth: 400,
@@ -107,6 +112,7 @@ export const useSettingsStore = create<SettingsState>()(
             language: 'en',
             baseTheme: 'simple',
             hasSeenTutorialPrompt: false,
+            scaleImagesToPlatforms: true,
 
             setScrollSensitivity: (val) => set({ scrollSensitivity: val }),
             setIngestLookbackDays: (val) => set({ ingestLookbackDays: val }),
@@ -123,6 +129,13 @@ export const useSettingsStore = create<SettingsState>()(
 
             setActiveManager: (manager) => set({ activeManager: manager, isSettingsOpen: !!(manager && manager.startsWith('settings_')) }),
             setEnabledPlatformKeys: (keys) => set({ enabledPlatformKeys: keys }),
+            setPlatformAutoPost: (key, enabled) => set((state) => ({
+                platformPreferences: {
+                    ...state.platformPreferences,
+                    [key]: { ...state.platformPreferences[key], autoPostEnabled: enabled }
+                }
+            })),
+            setPlatformScaleImages: (enabled) => set({ scaleImagesToPlatforms: enabled }),
             setBuilderCollapsed: (collapsed) => set({ isBuilderCollapsed: collapsed }),
             setLastBuilderWidth: (width) => set({ lastBuilderWidth: width }),
             setStoredWindowWidthCollapsed: (width) => set({ storedWindowWidthCollapsed: width }),
@@ -192,6 +205,7 @@ export const useSettingsStore = create<SettingsState>()(
                 textPresets: state.textPresets,
                 labels: state.labels,
                 enabledPlatformKeys: state.enabledPlatformKeys,
+                platformPreferences: state.platformPreferences,
                 isBuilderCollapsed: state.isBuilderCollapsed,
                 lastBuilderWidth: state.lastBuilderWidth,
                 storedWindowWidthCollapsed: state.storedWindowWidthCollapsed,
@@ -199,6 +213,7 @@ export const useSettingsStore = create<SettingsState>()(
                 language: state.language,
                 baseTheme: state.baseTheme,
                 hasSeenTutorialPrompt: state.hasSeenTutorialPrompt,
+                scaleImagesToPlatforms: state.scaleImagesToPlatforms,
             }),
         }
     )

@@ -1,0 +1,131 @@
+/* Manager Layout: Overlay, Window, Sidebar, Panes */
+.manager-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+}
+
+.manager-window {
+    width: 50rem;
+    height: 90%;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4);
+}
+
+.manager-window.small {
+    width: 30rem;
+    height: auto;
+    max-height: 80%;
+    flex-direction: column;
+}
+
+.manager-sidebar {
+    width: 180px;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+}
+
+.sidebar-section-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    padding: 20px 20px 8px 20px;
+    opacity: 0.5;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: var(--text-dim);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.sidebar-item:hover {
+    background: var(--bg-surface-hover);
+    color: var(--fg-primary);
+}
+
+.sidebar-item.active {
+    background: var(--bg-surface-active);
+    color: var(--accent-blue);
+    border-right: 3px solid var(--accent-blue);
+}
+
+[data-base-theme='march'] .sidebar-item.active {
+    color: var(--fg-accent);
+    border-right-color: var(--fg-accent);
+}
+
+[data-base-theme='time'] .sidebar-item.active {
+    color: var(--fg-accent);
+    border-right-color: var(--fg-accent);
+}
+
+.sidebar-item.close {
+    margin-top: auto;
+    color: #ff4d4d;
+}
+
+.manager-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+}
+
+.manager-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    height: 100%;
+}
+
+.pane-header {
+    margin-bottom: 24px;
+}
+
+.pane-header h4 {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+    color: var(--fg-primary);
+}
+
+.pane-header p {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.manager-list {
+    flex: 1;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 10px;
+}

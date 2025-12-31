@@ -4,7 +4,7 @@ import { HoverOverlay as IngestionHoverOverlay, BurstControl as IngestionBurstCo
 import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getThumbnailUrl } from './utils/pathUtils';
-import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen } from 'react-icons/md';
+import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen, MdPhonelinkSetup } from 'react-icons/md';
 import { useIngestionStore } from './store/useIngestionStore';
 import IngestionArea from './components/IngestionArea';
 import StoryBuilderArea from './components/StoryBuilderArea';
@@ -25,7 +25,10 @@ import './styles/components/buttons.css';
 import './styles/features/ingestion.css';
 import './styles/components/empty-state.css';
 import './styles/features/fullscreen-preview.css';
-import './styles/features/settings.css';
+import './styles/features/managers/layout.css';
+import './styles/features/managers/components.css';
+import './styles/features/managers/settings.css';
+import './styles/features/managers/platforms.css';
 import './styles/features/story-builder/layout.css';
 import './styles/features/story-builder/canvas.css';
 import './styles/components/tutorial.css';
@@ -476,11 +479,12 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="bottom-bar-right">
-                            <div className="preset-tiny-manager">
-                                <button id="tutorial-presets-manager-btn" className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
-                                    <MdSpeakerNotes size={20} />
-                                </button>
-                            </div>
+                            <button className="icon-btn" title={t('platforms')} onClick={() => setActiveManager('platforms')}>
+                                <MdPhonelinkSetup size={20} />
+                            </button>
+                            <button id="tutorial-presets-manager-btn" className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
+                                <MdSpeakerNotes size={20} />
+                            </button>
                             <button className="icon-btn" title={t('settings')} onClick={() => setActiveManager('settings_general')}>
                                 <MdSettings size={20} />
                             </button>

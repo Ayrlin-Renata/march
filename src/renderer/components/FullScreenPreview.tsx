@@ -165,7 +165,7 @@ const PreviewContent: React.FC<{
                 }
             }}
         >
-            <div className="preview-controls-top glassy">
+            <div className="preview-controls-top">
                 <div className="top-center-info">
                     <span className="image-name">{selectedImage.name}</span>
                     <SlotSelector

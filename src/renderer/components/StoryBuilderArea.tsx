@@ -3,47 +3,14 @@ import { useStoryStore } from '../store/useStoryStore';
 import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../types/stories';
 import type { ImageSlotData } from '../types/stories';
-import { MdAdd, MdDashboard, MdChevronRight, MdChevronLeft, MdDelete } from 'react-icons/md';
+import { MdChevronLeft, MdChevronRight, MdAdd, MdDashboard, MdDelete, MdClose, MdBorderInner, MdGridGoldenratio } from 'react-icons/md';
 import clsx from 'clsx';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { GlobalCropOverlay } from './StoryBuilder/GlobalCropOverlay';
 import { PreviewCanvas } from './StoryBuilder/PreviewCanvas';
-import { clampCrop } from '../utils/cropUtils';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import { getConstrainedPixelCrop } from '../utils/cropUtils';
 
-
-const CropZoomSlider: React.FC<{
-    scale: number,
-    onChange: (newScale: number) => void
-}> = ({ scale, onChange }) => {
-    // Note: 10^((val-50)/50) gives 0.1 at 0, 1 at 50, 10 at 100.
-    const logScaleMap = (v: number) => Math.pow(10, (v - 50) / 50);
-    const logValMap = (s: number) => Math.log10(s) * 50 + 50;
-
-    return (
-        <motion.div
-            className="crop-zoom-slider-container glassy"
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            onClick={(e) => e.stopPropagation()}
-        >
-            <input
-                type="range"
-                min="50"
-                max="100"
-                step="1"
-                value={logValMap(scale)}
-                onChange={(e) => {
-                    const val = parseFloat(e.target.value);
-                    onChange(logScaleMap(val));
-                }}
-                className="zoom-slider-input"
-            />
-            <span className="zoom-percent">{scale.toFixed(1)}x</span>
-        </motion.div>
-    );
-};
 
 
 const StoryBuilderArea: React.FC = () => {
@@ -65,8 +32,13 @@ const StoryBuilderArea: React.FC = () => {
 
     const [isPostListOpen, setIsPostListOpen] = React.useState(true);
     const [activeSlotRect, setActiveSlotRect] = React.useState<DOMRect | null>(null);
+    const [isSymmetric, setIsSymmetric] = React.useState(true); // Default to symmetric
+    const [isFitConstraint, setIsFitConstraint] = React.useState(true);
     const [activeEditingPostId, setActiveEditingPostId] = React.useState<string | null>(null);
     const [focusedSlotIndex, setFocusedSlotIndex] = React.useState<number | null>(null);
+
+    // Transient ref to store latest crop data during active drag/pan to avoid stale closures
+    const transientCropRef = React.useRef<{ pixelCrop: any, expansion: any } | null>(null);
 
     const activePost = posts.find(p => p.id === activePostId);
     const activePlatform = activePost ? activePost.platforms[activePost.activePlatform] : undefined;
@@ -167,6 +139,18 @@ const StoryBuilderArea: React.FC = () => {
                             const isActive = activePost.activePlatform === p.key;
                             return (
                                 <div key={p.key} className="platform-tab-wrapper">
+                                    {!isActive && isEnabled && (
+                                        <button
+                                            className="platform-enable-btn close-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                useStoryStore.getState().setPlatformEnabled(activePostId, p.key, false);
+                                            }}
+                                            title={t('disable_platform')}
+                                        >
+                                            <MdClose size={12} />
+                                        </button>
+                                    )}
                                     <button
                                         className={clsx("platform-tab", isActive && "active", !isEnabled && "disabled")}
                                         onClick={() => isActive ? null : (isEnabled ? setActivePlatform(activePostId, p.key) : enablePlatform(activePostId, p.key))}
@@ -226,7 +210,7 @@ const StoryBuilderArea: React.FC = () => {
                                     <button key={preset.id} className="preset-chip" onClick={() => {
                                         const currentText = activePost.platforms[activePost.activePlatform].text;
                                         if (!currentText.includes(preset.content)) {
-                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${preset.content}`.trim());
+                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${preset.content} `.trim());
                                         }
                                     }}>
                                         {preset.name}
@@ -241,7 +225,7 @@ const StoryBuilderArea: React.FC = () => {
                                     <button key={tag} className="hashtag-chip" onClick={() => {
                                         const currentText = activePost.platforms[activePost.activePlatform].text;
                                         if (!currentText.includes(tag)) {
-                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${tag}`.trim());
+                                            useStoryStore.getState().updatePlatformText(activePostId, activePost.activePlatform, `${currentText} ${tag} `.trim());
                                         }
                                     }}>
                                         {tag}
@@ -275,32 +259,214 @@ const StoryBuilderArea: React.FC = () => {
                                 onDeselect={() => setFocusedSlotIndex(null)}
                             />
 
+                            <GlobalCropOverlay
+                                activeSlotRect={activeSlotRect}
+                                crop={focusedSlotData?.crop || null}
+                                originalWidth={focusedSlotData?.originalWidth}
+                                originalHeight={focusedSlotData?.originalHeight}
+                                onResizeExpansion={(newExp) => {
+                                    if (focusedSlotIndex !== null) {
+                                        transientCropRef.current = null; // Clear ref on final update
+                                        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+                                            ...focusedSlotData!.crop,
+                                            expansion: newExp
+                                        });
+                                    }
+                                }}
+                                onDeselect={() => {
+                                    transientCropRef.current = null;
+                                    setFocusedSlotIndex(null);
+                                }}
+                                isSymmetric={isSymmetric}
+                                onToggleSymmetry={() => setIsSymmetric(!isSymmetric)}
+                                isFitConstraint={isFitConstraint}
+                                onPan={(dx: number, dy: number) => {
+                                    if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect) return;
+
+                                    // Initialize transient ref if not already set
+                                    if (!transientCropRef.current) {
+                                        transientCropRef.current = {
+                                            pixelCrop: focusedSlotData.crop.pixelCrop,
+                                            expansion: focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 }
+                                        };
+                                    }
+
+                                    const aspect = activeSlotRect.width / activeSlotRect.height;
+                                    const { pixelCrop: newPixelCrop, expansion: newExpansion } = getConstrainedPixelCrop(
+                                        transientCropRef.current.pixelCrop!,
+                                        transientCropRef.current.expansion,
+                                        focusedSlotData.originalWidth!,
+                                        focusedSlotData.originalHeight!,
+                                        aspect,
+                                        dx,
+                                        dy,
+                                        1,
+                                        isSymmetric
+                                    );
+
+                                    // Update ref for NEXT call in same drag
+                                    transientCropRef.current = { pixelCrop: newPixelCrop, expansion: newExpansion };
+
+                                    updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+                                        ...focusedSlotData.crop,
+                                        pixelCrop: newPixelCrop,
+                                        expansion: newExpansion
+                                    });
+                                }}
+                                onZoom={(factor: number) => {
+                                    if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect) return;
+
+                                    if (!transientCropRef.current) {
+                                        transientCropRef.current = {
+                                            pixelCrop: focusedSlotData.crop.pixelCrop,
+                                            expansion: focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 }
+                                        };
+                                    }
+
+                                    const aspect = activeSlotRect.width / activeSlotRect.height;
+                                    const imgW = focusedSlotData.originalWidth!;
+                                    const imgH = focusedSlotData.originalHeight!;
+
+                                    const { pixelCrop: newPixelCrop } = getConstrainedPixelCrop(
+                                        transientCropRef.current.pixelCrop!,
+                                        transientCropRef.current.expansion,
+                                        imgW,
+                                        imgH,
+                                        aspect,
+                                        0,
+                                        0,
+                                        factor,
+                                        isSymmetric
+                                    );
+
+                                    const actualFactor = newPixelCrop.width / transientCropRef.current.pixelCrop.width;
+                                    const oldExp = transientCropRef.current.expansion;
+                                    const rawExpansion = {
+                                        top: oldExp.top * actualFactor,
+                                        right: oldExp.right * actualFactor,
+                                        bottom: oldExp.bottom * actualFactor,
+                                        left: oldExp.left * actualFactor
+                                    };
+
+                                    // Clamp expansion to available space
+                                    const topSpace = newPixelCrop.y;
+                                    const bottomSpace = imgH - (newPixelCrop.y + newPixelCrop.height);
+                                    const leftSpace = newPixelCrop.x;
+                                    const rightSpace = imgW - (newPixelCrop.x + newPixelCrop.width);
+
+                                    const newExpansion = {
+                                        top: Math.max(0, Math.min(rawExpansion.top, topSpace)),
+                                        bottom: Math.max(0, Math.min(rawExpansion.bottom, bottomSpace)),
+                                        left: Math.max(0, Math.min(rawExpansion.left, leftSpace)),
+                                        right: Math.max(0, Math.min(rawExpansion.right, rightSpace))
+                                    };
+
+                                    transientCropRef.current = { pixelCrop: newPixelCrop, expansion: newExpansion };
+                                    const newScale = imgW / newPixelCrop.width;
+
+                                    updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+                                        ...focusedSlotData.crop,
+                                        pixelCrop: newPixelCrop,
+                                        expansion: newExpansion,
+                                        scale: newScale
+                                    });
+                                }}
+                            />
+
                             <AnimatePresence>
-                                {focusedSlotIndex !== null && focusedSlotData && (
-                                    <CropZoomSlider
-                                        scale={focusedSlotData.crop.scale}
-                                        onChange={(newScale) => {
-                                            const exp = focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
-                                            const blueBoxW = (activeSlotRect?.width || 0) + exp.left + exp.right;
-                                            const blueBoxH = (activeSlotRect?.height || 0) + exp.top + exp.bottom;
+                                {focusedSlotIndex !== null && (
+                                    <>
+                                        <div className="top-bar-full">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                <button
+                                                    className={clsx("icon-btn", isSymmetric && "active")}
+                                                    onClick={() => setIsSymmetric(!isSymmetric)}
+                                                    title="Symmetric Mode (S)"
+                                                >
+                                                    <MdBorderInner size={24} />
+                                                </button>
 
-                                            const clamped = clampCrop(
-                                                focusedSlotData.originalWidth || 0,
-                                                focusedSlotData.originalHeight || 0,
-                                                blueBoxW,
-                                                blueBoxH,
-                                                newScale,
-                                                focusedSlotData.crop
-                                            );
+                                                <button
+                                                    className={clsx("icon-btn", isFitConstraint && "active")}
+                                                    onClick={() => setIsFitConstraint(!isFitConstraint)}
+                                                    title="Axis Constraint (A)"
+                                                >
+                                                    <MdGridGoldenratio size={24} />
+                                                </button>
+                                            </div>
 
-                                            updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
-                                                ...focusedSlotData.crop,
-                                                scale: newScale,
-                                                x: clamped.x,
-                                                y: clamped.y
-                                            });
-                                        }}
-                                    />
+                                            <button
+                                                className="icon-btn-large"
+                                                onClick={() => setFocusedSlotIndex(null)}
+                                                title="Close (ESC)"
+                                            >
+                                                <MdClose size={24} />
+                                            </button>
+                                        </div>
+
+                                        {/* Bottom Zoom Pill */}
+                                        <div className="crop-bottom-zoom-bar" style={{
+                                            position: 'fixed',
+                                            bottom: 32,
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            zIndex: 100002,
+                                            pointerEvents: 'auto'
+                                        }}>
+                                            <div className="zoom-slider-box glassy">
+                                                <input
+                                                    type="range"
+                                                    min="1"
+                                                    max="5"
+                                                    step="0.01"
+                                                    value={focusedSlotData?.crop?.scale || 1}
+                                                    onChange={(e) => {
+                                                        if (focusedSlotIndex === null || !focusedSlotData || !activeSlotRect) return;
+                                                        const newScale = parseFloat(e.target.value);
+                                                        const currentScale = focusedSlotData.crop.scale || 1;
+                                                        const eventFactor = newScale / currentScale;
+
+                                                        // Call the onZoom logic directly since we are in the same component
+                                                        const aspect = activeSlotRect.width / activeSlotRect.height;
+                                                        const pc = transientCropRef.current?.pixelCrop || focusedSlotData.crop.pixelCrop;
+                                                        const exp = transientCropRef.current?.expansion || focusedSlotData.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
+
+                                                        const { pixelCrop: newPixelCrop } = getConstrainedPixelCrop(
+                                                            pc,
+                                                            exp,
+                                                            focusedSlotData.originalWidth!,
+                                                            focusedSlotData.originalHeight!,
+                                                            aspect,
+                                                            0,
+                                                            0,
+                                                            eventFactor,
+                                                            isSymmetric
+                                                        );
+
+                                                        const actualFactor = newPixelCrop.width / pc.width;
+                                                        const newExp = {
+                                                            top: exp.top * actualFactor,
+                                                            right: exp.right * actualFactor,
+                                                            bottom: exp.bottom * actualFactor,
+                                                            left: exp.left * actualFactor
+                                                        };
+
+                                                        transientCropRef.current = { pixelCrop: newPixelCrop, expansion: newExp };
+                                                        const updatedScale = focusedSlotData.originalWidth! / newPixelCrop.width;
+
+                                                        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
+                                                            ...focusedSlotData.crop,
+                                                            pixelCrop: newPixelCrop,
+                                                            expansion: newExp,
+                                                            scale: updatedScale
+                                                        });
+                                                    }}
+                                                    className="zoom-slider-input"
+                                                />
+                                                <span className="zoom-percent">{(focusedSlotData?.crop?.scale || 1).toFixed(1)}x</span>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </AnimatePresence>
 

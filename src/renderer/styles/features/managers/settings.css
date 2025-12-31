@@ -1,0 +1,115 @@
+/* Manager Specifics: Settings, Labels */
+
+/* Settings Pane */
+.settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.settings-label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.settings-control {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-primary);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.settings-control span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+}
+
+[data-base-theme='march'] .settings-control span {
+    color: var(--fg-accent);
+}
+
+[data-base-theme='time'] .settings-control span {
+    color: var(--fg-accent);
+}
+
+.settings-control input[type="range"] {
+    accent-color: var(--fg-accent);
+    flex: 1;
+}
+
+/* Label Manager Specifics */
+.label-edit-row {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.label-color-input {
+    width: 32px;
+    height: 32px;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.label-color-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.label-color-input::-webkit-color-swatch {
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.item-title-input {
+    background: transparent !important;
+    border: none !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: var(--fg-primary) !important;
+    padding: 0 !important;
+    width: 100%;
+}
+
+.item-title-input:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+    outline: 1px solid var(--accent-blue) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+}
+
+.item-subtitle-input {
+    background: transparent !important;
+    border: none !important;
+    font-size: 0.75rem !important;
+    color: var(--text-dim) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    padding: 0 !important;
+    width: 100%;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.item-subtitle-input:focus {
+    background: rgba(255, 255, 255, 0.03) !important;
+    outline: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 4px 6px !important;
+    border-radius: 4px !important;
+}

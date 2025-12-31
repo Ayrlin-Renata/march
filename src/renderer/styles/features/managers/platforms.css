@@ -1,0 +1,89 @@
+/* Platform Manager */
+.manager-item-platform {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.manager-item-platform .manager-item {
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+}
+
+.platform-config {
+    padding: 0 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: -4px;
+    padding-top: 16px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 600;
+}
+
+.config-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.status-badge.success {
+    background: var(--bg-surface-active);
+    color: var(--fg-accent);
+    border: 1px solid transparent;
+}
+
+.status-badge.warning {
+    background: var(--bg-primary);
+    color: var(--fg-error);
+    border: 1px solid var(--border-color);
+}
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--fg-primary);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.secondary-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.secondary-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

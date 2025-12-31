@@ -7,7 +7,6 @@
     height: 100%;
 }
 
-/* React Easy Crop Overrides */
 .cropper-container {
     border-radius: 0;
 }
@@ -19,7 +18,6 @@
 
 .cropper-crop-area-none {
     display: none;
-    /* Hide default crop box */
 }
 
 /* Passthrough Overlay Root */
@@ -29,77 +27,147 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    pointer-events: none;
-    /* Let clicks pass through */
-    z-index: 9000;
-    /* Above everything */
+    pointer-events: auto;
+    /* Changed from none to allow pan/zoom anywhere */
+    z-index: 99998;
+    background: transparent;
+    cursor: default;
 }
 
 .preview-boundary-highlight {
     position: absolute;
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
-    /* Dim everything else */
-    border: 2px solid var(--fg-accent);
-    /* Highlight active slot */
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8);
+    /* Darker, more cinematic dimming */
+    border: 2px solid rgba(255, 255, 255, 0.3);
     pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 .export-crop-boundary {
     position: absolute;
-    border: 2px dashed #00e5ff;
-    /* Cyan dashed line */
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
-    /* Contrast */
-    pointer-events: auto;
-    /* Allow interaction with handles */
-}
-
-.expansion-handle {
-    position: absolute;
-    background-color: #00e5ff;
-    border: 1px solid #fff;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    pointer-events: auto;
-    cursor: grab;
-}
-
-.expansion-handle.top {
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    cursor: ns-resize;
-}
-
-.expansion-handle.bottom {
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    cursor: ns-resize;
-}
-
-.expansion-handle.left {
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: ew-resize;
-}
-
-.expansion-handle.right {
-    right: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: ew-resize;
+    border: 1px solid var(--fg-accent);
+    /* Solid blue line, thinner */
+    box-shadow: 0 0 20px var(--bg-tertiary), inset 0 0 10px rgba(0, 163, 255, 0.1);
+    background: rgba(96, 165, 250, 0.05);
+    /* Very subtle tint to the crop area */
+    pointer-events: none;
 }
 
 .source-image-boundary {
     position: absolute;
-    border: 1px dashed rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
     pointer-events: none;
 }
 
-.export-crop-boundary {
-    pointer-events: none !important;
+/* Handles */
+.expansion-handle {
+    position: absolute;
+    background-color: var(--fg-accent);
+    border: 2px solid var(--bg-tertiary);
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    pointer-events: auto;
+    cursor: grab;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+.expansion-handle:hover {
+    transform: translate(-50%, -50%) scale(1.3) !important;
+    background-color: var(--fg-accent);
+    filter: brightness(1.1);
+}
+
+.expansion-handle.top,
+.expansion-handle.bottom {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    /* Wider hit-area for horizontal bars */
+    height: 8px;
+    border-radius: 4px;
+}
+
+.expansion-handle.left,
+.expansion-handle.right {
+    top: 50%;
+    transform: translateY(-50%);
+    height: 30px;
+    /* Taller hit-area for vertical bars */
+    width: 8px;
+    border-radius: 4px;
+}
+
+.expansion-handle.top {
+    top: -4px;
+    cursor: ns-resize;
+}
+
+.expansion-handle.bottom {
+    bottom: -4px;
+    cursor: ns-resize;
+}
+
+.expansion-handle.left {
+    left: -4px;
+    cursor: ew-resize;
+}
+
+.expansion-handle.right {
+    right: -4px;
+    cursor: ew-resize;
+}
+
+/* Correction for transform overlap */
+.expansion-handle.top:hover,
+.expansion-handle.bottom:hover {
+    transform: translateX(-50%) scale(1.2) !important;
+}
+
+.expansion-handle.left:hover,
+.expansion-handle.right:hover {
+    transform: translateY(-50%) scale(1.2) !important;
+}
+
+/* Corner Accents */
+.corner-accent {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--fg-accent);
+    pointer-events: none;
+}
+
+.corner-accent.top-left {
+    top: -2px;
+    left: -2px;
+    border-right: 0;
+    border-bottom: 0;
+    border-top-left-radius: 4px;
+}
+
+.corner-accent.top-right {
+    top: -2px;
+    right: -2px;
+    border-left: 0;
+    border-bottom: 0;
+    border-top-right-radius: 4px;
+}
+
+.corner-accent.bottom-left {
+    bottom: -2px;
+    left: -2px;
+    border-right: 0;
+    border-top: 0;
+    border-bottom-left-radius: 4px;
+}
+
+.corner-accent.bottom-right {
+    bottom: -2px;
+    right: -2px;
+    border-left: 0;
+    border-top: 0;
+    border-bottom-right-radius: 4px;
 }

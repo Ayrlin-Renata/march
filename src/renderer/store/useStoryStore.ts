@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { type StoryPost, type PlatformKey, type LayoutKey, PLATFORMS, LAYOUTS, type PlatformConfig, type SlotCrop } from '../types/stories';
-import { calculatePixelCrop } from '../utils/cropUtils';
 
 interface StoryState {
     posts: StoryPost[];
@@ -14,6 +13,7 @@ interface StoryState {
     updatePostName: (id: string, name: string) => void;
 
     enablePlatform: (postId: string, platform: PlatformKey) => void;
+    setPlatformEnabled: (postId: string, platform: PlatformKey, enabled: boolean) => void;
     setActivePlatform: (postId: string, platform: PlatformKey) => void;
     updateLayout: (postId: string, platform: PlatformKey, layout: LayoutKey) => void;
     setSlotImage: (postId: string, platform: PlatformKey, slotIndex: number, image: { id: string, path: string, width?: number, height?: number }) => void;
@@ -93,6 +93,22 @@ export const useStoryStore = create<StoryState>()(
                             }
                         },
                         activePlatform: platform
+                    };
+                }),
+            })),
+
+            setPlatformEnabled: (postId, platform, enabled) => set((state) => ({
+                posts: state.posts.map((p) => {
+                    if (p.id !== postId) return p;
+                    return {
+                        ...p,
+                        platforms: {
+                            ...p.platforms,
+                            [platform]: {
+                                ...p.platforms[platform],
+                                enabled
+                            }
+                        }
                     };
                 }),
             })),
@@ -252,12 +268,11 @@ export const useStoryStore = create<StoryState>()(
                                 };
                             } else if (slot.originalWidth && slot.originalHeight) {
                                 const targetAspect = layoutInfo.slotAspects[idx] || 1;
-                                pixelCrop = calculatePixelCrop(
+                                const { getInitialPixelCrop } = require('../utils/cropUtils');
+                                pixelCrop = getInitialPixelCrop(
                                     slot.originalWidth,
                                     slot.originalHeight,
-                                    1000,
-                                    1000 / targetAspect,
-                                    slot.crop
+                                    targetAspect
                                 );
                             } else {
                                 return slot;

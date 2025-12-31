@@ -15,6 +15,11 @@ export interface ElectronAPI {
     getSettings: () => Promise<any>;
     getAppVersion: () => Promise<string>;
     openExternal: (url: string) => Promise<void>;
+
+    // Bsky
+    saveBskyCredentials: (handle: string, password: string) => Promise<boolean>;
+    hasBskyCredentials: () => Promise<boolean>;
+    postToBsky: (content: { text: string; images: { path: string; crop?: any }[]; scaleImages?: boolean }) => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {

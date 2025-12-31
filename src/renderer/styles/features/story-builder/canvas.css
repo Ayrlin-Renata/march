@@ -281,26 +281,107 @@
 
 /* Precision Cropping Controls - Zoom Slider */
 .crop-zoom-slider-container {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
     z-index: 9500;
     padding: 0.75rem 1.25rem;
     border-radius: 99px;
     display: flex;
     align-items: center;
     gap: 1rem;
-    min-width: 280px;
+    min-width: 200px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+/* Default standalone positioning - used when NOT in the bar */
+.crop-zoom-slider-container.standalone {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.top-bar-full .icon-btn,
+.top-bar-full .icon-btn-large {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    color: var(--fg-secondary);
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.top-bar-full .icon-btn.active {
+    color: var(--fg-accent) !important;
+    background: var(--bg-surface-active);
+    border-radius: 8px;
+}
+
+.top-bar-full .icon-btn:hover,
+.top-bar-full .icon-btn-large:hover {
+    background: var(--bg-surface-hover) !important;
+    color: var(--text-main) !important;
+}
+
+.glassy {
+    background: var(--bg-surface-active);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border-radius: 100px;
+}
+
+.top-bar-full {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--bg-secondary);
+    backdrop-filter: blur(12px) saturate(180%);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    z-index: 100002;
+    pointer-events: auto;
+}
+
+.crop-bottom-zoom-bar {
+    pointer-events: auto;
+}
+
+/* Override old pill background if it has it */
+.crop-bottom-zoom-bar .zoom-slider-box.glassy {
+    padding: 12px 32px;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--bg-secondary) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.crop-zoom-slider-container.inline {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    min-width: auto;
 }
 
 .crop-zoom-slider-container .zoom-slider-input {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-tertiary);
     height: 4px;
     border-radius: 2px;
     outline: none;
@@ -329,7 +410,7 @@
 .crop-zoom-slider-container .zoom-percent {
     font-size: 0.9rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-main);
     min-width: 35px;
     text-align: right;
     font-variant-numeric: tabular-nums;
