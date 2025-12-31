@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
-import { type PlatformKey, LAYOUTS } from '../../types/stories';
-import { useStoryStore } from '../../store/useStoryStore';
+import { type PlatformKey, LAYOUTS } from '../../../types/stories';
+import { useStoryStore } from '../../../store/useStoryStore';
 import { DroppableSlot } from './DroppableSlot';
 
 const renderHashtags = (text: string) => {

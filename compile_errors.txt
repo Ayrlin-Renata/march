@@ -1,0 +1,4 @@
+
+> march@0.2.0 compile:renderer
+> tsc -p tsconfig.app.json
+

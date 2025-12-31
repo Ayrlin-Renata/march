@@ -41,6 +41,15 @@ export function getConstrainedPixelCrop(
     let newW = currentW / zoomFactor;
     let newH = newW / targetAspect;
 
+    // Handle Expansion Scale: If we zoom, the expansion should scale too
+    // to maintain its visual size relative to the slot.
+    const newExpansion = {
+        top: currentExpansion.top / zoomFactor,
+        right: currentExpansion.right / zoomFactor,
+        bottom: currentExpansion.bottom / zoomFactor,
+        left: currentExpansion.left / zoomFactor
+    };
+
     // 2. Clamp New Size to Image Bounds (Preserve Aspect)
     if (newW > imageWidth) {
         newW = imageWidth;
@@ -72,8 +81,6 @@ export function getConstrainedPixelCrop(
     };
 
     // 5. Handle Expansion Constraints (Auto-Shrink if it hits image edges)
-    const newExpansion = { ...currentExpansion };
-
     const topSpace = finalPixelCrop.y;
     const bottomSpace = imageHeight - (finalPixelCrop.y + finalPixelCrop.height);
     const leftSpace = finalPixelCrop.x;

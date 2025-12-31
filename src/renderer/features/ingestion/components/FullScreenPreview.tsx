@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { TransformWrapper, TransformComponent, useControls, useTransformContext } from 'react-zoom-pan-pinch';
-import { useIngestionStore } from '../store/useIngestionStore';
-import { getAssetUrl } from '../utils/pathUtils';
+import { useIngestionStore } from '../../../store/useIngestionStore';
+import { getAssetUrl } from '../../../utils/pathUtils';
 import { X, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useStoryStore } from '../store/useStoryStore';
+import { useSettingsStore } from '../../../store/useSettingsStore';
+import { useStoryStore } from '../../../store/useStoryStore';
 import clsx from 'clsx';
 
 const SlotSelector: React.FC<{ imageId: string, imagePath: string, width?: number, height?: number }> = ({ imageId, imagePath, width, height }) => {

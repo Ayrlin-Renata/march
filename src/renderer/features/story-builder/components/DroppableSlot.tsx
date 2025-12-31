@@ -1,11 +1,11 @@
 import React from 'react';
-import { useStoryStore } from '../../store/useStoryStore';
-import type { PlatformKey, ImageSlotData } from '../../types/stories';
+import { useStoryStore } from '../../../store/useStoryStore';
+import type { PlatformKey, ImageSlotData } from '../../../types/stories';
 import { MdAdd } from 'react-icons/md';
 import clsx from 'clsx';
 import { useDroppable } from '@dnd-kit/core';
-import { getAssetUrl } from '../../utils/pathUtils';
-import { getConstrainedPixelCrop } from '../../utils/cropUtils';
+import { getAssetUrl } from '../../../utils/pathUtils';
+import { getConstrainedPixelCrop } from '../../../utils/cropUtils';
 
 // Helper for Mockup slots with interactive editing
 export const DroppableSlot: React.FC<{
@@ -35,24 +35,34 @@ export const DroppableSlot: React.FC<{
             img.src = getAssetUrl(slotData.imagePath);
             img.onload = () => {
                 const newCrop = { ...slotData.crop };
-                // Init pixelCrop if missing
-                if (!newCrop.pixelCrop) {
-                    newCrop.pixelCrop = { x: 0, y: 0, width: img.width, height: img.height };
-                    newCrop.scale = 1; // logical scale
+                // Init pixelCrop if missing or invalid
+                if (!newCrop.pixelCrop || newCrop.pixelCrop.width === 0) {
+                    const imgAspect = img.width / img.height;
+                    const slotAspectMeasured = slotRef.current ? (slotRef.current.offsetWidth / slotRef.current.offsetHeight) : 1;
+
+                    let cropW, cropH;
+                    if (imgAspect > slotAspectMeasured) {
+                        // Image is wider than slot: match height
+                        cropH = img.height;
+                        cropW = cropH * slotAspectMeasured;
+                    } else {
+                        // Image is taller than slot: match width
+                        cropW = img.width;
+                        cropH = cropW / slotAspectMeasured;
+                    }
+
+                    newCrop.pixelCrop = {
+                        x: (img.width - cropW) / 2,
+                        y: (img.height - cropH) / 2,
+                        width: cropW,
+                        height: cropH
+                    };
+                    newCrop.scale = img.width / cropW;
                 }
 
                 updateSlotDimensions(postId, platform, slotIndex, img.width, img.height);
-                // We might need to update crop too if we just set it
-                if (!slotData.crop.pixelCrop) {
-                    updateSlotCrop(postId, platform, slotIndex, newCrop);
-                }
+                updateSlotCrop(postId, platform, slotIndex, newCrop);
             };
-        } else if (slotData.originalWidth && slotData.originalHeight && !slotData.crop.pixelCrop) {
-            // If dimensions exist but crop doesn't (migration?), init it.
-            updateSlotCrop(postId, platform, slotIndex, {
-                ...slotData.crop,
-                pixelCrop: { x: 0, y: 0, width: slotData.originalWidth, height: slotData.originalHeight }
-            });
         }
     }, [slotData.imagePath, slotData.originalWidth, slotData.originalHeight, slotData.crop.pixelCrop]);
 

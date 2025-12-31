@@ -1,21 +1,22 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
-import { HoverOverlay as IngestionHoverOverlay, BurstControl as IngestionBurstControl } from './components/IngestionArea';
+import { HoverOverlay as IngestionHoverOverlay } from './features/ingestion/components/HoverOverlay';
+import { BurstControl as IngestionBurstControl } from './features/ingestion/components/BurstControl';
 import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getThumbnailUrl } from './utils/pathUtils';
-import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen, MdPhonelinkSetup } from 'react-icons/md';
+import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen, MdPhonelinkSetup, MdViewSidebar } from 'react-icons/md';
 import { useIngestionStore } from './store/useIngestionStore';
-import IngestionArea from './components/IngestionArea';
-import StoryBuilderArea from './components/StoryBuilderArea';
-import FullScreenPreview from './components/FullScreenPreview';
-import { ManagerOverlay } from './components/Managers/ManagerOverlay';
+import IngestionArea from './features/ingestion/IngestionArea';
+import StoryBuilderArea from './features/story-builder/StoryBuilderArea';
+import FullScreenPreview from './features/ingestion/components/FullScreenPreview';
+import { ManagerOverlay } from './features/managers/ManagerOverlay';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useStoryStore } from './store/useStoryStore';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, DragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
-import { MdViewSidebar } from 'react-icons/md';
-import PostView from './components/PostView';
-import { TutorialPrompt } from './components/TutorialPrompt';
+import PostView from './features/post-view/PostView';
+import { TutorialPrompt } from './components/Tutorial/TutorialPrompt';
+import { Resizer } from './components/Shared/Resizer';
 
 // Styles
 import './styles/base/variables.css';
@@ -38,101 +39,9 @@ import './styles/features/story-builder/crop-overlay.css';
 import './styles/features/post-view.css';
 import './styles/components/themes.css';
 
-interface ResizerProps {
-    id: string;
-    direction: 'horizontal' | 'vertical';
-    onResize: (value: number) => void;
-    className?: string;
-}
-
-const Resizer: React.FC<ResizerProps> = ({ id, direction, onResize, className }) => {
-    const isResizing = useRef(false);
-    const initialPos = useRef(0);
-    const initialSize = useRef(0);
-    const [ghostPos, setGhostPos] = React.useState<number | null>(null);
-
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        isResizing.current = true;
-        document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
-        initialPos.current = direction === 'horizontal' ? e.clientX : e.clientY;
-        const parentElement = (e.currentTarget as HTMLElement).previousElementSibling as HTMLElement;
-        if (parentElement) {
-            initialSize.current = direction === 'horizontal' ? parentElement.offsetWidth : parentElement.offsetHeight;
-        }
-        setGhostPos(direction === 'horizontal' ? e.clientX : e.clientY);
-    }, [direction]);
-
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isResizing.current) return;
-        const currentPos = direction === 'horizontal' ? e.clientX : e.clientY;
-
-        // Validation logic for ghost pos
-        if (direction === 'horizontal') {
-            const delta = currentPos - initialPos.current;
-            const newSize = initialSize.current + delta;
-            const remainingWidth = window.innerWidth - newSize - 1; // -1 for resizer
-
-            if (newSize > 150 && remainingWidth > 450) {
-                setGhostPos(currentPos);
-            }
-        } else {
-            setGhostPos(currentPos);
-        }
-    }, [direction]);
-
-    const handleMouseUp = useCallback((e: MouseEvent) => {
-        if (!isResizing.current) return;
-        isResizing.current = false;
-        document.body.style.cursor = 'default';
-        setGhostPos(null);
-
-        const currentPos = direction === 'horizontal' ? e.clientX : e.clientY;
-        const delta = currentPos - initialPos.current;
-        const newSize = initialSize.current + delta;
-
-        if (direction === 'horizontal') {
-            const remainingWidth = window.innerWidth - newSize - 1;
-            if (newSize > 150 && remainingWidth > 450) {
-                onResize(newSize);
-            }
-        } else {
-            onResize(newSize);
-        }
-    }, [direction, onResize]);
-
-    useEffect(() => {
-        window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('mouseup', handleMouseUp);
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [handleMouseMove, handleMouseUp]);
-
-    return (
-        <>
-            <div
-                id={id}
-                className={`${className} resizer-${direction}`}
-                onMouseDown={handleMouseDown}
-            />
-            {ghostPos !== null && (
-                <div
-                    className={clsx("resizer-ghost", `direction-${direction}`)}
-                    style={{
-                        [direction === 'horizontal' ? 'left' : 'top']: ghostPos
-                    } as React.CSSProperties}
-                />
-            )}
-        </>
-    );
-};
-
 const App: React.FC = () => {
     const { t } = useTranslation();
     const { theme, toggleTheme } = useTheme();
-    const { } = useTranslation();
     const addImages = useIngestionStore(s => s.addImages);
     const ingestionWidth = useSettingsStore(s => s.ingestionWidth);
     const setIngestionWidth = useSettingsStore(s => s.setIngestionWidth);

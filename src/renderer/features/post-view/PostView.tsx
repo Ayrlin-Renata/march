@@ -1,12 +1,11 @@
 import React from 'react';
-import { useStoryStore } from '../store/useStoryStore';
-import { useSettingsStore } from '../store/useSettingsStore';
+import { useStoryStore } from '../../store/useStoryStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTranslation } from 'react-i18next';
-import { PLATFORMS, LAYOUTS } from '../types/stories';
-import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh } from 'react-icons/md';
-import { getThumbnailUrl } from '../utils/pathUtils';
+import { PLATFORMS, LAYOUTS } from '../../types/stories';
+import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh, MdLoop } from 'react-icons/md';
+import { getThumbnailUrl } from '../../utils/pathUtils';
 import clsx from 'clsx';
-import { MdLoop } from 'react-icons/md';
 
 const Spinner: React.FC = () => (
     <div className="spinner-icon">

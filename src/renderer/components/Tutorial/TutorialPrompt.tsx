@@ -2,9 +2,9 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { useTutorial } from '../hooks/useTutorial';
-import { useTheme } from '../context/ThemeContext';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { useTutorial } from '../../hooks/useTutorial';
+import { useTheme } from '../../context/ThemeContext';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 
 export const TutorialPrompt: React.FC = () => {

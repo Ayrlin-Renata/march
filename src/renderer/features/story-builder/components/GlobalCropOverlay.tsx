@@ -1,5 +1,8 @@
 import React from 'react';
-import { type SlotCrop } from '../../types/stories';
+import { type SlotCrop } from '../../../types/stories';
+import { MdBorderInner, MdGridGoldenratio, MdClose } from 'react-icons/md';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 
 interface GlobalCropOverlayProps {
     activeSlotRect: DOMRect | null;
@@ -13,6 +16,7 @@ interface GlobalCropOverlayProps {
     isFitConstraint?: boolean;
     onPan?: (dx: number, dy: number) => void;
     onZoom?: (factor: number) => void;
+    onToggleFit?: () => void;
 }
 
 export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
@@ -25,10 +29,11 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
     isSymmetric = true,
     isFitConstraint = false,
     onPan,
-    onZoom
+    onZoom,
+    onToggleSymmetry,
+    onToggleFit
 }) => {
-    if (!activeSlotRect) return null;
-    const { top: slotTop, left: slotLeft, width: slotWidth, height: slotHeight } = activeSlotRect;
+    const { t } = useTranslation();
 
     // Transient state for smooth resizing without store updates
     const [transientExpansion, setTransientExpansion] = React.useState<{ top: number, right: number, bottom: number, left: number } | null>(null);
@@ -37,7 +42,7 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
     const hasDraggedSinceDown = React.useRef(false);
     const justFinishedInteraction = React.useRef(false);
     const lastPos = React.useRef({ x: 0, y: 0 });
-    const isMouseDownOnOverlay = React.useRef(false);
+    const isMouseDownInsideImage = React.useRef(false);
 
     // Calculate max expansion and render state
     const calculateState = React.useCallback(() => {
@@ -54,12 +59,14 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
         const maxRight = originalWidth - (px.x + px.width);
 
         const currentExp = crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 };
+        const slotWidth = activeSlotRect.width;
+        const slotHeight = activeSlotRect.height;
 
         const cropBox = {
             top: -(currentExp.top * scale),
             left: -(currentExp.left * scale),
-            width: activeSlotRect.width + (currentExp.left + currentExp.right) * scale,
-            height: activeSlotRect.height + (currentExp.top + currentExp.bottom) * scale
+            width: slotWidth + (currentExp.left + currentExp.right) * scale,
+            height: slotHeight + (currentExp.top + currentExp.bottom) * scale
         };
 
         const sourceStyle = {
@@ -75,8 +82,8 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
         };
 
         const globalSourceRect = {
-            top: slotTop + sourceStyle.top,
-            left: slotLeft + sourceStyle.left,
+            top: activeSlotRect.top + sourceStyle.top,
+            left: activeSlotRect.left + sourceStyle.left,
             width: sourceStyle.width,
             height: sourceStyle.height
         };
@@ -88,13 +95,21 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             scale,
             globalSourceRect
         };
-    }, [activeSlotRect, crop, originalWidth, originalHeight, slotTop, slotLeft]);
+    }, [activeSlotRect, crop, originalWidth, originalHeight]);
 
     // Updated Dismissal Logic: Only close if clicking OUTSIDE the image boundary
     React.useEffect(() => {
         const handleMouseDown = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            isMouseDownOnOverlay.current = target.closest('.global-crop-overlay-root') !== null || target.closest('.modal-overlay') !== null;
+            const state = calculateState();
+            if (state) {
+                const { left, top, width, height } = state.globalSourceRect;
+                isMouseDownInsideImage.current = (
+                    e.clientX >= left && e.clientX <= left + width &&
+                    e.clientY >= top && e.clientY <= top + height
+                );
+            } else {
+                isMouseDownInsideImage.current = false;
+            }
         };
 
         const handleGlobalMouseUp = (e: MouseEvent) => {
@@ -117,8 +132,11 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
                 }
             }
 
-            // Only close if mousedown also started on overlay/modal and we are ending on them
-            if (isMouseDownOnOverlay.current && (target.closest('.global-crop-overlay-root') || target.closest('.modal-overlay'))) {
+            // If mousedown was inside image, do not dismiss
+            if (isMouseDownInsideImage.current) return;
+
+            // Otherwise, if we ended on the root or highlight area, dismiss
+            if (target.classList.contains('global-crop-overlay-root') || target.classList.contains('preview-boundary-highlight')) {
                 onDeselect();
             }
         };
@@ -130,6 +148,9 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             window.removeEventListener('mouseup', handleGlobalMouseUp);
         };
     }, [onDeselect, calculateState]);
+
+    if (!activeSlotRect) return null;
+    const { top: slotTop, left: slotLeft, width: slotWidth, height: slotHeight } = activeSlotRect;
 
     const state = calculateState();
     if (!state || !crop) return null;
@@ -182,7 +203,7 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
         const onPointerUp = (upEvent: PointerEvent) => {
             isPanning.current = false;
             justFinishedInteraction.current = true;
-            setTimeout(() => { justFinishedInteraction.current = false; }, 50);
+            setTimeout(() => { justFinishedInteraction.current = false; }, 100);
 
             target.releasePointerCapture(upEvent.pointerId);
             window.removeEventListener('pointermove', onPointerMove);
@@ -284,6 +305,33 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             onPointerDown={handlePointerDown}
             onWheel={handleWheel}
         >
+            <div className="top-bar-full">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <button
+                        className={clsx("icon-btn", isSymmetric && "active")}
+                        onClick={onToggleSymmetry}
+                        title={t('symmetric_resize_tooltip')}
+                    >
+                        <MdBorderInner size={24} />
+                    </button>
+                    <button
+                        className={clsx("icon-btn", isFitConstraint && "active")}
+                        onClick={onToggleFit}
+                        title={t('fit_constraint_tooltip')}
+                    >
+                        <MdGridGoldenratio size={24} />
+                    </button>
+                </div>
+
+                <button
+                    className="icon-btn-large"
+                    onClick={onDeselect}
+                    title={t('close')}
+                >
+                    <MdClose size={24} />
+                </button>
+            </div>
+
             <div
                 className="preview-boundary-highlight"
                 style={{ top: slotTop, left: slotLeft, width: slotWidth, height: slotHeight }}
@@ -305,11 +353,35 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
                     <div className="expansion-handle bottom" onMouseDown={(e) => startResize(e, 'bottom')} />
                     <div className="expansion-handle left" onMouseDown={(e) => startResize(e, 'left')} />
 
-                    {/* Corners for better visual resize feedback */}
                     <div className="corner-accent top-left" />
                     <div className="corner-accent top-right" />
                     <div className="corner-accent bottom-left" />
                     <div className="corner-accent bottom-right" />
+                </div>
+            </div>
+
+            <div className="crop-bottom-zoom-bar" style={{
+                position: 'fixed',
+                bottom: 32,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 100002,
+                pointerEvents: 'auto'
+            }}>
+                <div className="zoom-slider-box glassy">
+                    <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        step="0.01"
+                        value={crop.scale}
+                        onChange={(e) => {
+                            const newScale = parseFloat(e.target.value);
+                            onZoom?.(newScale / crop.scale);
+                        }}
+                        className="zoom-slider-input"
+                    />
+                    <span className="zoom-percent">{crop.scale.toFixed(1)}x</span>
                 </div>
             </div>
         </div>
