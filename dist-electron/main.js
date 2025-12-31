@@ -45,6 +45,8 @@ function createWindow() {
     const win = new BrowserWindow({
         width: windowState.width,
         height: windowState.height,
+        minWidth: 840,
+        minHeight: 610,
         x: windowState.x,
         y: windowState.y,
         show: false, // Don't show until we've applied maximization if needed

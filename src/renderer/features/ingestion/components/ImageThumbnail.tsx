@@ -53,7 +53,9 @@ export const ImageThumbnail: React.FC<{
             holdTimerRef.current = null;
         }
         setHoldProgress(0);
+        setLockout(false);
         hasTriggeredDragRef.current = false;
+        hasBridgedToDndRef.current = false;
     }, []);
 
     React.useEffect(() => {
@@ -81,14 +83,21 @@ export const ImageThumbnail: React.FC<{
     };
 
     const handleMouseDown = (e: React.PointerEvent) => {
+        // ALWAYS start from a clean state to prevent sticky native drags
+        if (holdTimerRef.current) {
+            clearInterval(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+        setHoldProgress(0);
         setLockout(false);
+        hasTriggeredDragRef.current = false;
         hasBridgedToDndRef.current = false;
+
         initialPointerPosRef.current = { x: e.clientX, y: e.clientY };
         e.persist();
         initialPointerEventRef.current = e;
 
         if (e.button === 0) {
-            setHoldProgress(0);
             const startTime = Date.now();
             const duration = 600;
 
