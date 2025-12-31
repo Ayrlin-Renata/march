@@ -107,3 +107,28 @@ export function getConstrainedPixelCrop(
         expansion: newExpansion
     };
 }
+
+/**
+ * Common helper to get a centered 'Cover' crop area for a given aspect ratio.
+ */
+export function getInitialPixelCrop(imgW: number, imgH: number, aspect: number) {
+    let cropW, cropH;
+    const imgAspect = imgW / imgH;
+
+    if (imgAspect > aspect) {
+        // Image is wider than target: fill height, crop sides
+        cropH = imgH;
+        cropW = cropH * aspect;
+    } else {
+        // Image is taller than target: fill width, crop top/bottom
+        cropW = imgW;
+        cropH = cropW / aspect;
+    }
+
+    return {
+        x: (imgW - cropW) / 2,
+        y: (imgH - cropH) / 2,
+        width: cropW,
+        height: cropH
+    };
+}

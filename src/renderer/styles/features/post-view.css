@@ -108,6 +108,84 @@
     width: 130px;
 }
 
+/* Collapsible Details/Summary Refinements */
+.platform-content-details {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.details-summary {
+    list-style: none;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    transition: background 0.2s ease;
+    user-select: none;
+}
+
+.details-summary::-webkit-details-marker {
+    display: none;
+}
+
+.details-summary:hover {
+    background: var(--bg-surface-hover);
+}
+
+.details-summary .chevron-icon {
+    color: var(--text-dim);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.platform-content-details[open] .chevron-icon {
+    transform: rotate(90deg);
+    color: var(--fg-accent);
+}
+
+.summary-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--fg-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+}
+
+.platform-content-details[open] .summary-label {
+    color: var(--text-main);
+}
+
+.summary-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+    opacity: 0.5;
+}
+
+.post-sequence-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    animation: slideDownFade 0.3s ease-out;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .post-image-preview-container {
     width: 180px;
     background: var(--bg-secondary);
@@ -245,4 +323,23 @@
 
 [data-base-theme='march'] .action-btn:hover {
     border-color: var(--fg-accent);
+}
+
+.post-now-btn {
+    background: var(--fg-accent) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+}
+
+.post-now-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.post-now-btn:disabled {
+    background: var(--bg-surface-active) !important;
+    opacity: 0.5;
+    cursor: not-allowed;
 }

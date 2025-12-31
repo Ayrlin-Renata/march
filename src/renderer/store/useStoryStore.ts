@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { type StoryPost, type PlatformKey, type LayoutKey, PLATFORMS, LAYOUTS, type PlatformConfig, type SlotCrop } from '../types/stories';
+import { getInitialPixelCrop } from '../utils/cropUtils';
 
 interface StoryState {
     posts: StoryPost[];
@@ -268,7 +269,6 @@ export const useStoryStore = create<StoryState>()(
                                 };
                             } else if (slot.originalWidth && slot.originalHeight) {
                                 const targetAspect = layoutInfo.slotAspects[idx] || 1;
-                                const { getInitialPixelCrop } = require('../utils/cropUtils');
                                 pixelCrop = getInitialPixelCrop(
                                     slot.originalWidth,
                                     slot.originalHeight,

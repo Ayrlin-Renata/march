@@ -120,7 +120,7 @@ export default {
     "about": "About",
     "about_title": "About March",
     "about_desc": "Information about the application.",
-    "about_description_text": "I made March Photobox to help me with my own struggles, I hope you find it convienient too!",
+    "about_description_text": "I made March Photobox to help me with my own screenshot struggles, I hope you find it convienient too!",
     "credentials_saved": "Credentials Saved",
     "credentials_missing": "Authorization Required",
     "auto_post_mode": "Auto Post Mode",

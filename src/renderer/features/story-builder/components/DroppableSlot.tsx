@@ -5,7 +5,7 @@ import { MdAdd } from 'react-icons/md';
 import clsx from 'clsx';
 import { useDroppable } from '@dnd-kit/core';
 import { getAssetUrl } from '../../../utils/pathUtils';
-import { getConstrainedPixelCrop } from '../../../utils/cropUtils';
+import { getConstrainedPixelCrop, getInitialPixelCrop } from '../../../utils/cropUtils';
 
 // Helper for Mockup slots with interactive editing
 export const DroppableSlot: React.FC<{
@@ -42,11 +42,11 @@ export const DroppableSlot: React.FC<{
 
                     let cropW, cropH;
                     if (imgAspect > slotAspectMeasured) {
-                        // Image is wider than slot: match height
+                        // Image is wider than slot: fill height, crop sides
                         cropH = img.height;
                         cropW = cropH * slotAspectMeasured;
                     } else {
-                        // Image is taller than slot: match width
+                        // Image is taller than slot: fill width, crop top/bottom
                         cropW = img.width;
                         cropH = cropW / slotAspectMeasured;
                     }
@@ -57,6 +57,9 @@ export const DroppableSlot: React.FC<{
                         width: cropW,
                         height: cropH
                     };
+                    // Ensure scale is correct for the slider (1.0 means original width = crop width)
+                    // But here we want the "Visual Scale" to be relative to the slot.
+                    // The GlobalCropOverlay uses originalWidth / pixelCrop.width as the scale value.
                     newCrop.scale = img.width / cropW;
                 }
 
@@ -212,6 +215,18 @@ export const DroppableSlot: React.FC<{
         };
     }, [isFocused, slotData.crop.pixelCrop, slotData.originalWidth, slotData.originalHeight, slotSize.width, postId, platform, slotIndex, updateSlotCrop, slotData.crop]);
 
+    // Initial Crop Calibration: Immediate if dimensions known, otherwise handled by useEffect above
+    React.useEffect(() => {
+        if (slotData.imagePath && slotData.originalWidth && slotData.originalHeight && !slotData.crop.pixelCrop) {
+            const initial = getInitialPixelCrop(slotData.originalWidth, slotData.originalHeight, slotAspect);
+            updateSlotCrop(postId, platform, slotIndex, {
+                ...slotData.crop,
+                pixelCrop: initial,
+                scale: slotData.originalWidth / initial.width
+            });
+        }
+    }, [slotData.imagePath, slotData.originalWidth, slotData.originalHeight, slotData.crop.pixelCrop, slotAspect, postId, platform, slotIndex, updateSlotCrop]);
+
     // Calculate Render Style
     // We render the `pixelCrop` area into `slotSize` container.
     // CSS Width = originalWidth * Scale
@@ -266,6 +281,7 @@ export const DroppableSlot: React.FC<{
                             position: 'absolute',
                             top: 0,
                             left: 0,
+                            pointerEvents: 'none',
                             ...renderStyle
                         } as any}
                         draggable={false}

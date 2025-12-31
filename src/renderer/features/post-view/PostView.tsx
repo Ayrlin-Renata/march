@@ -3,7 +3,7 @@ import { useStoryStore } from '../../store/useStoryStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../../types/stories';
-import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh, MdLoop } from 'react-icons/md';
+import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh, MdLoop, MdChevronRight } from 'react-icons/md';
 import { getThumbnailUrl } from '../../utils/pathUtils';
 import clsx from 'clsx';
 
@@ -221,10 +221,9 @@ const PostView: React.FC = () => {
                                     {/* Manual Post Button (if not auto or fallback) */}
                                     {(!autoPostMode || (autoPostMode && !hasBskyCreds)) && isBsky && (
                                         <button
-                                            className="primary-btn small"
+                                            className="action-btn primary post-now-btn"
                                             onClick={() => handlePostToBsky(config, p.key)}
                                             disabled={status === 'posting' || !hasBskyCreds}
-                                            style={{ background: p.color }}
                                         >
                                             {status === 'posting' ? t('posting') : (t('post_now') + ' ')} <MdCloudUpload />
                                         </button>
@@ -251,6 +250,7 @@ const PostView: React.FC = () => {
 
                             <details className="platform-content-details" open={!autoPostMode}>
                                 <summary className="details-summary">
+                                    <MdChevronRight className="chevron-icon" size={20} />
                                     <span className="summary-label">{t('post_content_checklist') || 'Content Checklist'}</span>
                                     <div className="summary-line" />
                                 </summary>
