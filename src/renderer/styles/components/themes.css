@@ -5,6 +5,12 @@
     gap: 8px;
 }
 
+@media (max-width: 450px) {
+    .theme-controls {
+        display: none;
+    }
+}
+
 .theme-picker-wrapper {
     position: relative;
 }

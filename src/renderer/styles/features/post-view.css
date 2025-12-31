@@ -343,3 +343,106 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Status & Indicators */
+.spinner-center-circle {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--fg-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+[data-base-theme='march'] .spinner-center-circle {
+    border-top-color: var(--fg-accent);
+}
+
+.spinner-center-circle.mini {
+    width: 12px;
+    height: 12px;
+    border-width: 1.5px;
+}
+
+.status-posting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fg-accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.status-success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4ade80;
+    /* Success Green */
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.status-error-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fg-error);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.platform-error-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(244, 135, 113, 0.1);
+    /* Error tint */
+    border: 1px solid var(--fg-error);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    animation: slideDownFade 0.3s ease-out;
+}
+
+[data-theme='light'] .platform-error-banner {
+    background: rgba(229, 20, 0, 0.05);
+}
+
+.error-main-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--fg-error);
+}
+
+.error-title {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+.error-detail {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.retry-btn-large {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--fg-error);
+    color: var(--fg-error);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.retry-btn-large:hover {
+    background: var(--fg-error);
+    color: white;
+}

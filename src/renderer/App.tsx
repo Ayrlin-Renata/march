@@ -388,10 +388,10 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="bottom-bar-right">
-                            <button className="icon-btn" title={t('platforms')} onClick={() => setActiveManager('platforms')}>
+                            <button className="icon-btn btn-platforms" title={t('platforms')} onClick={() => setActiveManager('platforms')}>
                                 <MdPhonelinkSetup size={20} />
                             </button>
-                            <button id="tutorial-presets-manager-btn" className="icon-btn" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
+                            <button id="tutorial-presets-manager-btn" className="icon-btn btn-presets" title={t('preset_manager_tooltip')} onClick={() => setActiveManager('presets')}>
                                 <MdSpeakerNotes size={20} />
                             </button>
                             <button className="icon-btn" title={t('settings')} onClick={() => setActiveManager('settings_general')}>

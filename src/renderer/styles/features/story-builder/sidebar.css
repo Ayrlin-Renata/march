@@ -1,16 +1,19 @@
 /* Post Sidebar (Right) */
 .post-sidebar {
-    width: 250px;
+    width: 15rem;
     background-color: var(--bg-secondary);
     border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: row;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    flex: 0.4;
+    max-width: 15rem;
 }
 
 .post-sidebar.collapsed {
     width: 32px;
+    flex: 0;
 }
 
 .collapse-btn {

@@ -446,6 +446,12 @@
     transition: all 0.2s ease;
 }
 
+@media (max-width: 600px) {
+    .burst-label {
+        display: none;
+    }
+}
+
 [data-base-theme='march'] .icon-btn-text {
     color: var(--fg-accent-dark);
 }
@@ -509,6 +515,7 @@
     padding: 12px 0 8px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .burst-info-left {
@@ -539,6 +546,9 @@
     font-size: 0.75rem;
     color: var(--text-dim);
     font-family: 'JetBrains Mono', monospace;
+    text-wrap: nowrap;
+    padding-left: 1em;
+    padding-top: 5px;
 }
 
 [data-base-theme='march'] .burst-time {
@@ -552,9 +562,17 @@
     margin-bottom: 10px;
 }
 
+[data-base-theme='march'] .burst-slider {
+    accent-color: var(--fg-accent);
+}
+
+[data-base-theme='time'] .burst-slider {
+    accent-color: var(--fg-accent);
+}
+
 .popup-hint {
     font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--text-dim);
     font-style: italic;
     text-align: center;
 }

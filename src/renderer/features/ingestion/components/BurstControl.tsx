@@ -36,7 +36,8 @@ export const BurstControl: React.FC = () => {
                 title={t('burst_sensitivity')}
             >
                 <MdBolt size={18} />
-                <span>{t('burst')}: {thresholdSec}s</span>
+                <span className="burst-label">{t('burst')}: </span>
+                <span>{thresholdSec}s</span>
             </button>
 
             <AnimatePresence>

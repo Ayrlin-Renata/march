@@ -3,14 +3,12 @@ import { useStoryStore } from '../../store/useStoryStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useTranslation } from 'react-i18next';
 import { PLATFORMS, LAYOUTS } from '../../types/stories';
-import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh, MdLoop, MdChevronRight } from 'react-icons/md';
+import { MdArrowBack, MdContentCopy, MdCheck, MdImage, MdCloudUpload, MdError, MdRefresh, MdChevronRight } from 'react-icons/md';
 import { getThumbnailUrl } from '../../utils/pathUtils';
 import clsx from 'clsx';
 
 const Spinner: React.FC = () => (
-    <div className="spinner-icon">
-        <MdLoop size={24} className="spin-animation" />
-    </div>
+    <div className="spinner-center-circle" />
 );
 
 const PostView: React.FC = () => {
@@ -152,7 +150,7 @@ const PostView: React.FC = () => {
                                         cursor: 'default' // No toggle here
                                     }}
                                 >
-                                    {status === 'posting' && <MdLoop className="spin-animation" size={10} />}
+                                    {status === 'posting' && <div className="spinner-center-circle mini" />}
                                     {status === 'success' && <MdCheck size={12} />}
                                     {status === 'error' && <MdError size={12} />}
                                     {p.name}
