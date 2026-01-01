@@ -120,7 +120,7 @@
 }
 
 .add-btn {
-    background: var(--accent-blue);
+    background: var(--fg-accent);
     color: #fff;
     border: none;
     border-radius: 6px;

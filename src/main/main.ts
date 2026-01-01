@@ -179,6 +179,8 @@ function createWindow() {
     });
 
     ipcMain.on('set-settings', (_event, newSettings: Partial<AppSettings>) => {
+        const oldLookback = settings.get('ingestLookbackDays');
+
         if (newSettings.ingestLookbackDays !== undefined) {
             settings.set('ingestLookbackDays', newSettings.ingestLookbackDays);
         }
@@ -190,6 +192,22 @@ function createWindow() {
         }
         if (newSettings.watchedFolders !== undefined) {
             settings.set('watchedFolders', newSettings.watchedFolders);
+        }
+
+        // If lookback changed, re-trigger watcher
+        if (newSettings.ingestLookbackDays !== undefined && newSettings.ingestLookbackDays !== oldLookback) {
+            const folderData = settings.get('watchedFolders') as any[] || [];
+            const watchedPaths = folderData
+                .map(f => {
+                    if (typeof f === 'string') return f;
+                    if (f && typeof f === 'object' && 'path' in f) return f.path;
+                    return null;
+                })
+                .filter((p): p is string => typeof p === 'string');
+
+            if (win) {
+                setupWatcher(win, watchedPaths, newSettings.ingestLookbackDays);
+            }
         }
     });
 

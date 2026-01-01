@@ -209,16 +209,21 @@ const App: React.FC = () => {
         }
     }, [addImages]);
 
+    const clearImages = useIngestionStore(s => s.clearImages);
+
     useEffect(() => {
         if (window.electron && window.electron.on) {
-            const unsubStart = window.electron.on('discovery-started', () => setIsDiscovering(true));
+            const unsubStart = window.electron.on('discovery-started', () => {
+                setIsDiscovering(true);
+                clearImages();
+            });
             const unsubEnd = window.electron.on('discovery-finished', () => setIsDiscovering(false));
             return () => {
                 unsubStart();
                 unsubEnd();
             };
         }
-    }, [setIsDiscovering]);
+    }, [setIsDiscovering, clearImages]);
 
     useEffect(() => {
         const handleWindowResize = () => {

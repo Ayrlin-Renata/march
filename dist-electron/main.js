@@ -8,7 +8,26 @@ import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup } from
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
 import { saveBskyCredentials, hasBskyCredentials, postToBsky } from './platforms/bsky.js';
-updateElectronApp();
+app.name = 'March';
+app.setAppUserModelId('com.ayrlin.march');
+if (app.isPackaged) {
+    updateElectronApp();
+}
+const gotTheLock = app.requestSingleInstanceLock();
+let win = null;
+if (!gotTheLock) {
+    app.quit();
+}
+else {
+    app.on('second-instance', () => {
+        if (win) {
+            if (win.isMinimized())
+                win.restore();
+            win.focus();
+        }
+    });
+}
+console.log('[Main] User Data Path:', app.getPath('userData'));
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Register protocol before app ready
 protocol.registerSchemesAsPrivileged([
@@ -42,7 +61,7 @@ if (!fs.existsSync(cacheDir)) {
 }
 function createWindow() {
     const windowState = getWindowState();
-    const win = new BrowserWindow({
+    win = new BrowserWindow({
         width: windowState.width,
         height: windowState.height,
         minWidth: 840,
@@ -66,46 +85,61 @@ function createWindow() {
         },
     });
     ipcMain.on('update-titlebar-overlay', (_event, options) => {
-        win.setTitleBarOverlay(options);
+        if (win)
+            win.setTitleBarOverlay(options);
     });
     ipcMain.on('window-minimize', () => {
-        win.minimize();
+        if (win)
+            win.minimize();
     });
     ipcMain.on('window-maximize', () => {
-        if (win.isMaximized()) {
-            win.unmaximize();
-        }
-        else {
-            win.maximize();
+        if (win) {
+            if (win.isMaximized()) {
+                win.unmaximize();
+            }
+            else {
+                win.maximize();
+            }
         }
     });
     ipcMain.on('window-close', () => {
-        win.close();
+        if (win)
+            win.close();
     });
-    if (windowState.isMaximized) {
-        win.maximize();
+    if (win) {
+        if (windowState.isMaximized) {
+            win.maximize();
+        }
+        win.show();
+        if (app.isPackaged) {
+            win.setMenu(null);
+        }
+        win.on('maximize', () => {
+            if (win)
+                saveWindowState(win);
+        });
     }
-    win.show();
-    if (app.isPackaged) {
-        win.setMenu(null);
+    if (win) {
+        win.on('unmaximize', () => {
+            if (win)
+                saveWindowState(win);
+        });
+        win.on('close', () => {
+            if (win)
+                saveWindowState(win);
+        });
+        win.on('move', () => {
+            if (win)
+                saveWindowState(win);
+        });
+        win.on('resize', () => {
+            if (win)
+                saveWindowState(win);
+        });
     }
-    win.on('maximize', () => {
-        saveWindowState(win);
-    });
-    win.on('unmaximize', () => {
-        saveWindowState(win);
-    });
-    win.on('close', () => {
-        saveWindowState(win);
-    });
-    win.on('move', () => {
-        saveWindowState(win);
-    });
-    win.on('resize', () => {
-        saveWindowState(win);
-    });
     ipcMain.on('renderer-ready', () => {
-        reBroadcastFiles(win);
+        if (win)
+            reBroadcastFiles(win);
     });
     setLabelLookup((filePath) => {
         return labelStore.get(filePath.replace(/\\/g, '/'), 0);
@@ -121,6 +155,7 @@ function createWindow() {
         return settings.store;
     });
     ipcMain.on('set-settings', (_event, newSettings) => {
+        const oldLookback = settings.get('ingestLookbackDays');
         if (newSettings.ingestLookbackDays !== undefined) {
             settings.set('ingestLookbackDays', newSettings.ingestLookbackDays);
         }
@@ -133,6 +168,22 @@ function createWindow() {
         if (newSettings.watchedFolders !== undefined) {
             settings.set('watchedFolders', newSettings.watchedFolders);
         }
+        // If lookback changed, re-trigger watcher
+        if (newSettings.ingestLookbackDays !== undefined && newSettings.ingestLookbackDays !== oldLookback) {
+            const folderData = settings.get('watchedFolders') || [];
+            const watchedPaths = folderData
+                .map(f => {
+                if (typeof f === 'string')
+                    return f;
+                if (f && typeof f === 'object' && 'path' in f)
+                    return f.path;
+                return null;
+            })
+                .filter((p) => typeof p === 'string');
+            if (win) {
+                setupWatcher(win, watchedPaths, newSettings.ingestLookbackDays);
+            }
+        }
     });
     ipcMain.handle('get-app-version', () => {
         return app.getVersion();
@@ -141,6 +192,8 @@ function createWindow() {
         return shell.openExternal(url);
     });
     ipcMain.handle('select-folder', async () => {
+        if (!win)
+            return null;
         const result = await dialog.showOpenDialog(win, {
             properties: ['openDirectory']
         });
@@ -161,7 +214,8 @@ function createWindow() {
                 return f.path;
             return null;
         }).filter((p) => typeof p === 'string');
-        updateWatchPaths(win, paths);
+        if (win)
+            updateWatchPaths(win, paths);
         // If they are full objects, we save them to the store
         if (folders.length > 0 && typeof folders[0] !== 'string') {
             settings.set('watchedFolders', folders);
@@ -204,12 +258,16 @@ function createWindow() {
         return postToBsky(content);
     });
     ipcMain.on('resize-window', (_event, deltaX) => {
-        const [width, height] = win.getSize();
-        win.setSize(width + deltaX, height);
+        if (win) {
+            const [width, height] = win.getSize();
+            win.setSize(width + deltaX, height);
+        }
     });
     ipcMain.on('set-window-width', (_event, width) => {
-        const [, height] = win.getSize();
-        win.setSize(width, height);
+        if (win) {
+            const [, height] = win.getSize();
+            win.setSize(width, height);
+        }
     });
     ipcMain.on('start-drag', (event, { filePath }) => {
         // Generate a small icon on the fly for the drag preview
@@ -302,7 +360,9 @@ function createWindow() {
         return null;
     })
         .filter((p) => typeof p === 'string');
-    setupWatcher(win, watchedPaths, lookbackDays);
+    if (win) {
+        setupWatcher(win, watchedPaths, lookbackDays);
+    }
 }
 app.whenReady().then(() => {
     // Modern protocol handling for high-performance image loading

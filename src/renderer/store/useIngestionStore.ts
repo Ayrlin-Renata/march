@@ -17,6 +17,7 @@ interface IngestionState {
     resetLabel: (id: string) => void;
     updateImageDimensions: (id: string, width: number, height: number) => void;
     removeImagesBySource: (source: string) => void;
+    clearImages: () => void;
     isDiscovering: boolean;
     setIsDiscovering: (val: boolean) => void;
 }
@@ -183,6 +184,7 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
             images: state.images.filter(img => img.source !== source)
         }));
     },
+    clearImages: () => set({ images: [], selectedImageId: null }),
     isDiscovering: false,
     setIsDiscovering: (val) => set({ isDiscovering: val })
 }));
