@@ -5,7 +5,8 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--border-color);
-    z-index: 1000;
+    position: relative;
+    z-index: 999999;
     user-select: none;
     flex-shrink: 0;
 }

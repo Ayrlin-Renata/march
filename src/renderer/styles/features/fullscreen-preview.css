@@ -14,7 +14,7 @@
 
 .preview-controls-top {
     position: absolute;
-    top: 0;
+    top: 33px;
     left: 0;
     right: 0;
     height: 60px;
@@ -27,6 +27,8 @@
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
 }
+
+/* Note: Since .fullscreen-overlay has top: 33px, this absolute top: 0 is correct relative to its parent. */
 
 .top-center-info {
     display: flex;
@@ -63,8 +65,8 @@
 
 .label-glow-picker {
     position: absolute;
-    top: 60px;
-    /* Under top bar */
+    top: 93px;
+    /* 33 (title) + 60 (header) */
     left: 50%;
     transform: translateX(-50%);
     display: flex;

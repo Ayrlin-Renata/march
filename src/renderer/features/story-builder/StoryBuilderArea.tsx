@@ -118,15 +118,6 @@ const StoryBuilderArea: React.FC = () => {
 
     return (
         <section className="story-builder-area" id="tutorial-story-builder-area">
-            <GlobalCropOverlay
-                activeSlotRect={activeSlotRect}
-                crop={focusedSlotData?.crop || null}
-                originalWidth={focusedSlotData?.originalWidth}
-                originalHeight={focusedSlotData?.originalHeight}
-                onResizeExpansion={handleResizeExpansion}
-                onDeselect={() => setFocusedSlotIndex(null)}
-            />
-
             <BuilderHeader
                 activePostId={activePostId}
                 activePost={activePost}
@@ -180,13 +171,8 @@ const StoryBuilderArea: React.FC = () => {
                                 originalWidth={focusedSlotData?.originalWidth}
                                 originalHeight={focusedSlotData?.originalHeight}
                                 onResizeExpansion={(newExp) => {
-                                    if (focusedSlotIndex !== null) {
-                                        transientCropRef.current = null;
-                                        updateSlotCrop(activePostId, activePost.activePlatform, focusedSlotIndex, {
-                                            ...focusedSlotData!.crop,
-                                            expansion: newExp
-                                        });
-                                    }
+                                    transientCropRef.current = null;
+                                    handleResizeExpansion(newExp);
                                 }}
                                 onDeselect={() => {
                                     transientCropRef.current = null;

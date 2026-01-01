@@ -104,9 +104,14 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
     const state = calculateState();
     latestStateRef.current = state; // Keep ref in sync with render
 
+    const isMouseDownOnControl = React.useRef(false);
+
     // Updated Dismissal Logic: Only close if clicking OUTSIDE the image boundary
     React.useEffect(() => {
         const handleMouseDown = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+
+            // Check if inside image boundary
             const currentState = latestStateRef.current;
             if (currentState) {
                 const { left, top, width, height } = currentState.globalSourceRect;
@@ -117,19 +122,38 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             } else {
                 isMouseDownInsideImage.current = false;
             }
+
+            // Check if on any control/handle
+            isMouseDownOnControl.current = !!(
+                target.closest('.expansion-handle') ||
+                target.closest('.crop-top-bar') ||
+                target.closest('.top-bar-full') ||
+                target.closest('.crop-bottom-zoom-bar') ||
+                target.closest('.crop-zoom-slider-container')
+            );
         };
 
         const handleGlobalMouseUp = (e: MouseEvent) => {
-            if (isDraggingHandle.current || isPanning.current || hasDraggedSinceDown.current || justFinishedInteraction.current) return;
+            // Guard: If we are in the middle of a complex interaction, don't dismiss
+            if (isDraggingHandle.current || isPanning.current || hasDraggedSinceDown.current || justFinishedInteraction.current) {
+                return;
+            }
+
+            // Guard: If the click *started* inside the image or on a control, don't dismiss even if released outside
+            if (isMouseDownInsideImage.current || isMouseDownOnControl.current) {
+                return;
+            }
 
             const target = e.target as HTMLElement;
 
-            // Exclude controls
-            if (target.closest('.crop-top-bar') || target.closest('.top-bar-full')) return;
-            if (target.closest('.crop-bottom-zoom-bar')) return;
-            if (target.closest('.crop-zoom-slider-container')) return;
+            // Guard: If the release target is a control, don't dismiss
+            if (target.closest('.crop-top-bar') || target.closest('.top-bar-full') ||
+                target.closest('.crop-bottom-zoom-bar') || target.closest('.crop-zoom-slider-container') ||
+                target.closest('.expansion-handle')) {
+                return;
+            }
 
-            // Check if outside image boundary
+            // Check if release is outside image boundary
             const currentState = latestStateRef.current;
             if (currentState) {
                 const { left, top, width, height } = currentState.globalSourceRect;
@@ -139,20 +163,17 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
                 }
             }
 
-            // If mousedown was inside image, do not dismiss
-            if (isMouseDownInsideImage.current) return;
-
-            // Otherwise, if we ended on the root or highlight area, dismiss
+            // If we ended on the root or highlight area, dismiss
             if (target.classList.contains('global-crop-overlay-root') || target.classList.contains('preview-boundary-highlight')) {
                 onDeselect();
             }
         };
 
-        window.addEventListener('mousedown', handleMouseDown);
-        window.addEventListener('mouseup', handleGlobalMouseUp);
+        window.addEventListener('mousedown', handleMouseDown, true); // Use capture to ensure we see it
+        window.addEventListener('mouseup', handleGlobalMouseUp, true);
         return () => {
-            window.removeEventListener('mousedown', handleMouseDown);
-            window.removeEventListener('mouseup', handleGlobalMouseUp);
+            window.removeEventListener('mousedown', handleMouseDown, true);
+            window.removeEventListener('mouseup', handleGlobalMouseUp, true);
         };
     }, [onDeselect]);
 

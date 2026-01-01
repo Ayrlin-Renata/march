@@ -1,6 +1,9 @@
 .post-view {
     position: fixed;
-    inset: 0;
+    top: 33px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: 1100;
     background: var(--bg-primary);
     display: flex;
