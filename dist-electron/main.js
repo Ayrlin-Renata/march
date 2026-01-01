@@ -32,8 +32,10 @@ if (app.isPackaged) {
     });
     autoUpdater.on('error', (err) => {
         console.error('[Updater] Error:', err);
+        // Send stack trace if available, otherwise just the message
+        const errorDetail = err.stack || err.message || 'Unknown error';
         if (win)
-            win.webContents.send('update-error', err.message);
+            win.webContents.send('update-error', errorDetail);
     });
     autoUpdater.on('download-progress', (progressObj) => {
         if (win)

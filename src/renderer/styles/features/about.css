@@ -89,10 +89,13 @@
     border: 1px solid var(--divider-color);
     border-radius: 4px;
     padding: 12px;
+    padding-right: 60px;
+    /* Make room for the copy button */
     margin-top: 8px;
     position: relative;
-    max-height: 120px;
+    max-height: 250px;
     overflow-y: auto;
+    display: block;
 }
 
 .error-log-box code {

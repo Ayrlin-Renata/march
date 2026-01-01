@@ -138,7 +138,6 @@ export default {
     "sharing_images_settings": "Sharing: Images",
     "scale_images_to_platform": "Scale image resolution to platform constraints",
     "images": "Images",
-    "images_settings": "Images",
     "update_checking": "Checking for updates...",
     "update_available": "Update available!",
     "update_downloading": "Downloading update...",

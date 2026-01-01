@@ -138,5 +138,16 @@ export default {
     "sharing_images_settings": "공유: 이미지",
     "scale_images_to_platform": "플랫폼 제한에 맞춰 이미지 해상도 조절",
     "images": "이미지",
-    "images_settings": "이미지"
+    "images_settings": "이미지",
+    "update_checking": "업데이트 확인 중...",
+    "update_available": "새로운 업데이트가 있습니다!",
+    "update_downloading": "업데이트 다운로드 중...",
+    "update_ready": "설치 준비 완료",
+    "update_restart": "재시작 및 설치",
+    "update_uptodate": "March가 최신 버전입니다",
+    "update_error": "업데이트 실패",
+    "update_idle": "업데이트 확인 안 됨",
+    "update_check": "업데이트 확인",
+    "copy": "복사",
+    "copied": "복사됨!"
 };

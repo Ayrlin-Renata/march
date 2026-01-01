@@ -138,5 +138,16 @@ export default {
     "sharing_images_settings": "Berbagi: Gambar",
     "scale_images_to_platform": "Skala resolusi gambar sesuai batasan platform",
     "images": "Gambar",
-    "images_settings": "Gambar"
+    "images_settings": "Gambar",
+    "update_checking": "Memeriksa pembaruan...",
+    "update_available": "Pembaruan tersedia!",
+    "update_downloading": "Mengunduh pembaruan...",
+    "update_ready": "Pembaruan siap dipasang",
+    "update_restart": "Muat Ulang & Pasang",
+    "update_uptodate": "March sudah mutakhir",
+    "update_error": "Pembaruan gagal",
+    "update_idle": "Belum ada pembaruan yang diperiksa",
+    "update_check": "Periksa Pembaruan",
+    "copy": "Salin",
+    "copied": "Disalin!"
 };

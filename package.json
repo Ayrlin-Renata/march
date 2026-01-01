@@ -1,7 +1,7 @@
 {
   "name": "march",
   "private": true,
-  "version": "0.2.6-alpha",
+  "version": "0.2.7-alpha",
   "type": "module",
   "author": {
     "name": "Ayrlin Renata"
@@ -41,7 +41,8 @@
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "publish": [
       {

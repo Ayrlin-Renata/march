@@ -138,5 +138,16 @@ export default {
     "sharing_images_settings": "共有：画像",
     "scale_images_to_platform": "プラットフォームの制限に合わせて画像解像度を調整する",
     "images": "画像",
-    "images_settings": "画像"
+    "images_settings": "画像",
+    "update_checking": "アップデートをチェック中...",
+    "update_available": "新機能が利用可能です！",
+    "update_downloading": "アップデートをダウンロード中...",
+    "update_ready": "インストールの準備が完了しました",
+    "update_restart": "再起動してインストール",
+    "update_uptodate": "Marchは最新の状態です",
+    "update_error": "アップデートに失敗しました",
+    "update_idle": "アップデートは未確認です",
+    "update_check": "アップデートを確認",
+    "copy": "コピー",
+    "copied": "コピーしました！"
 };

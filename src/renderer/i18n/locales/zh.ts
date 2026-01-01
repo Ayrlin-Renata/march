@@ -138,5 +138,16 @@ export default {
     "sharing_images_settings": "分享: 图像",
     "scale_images_to_platform": "根据平台限制缩放图像分辨率",
     "images": "图像",
-    "images_settings": "图像"
+    "images_settings": "图像",
+    "update_checking": "正在检查更新...",
+    "update_available": "发现新版本！",
+    "update_downloading": "正在下载更新...",
+    "update_ready": "更新已准备好安装",
+    "update_restart": "重启并安装",
+    "update_uptodate": "March 已是最新版本",
+    "update_error": "更新失败",
+    "update_idle": "尚未检查更新",
+    "update_check": "检查更新",
+    "copy": "复制",
+    "copied": "已复制！"
 };
