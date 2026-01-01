@@ -265,6 +265,11 @@ function createWindow() {
             win.setSize(width + deltaX, height);
         }
     });
+    ipcMain.on('set-min-window-width', (_event, width) => {
+        if (win) {
+            win.setMinimumSize(width, 610);
+        }
+    });
     ipcMain.on('set-window-width', (_event, width) => {
         if (win) {
             const [, height] = win.getSize();

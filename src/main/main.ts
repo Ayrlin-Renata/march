@@ -299,6 +299,12 @@ function createWindow() {
         }
     });
 
+    ipcMain.on('set-min-window-width', (_event, width: number) => {
+        if (win) {
+            win.setMinimumSize(width, 610);
+        }
+    });
+
     ipcMain.on('set-window-width', (_event, width: number) => {
         if (win) {
             const [, height] = win.getSize();

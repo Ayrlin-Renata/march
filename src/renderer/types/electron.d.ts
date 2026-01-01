@@ -9,6 +9,7 @@ export interface ElectronAPI {
     exportImages: (paths: string[], targetDir: string) => Promise<boolean>;
     resizeWindow: (deltaX: number) => void;
     setWindowWidth: (width: number) => void;
+    setMinWindowWidth: (width: number) => void;
     startDrag: (filePath: string, iconPath: string) => void;
     startDragCropped: (filePath: string, rect: { x: number; y: number; width: number; height: number }) => void;
     copyImage: (filePath: string, rect?: { x: number; y: number; width: number; height: number }) => Promise<boolean>;

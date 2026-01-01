@@ -22,7 +22,7 @@ export const HoverOverlay: React.FC = () => {
                 img.labelIndex && `label-${img.labelIndex}`
             )}
             style={{
-                left: popoverPos.left,
+                left: `clamp(min(250px, 50vw), ${popoverPos.left}px, max(100vw - 250px, 50vw))`,
                 top: popoverPos.below ? popoverPos.top : 'auto',
                 bottom: !popoverPos.below ? (window.innerHeight - popoverPos.top) : 'auto',
                 transform: 'translateX(-50%)',

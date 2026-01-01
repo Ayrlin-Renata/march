@@ -251,10 +251,12 @@ const App: React.FC = () => {
 
         if (window.electron && window.electron.setWindowWidth) {
             if (newState) {
-                // Collapsing: Switch to the stored COLLAPSED width
+                // Collapsing: Switch to the stored COLLAPSED width and smaller minWidth
+                if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(250);
                 window.electron.setWindowWidth(storedWindowWidthCollapsed);
             } else {
-                // Expanding: Switch to the stored UNCOLLAPSED width
+                // Expanding: Switch to the stored UNCOLLAPSED width and larger minWidth
+                if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(840);
                 window.electron.setWindowWidth(storedWindowWidthUncollapsed);
             }
         }
@@ -266,11 +268,13 @@ const App: React.FC = () => {
         if (window.electron && window.electron.send) {
             window.electron.send('renderer-ready', {});
 
-            // On startup, if collapsed, make sure the window is sized correctly
+            // On startup, make sure the window is sized correctly and has the right constraints
             if (window.electron && window.electron.setWindowWidth) {
                 if (isBuilderCollapsed) {
+                    if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(250);
                     window.electron.setWindowWidth(storedWindowWidthCollapsed);
                 } else {
+                    if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(840);
                     window.electron.setWindowWidth(storedWindowWidthUncollapsed);
                 }
             }
@@ -286,12 +290,15 @@ const App: React.FC = () => {
             if (!isBuilderCollapsed) {
                 setStoredWindowWidthUncollapsed(window.innerWidth);
             }
+            if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(250);
             window.electron.setWindowWidth(storedWindowWidthCollapsed + 150);
         } else {
             // Restore appropriate width when exiting post mode
             if (isBuilderCollapsed) {
+                if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(250);
                 window.electron.setWindowWidth(storedWindowWidthCollapsed);
             } else {
+                if (window.electron.setMinWindowWidth) window.electron.setMinWindowWidth(840);
                 window.electron.setWindowWidth(storedWindowWidthUncollapsed);
             }
         }
