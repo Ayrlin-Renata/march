@@ -466,7 +466,7 @@
 }
 
 .icon-btn-text.active {
-    background: var(--accent-blue);
+    background: var(--fg-accent);
     color: #fff;
 }
 

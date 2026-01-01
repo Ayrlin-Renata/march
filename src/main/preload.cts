@@ -26,4 +26,10 @@ contextBridge.exposeInMainWorld('electron', {
     saveBskyCredentials: (handle: string, password: string) => ipcRenderer.invoke('save-bsky-credentials', { handle, password }),
     hasBskyCredentials: () => ipcRenderer.invoke('has-bsky-credentials'),
     postToBsky: (content: { text: string; imagePaths: string[] }) => ipcRenderer.invoke('post-to-bsky', content),
+
+    // Window Controls
+    minimize: () => ipcRenderer.send('window-minimize'),
+    maximize: () => ipcRenderer.send('window-maximize'),
+    close: () => ipcRenderer.send('window-close'),
+    updateTitleBarOverlay: (options: any) => ipcRenderer.send('update-titlebar-overlay', options),
 });

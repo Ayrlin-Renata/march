@@ -20,6 +20,10 @@ export interface ElectronAPI {
     saveBskyCredentials: (handle: string, password: string) => Promise<boolean>;
     hasBskyCredentials: () => Promise<boolean>;
     postToBsky: (content: { text: string; images: { path: string; crop?: any }[]; scaleImages?: boolean }) => Promise<{ success: boolean; error?: string }>;
+    minimize: () => void;
+    maximize: () => void;
+    close: () => void;
+    updateTitleBarOverlay: (options: { color: string; symbolColor: string; height: number }) => void;
 }
 
 declare global {

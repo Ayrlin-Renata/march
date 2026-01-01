@@ -17,6 +17,7 @@ import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, Dr
 import PostView from './features/post-view/PostView';
 import { TutorialPrompt } from './components/Tutorial/TutorialPrompt';
 import { Resizer } from './components/Shared/Resizer';
+import { TitleBar } from './components/TitleBar';
 
 // Styles
 import './styles/base/variables.css';
@@ -38,6 +39,7 @@ import './styles/features/story-builder/components.css';
 import './styles/features/story-builder/crop-overlay.css';
 import './styles/features/post-view.css';
 import './styles/components/themes.css';
+import './styles/components/titlebar.css';
 
 const App: React.FC = () => {
     const { t } = useTranslation();
@@ -300,6 +302,7 @@ const App: React.FC = () => {
 
     return (
         <div className={clsx("layout-root", isBuilderCollapsed && "builder-collapsed")} style={{ '--thumb-size': `${thumbnailSize}px`, '--ingestion-width': `${ingestionWidth}px` } as React.CSSProperties}>
+            <TitleBar />
             <style>{dynamicLabelStyles}</style>
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="main-layout-wrapper">

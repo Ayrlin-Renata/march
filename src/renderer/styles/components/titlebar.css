@@ -1,0 +1,81 @@
+.app-title-bar {
+    height: 33px;
+    background-color: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.title-bar-drag-area {
+    flex: 1;
+    height: 100%;
+    -webkit-app-region: drag;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+}
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-img {
+    width: 16px;
+    height: 16px;
+}
+
+.app-name {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1rem;
+    color: var(--text-dim);
+}
+
+.title-bar-controls {
+    display: flex;
+    height: 100%;
+    -webkit-app-region: no-drag;
+    margin-right: 138px;
+    /* Approximate space for native Win11 controls */
+}
+
+.title-bar-btn {
+    width: 46px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--fg-secondary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.title-bar-btn:hover {
+    background-color: var(--bg-surface-hover);
+    color: var(--fg-primary);
+}
+
+.title-bar-btn.close:hover {
+    background-color: var(--fg-error);
+    color: white;
+}
+
+[data-base-theme='march'] .app-title-bar {
+    background-image: var(--bg-gradient-pink);
+}
+
+[data-base-theme='march'] .app-name {
+    color: var(--fg-accent-dark);
+}
+
+[data-base-theme='time'] .app-name {
+    color: var(--fg-accent);
+}

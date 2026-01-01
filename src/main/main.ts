@@ -73,6 +73,32 @@ function createWindow() {
         },
         backgroundColor: '#1e1e1e',
         icon: path.join(__dirname, 'logo.png'),
+        titleBarStyle: 'hidden',
+        titleBarOverlay: {
+            color: '#1a1a1b',
+            symbolColor: '#ffffff',
+            height: 32
+        },
+    });
+
+    ipcMain.on('update-titlebar-overlay', (_event, options) => {
+        win.setTitleBarOverlay(options);
+    });
+
+    ipcMain.on('window-minimize', () => {
+        win.minimize();
+    });
+
+    ipcMain.on('window-maximize', () => {
+        if (win.isMaximized()) {
+            win.unmaximize();
+        } else {
+            win.maximize();
+        }
+    });
+
+    ipcMain.on('window-close', () => {
+        win.close();
     });
 
     if (windowState.isMaximized) {
