@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard, shell } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import updater from 'electron-updater';
+const { autoUpdater } = updater;
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
