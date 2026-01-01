@@ -1,7 +1,7 @@
 {
   "name": "march",
   "private": true,
-  "version": "0.2.2",
+  "version": "v0.2.3-alpha",
   "type": "module",
   "author": {
     "name": "Ayrlin Renata"
@@ -42,7 +42,14 @@
       "oneClick": true,
       "perMachine": false,
       "allowToChangeInstallationDirectory": false
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Ayrlin-Renata",
+        "repo": "march"
+      }
+    ]
   },
   "dependencies": {
     "@atproto/api": "^0.18.9",
@@ -53,6 +60,7 @@
     "clsx": "^2.1.1",
     "driver.js": "^1.4.0",
     "electron-store": "^11.0.2",
+    "electron-updater": "^6.6.2",
     "framer-motion": "^12.23.26",
     "i18next": "^25.7.3",
     "lucide-react": "^0.562.0",
@@ -63,7 +71,6 @@
     "react-icons": "^5.5.0",
     "react-zoom-pan-pinch": "^3.7.0",
     "tailwind-merge": "^3.4.0",
-    "update-electron-app": "^3.1.2",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard, shell } from 'electron';
-import { updateElectronApp } from 'update-electron-app';
+import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
@@ -11,7 +11,8 @@ import { saveBskyCredentials, hasBskyCredentials, postToBsky } from './platforms
 app.name = 'March';
 app.setAppUserModelId('com.ayrlin.march');
 if (app.isPackaged) {
-    updateElectronApp();
+    autoUpdater.allowPrerelease = true;
+    autoUpdater.checkForUpdatesAndNotify();
 }
 const gotTheLock = app.requestSingleInstanceLock();
 let win = null;
