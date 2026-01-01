@@ -46,7 +46,12 @@ const SortableLabelItem: React.FC<{ label: any, images: any[], updateLabel: any,
                 <MdDragHandle size={20} />
             </div>
             <div className="label-edit-row">
-                <input type="color" className="label-color-input" value={label.color} onChange={(e) => updateLabel(label.index, label.name, e.target.value)} />
+                <input
+                    type="color"
+                    className="label-color-input"
+                    value={label.color.slice(0, 7)}
+                    onChange={(e) => updateLabel(label.index, label.name, e.target.value + 'ff')}
+                />
                 <div className="item-info">
                     <input className="item-title-input" value={label.name} onChange={(e) => updateLabel(label.index, e.target.value, label.color)} />
                     <span className="item-subtitle">{t('label_prefix')} {label.index} • {t('images_count', { count: images.filter(img => img.labelIndex === label.index).length })}</span>
