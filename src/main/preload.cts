@@ -33,4 +33,8 @@ contextBridge.exposeInMainWorld('electron', {
     maximize: () => ipcRenderer.send('window-maximize'),
     close: () => ipcRenderer.send('window-close'),
     updateTitleBarOverlay: (options: any) => ipcRenderer.send('update-titlebar-overlay', options),
+
+    // Auto-update
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
 });

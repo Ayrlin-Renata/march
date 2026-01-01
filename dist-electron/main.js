@@ -13,8 +13,59 @@ app.name = 'March';
 app.setAppUserModelId('com.ayrlin.march');
 if (app.isPackaged) {
     autoUpdater.allowPrerelease = true;
+    // Connect logger to console
+    autoUpdater.logger = console;
+    autoUpdater.on('checking-for-update', () => {
+        console.log('[Updater] Checking for update...');
+        if (win)
+            win.webContents.send('update-checking');
+    });
+    autoUpdater.on('update-available', (info) => {
+        console.log('[Updater] Update available:', info.version);
+        if (win)
+            win.webContents.send('update-available', info);
+    });
+    autoUpdater.on('update-not-available', (info) => {
+        console.log('[Updater] App up to date.');
+        if (win)
+            win.webContents.send('update-not-available', info);
+    });
+    autoUpdater.on('error', (err) => {
+        console.error('[Updater] Error:', err);
+        if (win)
+            win.webContents.send('update-error', err.message);
+    });
+    autoUpdater.on('download-progress', (progressObj) => {
+        if (win)
+            win.webContents.send('update-download-progress', progressObj);
+    });
+    autoUpdater.on('update-downloaded', (info) => {
+        console.log('[Updater] Update downloaded:', info.version);
+        if (win)
+            win.webContents.send('update-downloaded', info);
+    });
     autoUpdater.checkForUpdatesAndNotify();
 }
+ipcMain.handle('check-for-updates', async () => {
+    if (app.isPackaged) {
+        try {
+            return await autoUpdater.checkForUpdates();
+        }
+        catch (err) {
+            console.error('Manual check failed:', err);
+            throw err;
+        }
+    }
+    // In dev mode, wait 1s and then tell the renderer it's not available
+    // to simulate a check and keep the UI from hanging.
+    await new Promise(r => setTimeout(r, 1000));
+    if (win)
+        win.webContents.send('update-not-available');
+    return { dev: true };
+});
+ipcMain.handle('quit-and-install', () => {
+    autoUpdater.quitAndInstall();
+});
 const gotTheLock = app.requestSingleInstanceLock();
 let win = null;
 if (!gotTheLock) {

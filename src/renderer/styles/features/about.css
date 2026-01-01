@@ -1,0 +1,135 @@
+.about-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.about-branding {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.about-logo {
+    filter: drop-shadow(0 0 8px rgba(0, 122, 204, 0.2));
+}
+
+.update-section {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.update-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-icon {
+    font-size: 24px;
+    color: var(--fg-accent);
+}
+
+.update-icon.spinning {
+    animation: spin 2s linear infinite;
+}
+
+.update-icon.error {
+    color: var(--fg-error);
+}
+
+.update-icon.success {
+    color: var(--fg-accent);
+}
+
+.update-info {
+    flex: 1;
+}
+
+.update-status-text {
+    font-weight: 500;
+    font-size: 14px;
+    margin: 0;
+}
+
+.update-version-text {
+    font-size: 12px;
+    opacity: 0.6;
+    margin: 2px 0 0 0;
+}
+
+.update-progress-container {
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.update-progress-bar {
+    height: 100%;
+    background: var(--fg-accent);
+    transition: width 0.3s ease;
+}
+
+.update-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.error-log-box {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 8px;
+    position: relative;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.error-log-box code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--fg-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    user-select: text;
+}
+
+.copy-error-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--bg-active);
+    border: 1px solid var(--border-color);
+    color: var(--fg-secondary);
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.copy-error-btn:hover {
+    background: var(--fg-accent);
+    color: white;
+    border-color: var(--fg-accent);
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

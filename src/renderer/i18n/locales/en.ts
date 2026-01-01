@@ -138,5 +138,16 @@ export default {
     "sharing_images_settings": "Sharing: Images",
     "scale_images_to_platform": "Scale image resolution to platform constraints",
     "images": "Images",
-    "images_settings": "Images"
+    "images_settings": "Images",
+    "update_checking": "Checking for updates...",
+    "update_available": "Update available!",
+    "update_downloading": "Downloading update...",
+    "update_ready": "Update ready to install",
+    "update_restart": "Restart & Install",
+    "update_uptodate": "March is up to date",
+    "update_error": "Update failed",
+    "update_idle": "No updates checked yet",
+    "update_check": "Check for Updates",
+    "copy": "Copy",
+    "copied": "Copied!"
 };

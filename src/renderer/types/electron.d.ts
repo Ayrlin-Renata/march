@@ -25,6 +25,10 @@ export interface ElectronAPI {
     maximize: () => void;
     close: () => void;
     updateTitleBarOverlay: (options: { color: string; symbolColor: string; height: number }) => void;
+
+    // Auto-update
+    checkForUpdates: () => Promise<any>;
+    quitAndInstall: () => Promise<void>;
 }
 
 declare global {
