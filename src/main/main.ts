@@ -5,7 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup } from './watcher.js';
+import { setupWatcher, reBroadcastFiles, updateWatchPaths, setLabelLookup, removeDiscoveredFile } from './watcher.js';
+import { toWinLongPath, normalizeInternalPath } from './utils/pathHelper.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
 import { saveBskyCredentials, hasBskyCredentials, postToBsky } from './platforms/bsky.js';
@@ -451,7 +452,6 @@ function createWindow() {
     }
 
     // Initial setup with lookback
-    // Initial setup with lookback
     const lookbackDays = settings.get('ingestLookbackDays');
     const folderData = settings.get('watchedFolders') as any[] || [];
     const watchedPaths = folderData
@@ -483,13 +483,11 @@ app.whenReady().then(() => {
             // Cleanup for Windows drive letters
             if (process.platform === 'win32') {
                 if (filePath.startsWith('/')) filePath = filePath.slice(1);
-                // Ensure drive letter format X:/
-                if (/^[a-zA-Z]:/.test(filePath) && !filePath.startsWith('/')) {
-                    // Correct
-                }
             }
 
-            return net.fetch(pathToFileURL(filePath).toString());
+            const longPath = toWinLongPath(filePath);
+
+            return net.fetch(pathToFileURL(longPath).toString());
         } catch (error) {
             console.error('Failed to resolve media protocol path:', error);
             return new Response('Not Found', { status: 404 });
@@ -513,8 +511,9 @@ app.whenReady().then(() => {
                 if (filePath.startsWith('/')) filePath = filePath.slice(1);
             }
 
-            // Check Cache
-            const stats = await fs.promises.stat(filePath);
+            // Check Cache (Use long path to avoid false ENOENT)
+            const longPathForStat = toWinLongPath(filePath);
+            const stats = await fs.promises.stat(longPathForStat);
             const cacheKey = crypto.createHash('md5')
                 .update(`${filePath}-${stats.mtimeMs}-${targetWidth}-${cropParam || 'no-crop'}`)
                 .digest('hex');
@@ -527,8 +526,19 @@ app.whenReady().then(() => {
                 });
             } catch {
                 // Not in cache, generate it
+                const longPath = toWinLongPath(filePath);
                 const { nativeImage } = await import('electron');
-                let img = nativeImage.createFromPath(filePath);
+                let img = nativeImage.createFromPath(longPath);
+
+                if (img.isEmpty()) {
+                    try {
+                        const buffer = await fs.promises.readFile(longPath);
+                        img = nativeImage.createFromBuffer(buffer);
+                    } catch (e) {
+                        // Still failed
+                    }
+                }
+
                 if (img.isEmpty()) {
                     return new Response('Locked or Empty', { status: 503 });
                 }
@@ -563,7 +573,31 @@ app.whenReady().then(() => {
                     headers: { 'Content-Type': 'image/jpeg' }
                 });
             }
-        } catch (error) {
+        } catch (error: any) {
+            if (error && (error.code === 'ENOENT' || error.message?.includes('ENOENT'))) {
+                // If file is missing, notify renderer to remove it from state
+                const win = BrowserWindow.getAllWindows()[0];
+                if (win && !win.isDestroyed()) {
+                    const url = new URL(request.url);
+                    let filePath = decodeURIComponent(url.pathname);
+                    if (url.hostname && url.hostname !== 'local') {
+                        filePath = url.hostname + ":" + filePath;
+                    }
+                    if (process.platform === 'win32') {
+                        if (filePath.startsWith('/')) filePath = filePath.slice(1);
+                    }
+
+                    const normalized = normalizeInternalPath(filePath);
+
+                    // Also remove from watcher's cache so it doesn't come back on re-broadcast
+                    removeDiscoveredFile(filePath);
+
+                    win.webContents.send('file-removed', filePath);
+                    // Use normalized path for the store to ensure matching
+                    win.webContents.send('file-removed', normalized);
+                }
+                return new Response('Not Found', { status: 404 });
+            }
             console.error('Failed to generate thumbnail:', error);
             return new Response('Not Found', { status: 404 });
         }

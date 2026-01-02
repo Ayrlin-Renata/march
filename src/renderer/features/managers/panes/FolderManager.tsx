@@ -23,7 +23,6 @@ export const FolderManagerPane: React.FC = () => {
     React.useEffect(() => {
         return () => {
             if (isDirty) {
-                console.log('[FolderManager] Committing deferred changes:', localFoldersRef.current);
                 setWatchedFolders(localFoldersRef.current);
                 if (window.electron && window.electron.updateWatchedFolders) {
                     window.electron.updateWatchedFolders(localFoldersRef.current.map(f => f.path));

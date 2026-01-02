@@ -135,7 +135,7 @@ export const LazyImage: React.FC<{
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', borderRadius: '4px' }}>
             {isBroken && (
                 <div className="thumbnail-writing-placeholder" style={{ zIndex: 10 }}>
-                    <MdSync size={24} className="spinner-icon" />
+                    <MdSync size={40} className="spinner-icon" />
                     <span>{t('writing')}</span>
                 </div>
             )}
@@ -154,7 +154,7 @@ export const LazyImage: React.FC<{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
-                    opacity: isBroken ? 0.3 : (isLoadAllowed ? 1 : 0),
+                    opacity: (isBroken || !isLoadAllowed) ? 0 : 1,
                     transition: 'opacity 0.3s ease',
                     zIndex: 2
                 }}

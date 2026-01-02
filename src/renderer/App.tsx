@@ -6,7 +6,7 @@ import { useTheme } from './context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getThumbnailUrl } from './utils/pathUtils';
 import { MdSettings, MdOutlineLightMode, MdOutlineDarkMode, MdStyle, MdSpeakerNotes, MdFolderOpen, MdPhonelinkSetup, MdViewSidebar } from 'react-icons/md';
-import { useIngestionStore } from './store/useIngestionStore';
+import { useIngestionStore, normalizePath } from './store/useIngestionStore';
 import IngestionArea from './features/ingestion/IngestionArea';
 import StoryBuilderArea from './features/story-builder/StoryBuilderArea';
 import FullScreenPreview from './features/ingestion/components/FullScreenPreview';
@@ -147,8 +147,16 @@ const App: React.FC = () => {
     const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
 
     // Sync settings with backend
+    const isFirstSyncRef = useRef(true);
     useEffect(() => {
         if (window.electron && window.electron.send) {
+            // Skip the very first sync on mount because the main process 
+            // already hydrates itself and starts the initial scan.
+            if (isFirstSyncRef.current) {
+                isFirstSyncRef.current = false;
+                return;
+            }
+
             window.electron.send('set-settings', {
                 ingestLookbackDays,
                 textPresets,
@@ -216,11 +224,22 @@ const App: React.FC = () => {
             const unsubStart = window.electron.on('discovery-started', () => {
                 setIsDiscovering(true);
                 clearImages();
+                fileBufferRef.current = []; // Clear pending batch on fresh scan
             });
             const unsubEnd = window.electron.on('discovery-finished', () => setIsDiscovering(false));
+            const unsubRemoved = window.electron.on('file-removed', (path: string) => {
+                // Remove from buffer to prevent it being re-added after flush
+                const normPath = normalizePath(path);
+                fileBufferRef.current = fileBufferRef.current.filter(f => normalizePath(f.path) !== normPath);
+
+                const removeImageByPath = useIngestionStore.getState().removeImageByPath;
+                removeImageByPath(path);
+            });
+
             return () => {
                 unsubStart();
                 unsubEnd();
+                unsubRemoved();
             };
         }
     }, [setIsDiscovering, clearImages]);

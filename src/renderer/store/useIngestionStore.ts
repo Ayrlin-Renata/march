@@ -17,10 +17,15 @@ interface IngestionState {
     resetLabel: (id: string) => void;
     updateImageDimensions: (id: string, width: number, height: number) => void;
     removeImagesBySource: (source: string) => void;
+    removeImageByPath: (path: string) => void;
     clearImages: () => void;
     isDiscovering: boolean;
     setIsDiscovering: (val: boolean) => void;
 }
+
+export const normalizePath = (path: string) => {
+    return path.normalize('NFC').replace(/\\/g, '/').toLowerCase();
+};
 
 export const useIngestionStore = create<IngestionState>((set, get) => ({
     images: [],
@@ -31,16 +36,18 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
     addImages: (newImages, burstThreshold) => {
         const { images } = get();
         let updatedImages = [...images];
-        const existingPaths = new Set(images.map(img => img.path));
+        const existingNormPaths = new Set(images.map(img => normalizePath(img.path)));
 
         newImages.forEach((img) => {
             if (!img.path) return;
+            const normPath = normalizePath(img.path);
             // Prevent duplicates using Set O(1)
-            if (existingPaths.has(img.path)) return;
+            if (existingNormPaths.has(normPath)) return;
 
             const timestamp = img.timestamp || Date.now();
             const id = img.id || Math.random().toString(36).substring(7);
 
+            // Normalized path is stored for consistency
             const newImg: IngestedImage = {
                 id,
                 path: img.path || '',
@@ -53,7 +60,7 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
             };
 
             updatedImages.push(newImg);
-            existingPaths.add(img.path);
+            existingNormPaths.add(normPath);
         });
 
         // 1. Sort the entire set chronologically (asc) for burst calculation
@@ -184,7 +191,19 @@ export const useIngestionStore = create<IngestionState>((set, get) => ({
             images: state.images.filter(img => img.source !== source)
         }));
     },
+    removeImageByPath: (path: string) => {
+        const normTarget = normalizePath(path);
+
+        set((state) => {
+            const filtered = state.images.filter(img => {
+                const normImg = normalizePath(img.path);
+                return normImg !== normTarget;
+            });
+
+            return { images: filtered };
+        });
+    },
     clearImages: () => set({ images: [], selectedImageId: null }),
     isDiscovering: false,
-    setIsDiscovering: (val) => set({ isDiscovering: val })
+    setIsDiscovering: (val: boolean) => set({ isDiscovering: val })
 }));
