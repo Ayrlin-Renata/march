@@ -27,7 +27,7 @@ export const LayoutSidebar: React.FC<LayoutSidebarProps> = ({
                     onClick={() => updateLayout(activePostId, activePost.activePlatform, l.key)}
                 >
                     <div className={clsx("layout-icon-preview", l.key)} />
-                    <span className="layout-btn-label">{t(`layout_${l.key}` as any)}</span>
+                    <span className="layout-btn-label">{t(l.label as any)}</span>
                 </button>
             ))}
         </aside>
