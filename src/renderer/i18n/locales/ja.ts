@@ -122,7 +122,7 @@ export default {
     "tutorial_post_desc": "準備ができたら、ここをクリックして投稿チェックリストを作成します。",
     "reset_tutorial_prompt": "チュートリアルプロンプトをリセット (デバッグ)",
     "about": "このアプリについて",
-    "about_title": "About March",
+    "about_title": "Marchについて",
     "about_desc": "アプリケーション情報",
     "about_description_text": "自分が不便に感じていたことを解消するためにMarch Photoboxを作りました。皆さんの役にも立てば幸いです！",
     "credentials_saved": "認証情報を保存しました",

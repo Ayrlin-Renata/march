@@ -122,7 +122,7 @@ export default {
     "tutorial_post_desc": "준비가 되면 여기를 클릭하여 게시 체크리스트를 구성하세요.",
     "reset_tutorial_prompt": "튜토리얼 프롬프트 초기화 (디버그)",
     "about": "정보",
-    "about_title": "About March",
+    "about_title": "March 정보",
     "about_desc": "응용 프로그램 정보",
     "about_description_text": "제가 겪었던 불편함을 해결하기 위해 March Photobox를 만들었습니다. 여러분께도 편리하게 쓰였으면 좋겠습니다!",
     "credentials_saved": "인증 정보 저장됨",
