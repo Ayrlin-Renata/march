@@ -523,21 +523,29 @@ app.whenReady().then(() => {
                 // Not in cache, generate it
                 const { nativeImage } = await import('electron');
                 let img = nativeImage.createFromPath(filePath);
+                if (img.isEmpty()) {
+                    return new Response('Locked or Empty', { status: 503 });
+                }
 
                 if (cropParam) {
-                    const [cx, cy, cw, ch] = cropParam.split(',').map(v => Math.round(parseFloat(v)));
-                    const imgSize = img.getSize();
-                    console.log(`[Main/Thumb] Crop Request: ${cropParam}, ImgSize: ${imgSize.width}x${imgSize.height}`);
-                    img = img.crop({
-                        x: Math.max(0, cx),
-                        y: Math.max(0, cy),
-                        width: Math.min(imgSize.width - cx, cw),
-                        height: Math.min(imgSize.height - cy, ch)
-                    });
+                    const parts = cropParam.split(',').map(v => Math.round(parseFloat(v)));
+                    if (parts.length === 4) {
+                        const [cx, cy, cw, ch] = parts;
+                        const imgSize = img.getSize();
+                        img = img.crop({
+                            x: Math.max(0, cx),
+                            y: Math.max(0, cy),
+                            width: Math.min(imgSize.width - cx, cw || 1),
+                            height: Math.min(imgSize.height - cy, ch || 1)
+                        });
+                    }
                 }
 
                 // Resize based on provided size or default to 250
                 const thumb = img.resize({ width: targetWidth, quality: 'better' });
+                if (thumb.isEmpty()) {
+                    return new Response('Processing', { status: 503 });
+                }
                 const buffer = thumb.toJPEG(80);
 
                 // Save to cache asynchronously

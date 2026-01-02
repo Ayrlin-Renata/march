@@ -149,5 +149,6 @@ export default {
     "update_idle": "업데이트 확인 안 됨",
     "update_check": "업데이트 확인",
     "copy": "복사",
-    "copied": "복사됨!"
+    "copied": "복사됨!",
+    "writing": "작성 중..."
 };

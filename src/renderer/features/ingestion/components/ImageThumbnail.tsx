@@ -211,6 +211,7 @@ export const ImageThumbnail: React.FC<{
                     <LazyImage
                         src={getThumbnailUrl(img.path)}
                         alt={img.name}
+                        timestamp={img.timestamp || Date.now()}
                         className="thumbnail-img"
                         priority={priority}
                     />

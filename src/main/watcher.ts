@@ -71,6 +71,7 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                 return;
             }
 
+
             const stats = await fs.promises.stat(filePath);
             // Use the earliest available timestamp to catch true "Creation"
             const timestamp = Math.min(

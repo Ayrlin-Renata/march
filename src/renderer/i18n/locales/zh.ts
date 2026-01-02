@@ -149,5 +149,6 @@ export default {
     "update_idle": "尚未检查更新",
     "update_check": "检查更新",
     "copy": "复制",
-    "copied": "已复制！"
+    "copied": "已复制！",
+    "writing": "写入中..."
 };

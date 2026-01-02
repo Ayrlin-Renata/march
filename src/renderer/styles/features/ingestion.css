@@ -258,6 +258,30 @@
     z-index: 1;
 }
 
+.thumbnail-writing-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-surface-active);
+    color: var(--text-dim);
+    gap: 8px;
+    z-index: 3;
+    border-radius: 4px;
+}
+
+.thumbnail-writing-placeholder span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+}
+
 .label-glow {
     position: absolute;
     bottom: 0;

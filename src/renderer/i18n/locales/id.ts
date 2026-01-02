@@ -149,5 +149,6 @@ export default {
     "update_idle": "Belum ada pembaruan yang diperiksa",
     "update_check": "Periksa Pembaruan",
     "copy": "Salin",
-    "copied": "Disalin!"
+    "copied": "Disalin!",
+    "writing": "Sedang menulis..."
 };

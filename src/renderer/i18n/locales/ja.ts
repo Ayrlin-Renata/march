@@ -149,5 +149,6 @@ export default {
     "update_idle": "アップデートは未確認です",
     "update_check": "アップデートを確認",
     "copy": "コピー",
-    "copied": "コピーしました！"
+    "copied": "コピーしました！",
+    "writing": "書き込み中..."
 };

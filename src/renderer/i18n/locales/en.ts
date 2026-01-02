@@ -148,5 +148,6 @@ export default {
     "update_idle": "No updates checked yet",
     "update_check": "Check for Updates",
     "copy": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "writing": "Writing..."
 };
