@@ -31,6 +31,7 @@
 
 .manager-sidebar {
     width: 180px;
+    flex-shrink: 0;
     background: var(--bg-primary);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -92,6 +93,7 @@
 
 .manager-main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background: transparent;
