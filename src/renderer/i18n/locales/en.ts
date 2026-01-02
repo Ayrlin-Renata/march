@@ -153,5 +153,8 @@ export default {
     "update_check": "Check for Updates",
     "copy": "Copy",
     "copied": "Copied!",
-    "writing": "Writing..."
+    "writing": "Writing...",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "changes_pending": "Changes pending..."
 };

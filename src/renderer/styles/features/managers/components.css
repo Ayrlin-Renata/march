@@ -26,6 +26,9 @@
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--fg-primary);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
 }
 
 .item-subtitle {
@@ -35,6 +38,41 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.clickable {
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.clickable:hover {
+    background: var(--bg-surface-hover);
+    color: var(--fg-accent);
+}
+
+.inline-edit-input {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--fg-accent) !important;
+    border-radius: 4px;
+    padding: 2px 4px !important;
+    margin: -3px -5px;
+    /* Account for border */
+    color: var(--fg-primary) !important;
+    outline: none;
+    width: 100%;
+}
+
+.inline-edit-input.title {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.inline-edit-input.subtitle {
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 .item-subtitle.truncate {

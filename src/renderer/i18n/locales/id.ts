@@ -154,5 +154,8 @@ export default {
     "update_check": "Periksa Pembaruan",
     "copy": "Salin",
     "copied": "Disalin!",
-    "writing": "Sedang menulis..."
+    "writing": "Sedang menulis...",
+    "expand": "Perluas",
+    "collapse": "Ciutkan",
+    "changes_pending": "Perubahan tertunda..."
 };

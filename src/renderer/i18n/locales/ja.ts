@@ -154,5 +154,8 @@ export default {
     "update_check": "アップデートを確認",
     "copy": "コピー",
     "copied": "コピーしました！",
-    "writing": "書き込み中..."
+    "writing": "書き込み中...",
+    "expand": "展開",
+    "collapse": "折りたたむ",
+    "changes_pending": "変更が保留中..."
 };

@@ -8,12 +8,10 @@ export const getAssetUrl = (path: string): string => {
     // Replace backslashes with forward slashes for Windows compatibility
     const normalized = path.replace(/\\/g, '/');
 
-    // Use a dummy hostname 'local' to avoid Windows drive letters being parsed as hostnames
-    if (normalized.startsWith('/')) {
-        return `media://local${normalized}`;
-    }
+    // We encode the entire path after the protocol to ensure characters like #, ?, for emojis don't break URL parsing
+    const encoded = normalized.split('/').map(segment => encodeURIComponent(segment)).join('/');
 
-    return `media://local/${normalized}`;
+    return `media://local/${encoded}`;
 };
 
 export const getThumbnailUrl = (path: string, size?: number, crop?: { x: number; y: number; width: number; height: number }): string => {
@@ -25,8 +23,8 @@ export const getThumbnailUrl = (path: string, size?: number, crop?: { x: number;
 
     const query = params.toString() ? `?${params.toString()}` : '';
 
-    if (normalized.startsWith('/')) {
-        return `thumb://local${normalized}${query}`;
-    }
-    return `thumb://local/${normalized}${query}`;
+    // Consistent encoding for thumbnails as well
+    const encoded = normalized.split('/').map(segment => encodeURIComponent(segment)).join('/');
+
+    return `thumb://local/${encoded}${query}`;
 };

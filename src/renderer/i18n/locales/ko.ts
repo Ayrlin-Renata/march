@@ -154,5 +154,8 @@ export default {
     "update_check": "업데이트 확인",
     "copy": "복사",
     "copied": "복사됨!",
-    "writing": "작성 중..."
+    "writing": "저장 중...",
+    "expand": "펼치기",
+    "collapse": "접기",
+    "changes_pending": "변경 사항 보류 중..."
 };

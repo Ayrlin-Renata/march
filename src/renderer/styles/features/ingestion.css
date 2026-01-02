@@ -74,9 +74,14 @@
 }
 
 .filter-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
     padding: 8px 12px;
     background: var(--bg-surface-active);
     border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 20;
 }
 
 .filter-pill-container {
@@ -85,6 +90,50 @@
     flex: 1;
     overflow-x: auto;
     background: transparent;
+    cursor: grab;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    user-select: none;
+}
+
+.filter-pill-container::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-pill-container:active {
+    cursor: grabbing;
+}
+
+.filter-pill-container.wrapped {
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    mask-image: none;
+    cursor: default;
+}
+
+.expand-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    margin: -2px -4px -4px -4px;
+}
+
+.expand-toggle-btn:hover {
+    background: var(--bg-surface-hover);
+    color: var(--fg-accent);
+}
+
+.expand-toggle-btn .rotated {
+    transform: rotate(180deg);
 }
 
 .filter-pill {

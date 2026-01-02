@@ -68,6 +68,7 @@ interface SettingsState {
     reorderLabels: (newLabels: LabelConfig[]) => void;
     updateLabel: (index: number, name: string, color: string) => void;
     addWatchedFolder: (path: string, alias: string) => void;
+    updateWatchedFolder: (oldPath: string, updates: Partial<FolderConfig>) => void;
     removeWatchedFolder: (path: string) => void;
     addTextPreset: (name: string, content: string) => void;
     updateTextPreset: (id: string, name: string, content: string) => void;
@@ -148,6 +149,9 @@ export const useSettingsStore = create<SettingsState>()(
 
             addWatchedFolder: (path: string, alias: string) => set((state) => ({
                 watchedFolders: [...state.watchedFolders, { path, alias, enabled: true }]
+            })),
+            updateWatchedFolder: (oldPath: string, updates: Partial<FolderConfig>) => set((state) => ({
+                watchedFolders: state.watchedFolders.map(f => f.path === oldPath ? { ...f, ...updates } : f)
             })),
             removeWatchedFolder: (path: string) => set((state) => ({
                 watchedFolders: state.watchedFolders.filter(f => f.path !== path)

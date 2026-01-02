@@ -31,9 +31,19 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
     }
 
     const watcher = chokidar.watch(watchPaths, {
-        ignored: (p) => {
+        ignored: (p, stats) => {
             // Always ignore node_modules
             if (p.includes('node_modules')) return true;
+
+            // Stats might not be provided for every call, but when it is, 
+            // we can ignore non-image files that aren't directories.
+            if (stats?.isFile()) {
+                const ext = path.extname(p).toLowerCase();
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
+                if (!imageExtensions.includes(ext)) {
+                    return true;
+                }
+            }
 
             // Get the filename/last segment
             const name = path.basename(p);
@@ -44,9 +54,7 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                 const isExplicitRoot = watchPaths.some(wp => {
                     return path.resolve(p) === path.resolve(wp);
                 });
-                // If it's NOT an explicit root, ignore it (e.g. .git, .DS_Store)
                 if (isExplicitRoot) return false;
-                // If it's NOT an explicit root, ignore it (e.g. .git, .DS_Store)
                 return true;
             }
             return false;
@@ -62,6 +70,9 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
 
     const processFile = async (filePath: string, isInitial: boolean = false) => {
         try {
+            // Double check existence (handling race conditions)
+            if (!fs.existsSync(filePath)) return;
+
             pendingFiles++;
             // Check if it's an image
             const ext = path.extname(filePath).toLowerCase();

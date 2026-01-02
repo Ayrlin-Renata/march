@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdImage, MdRefresh } from 'react-icons/md';
+import { MdImage, MdRefresh, MdExpandMore } from 'react-icons/md';
 import { useIngestionStore } from '../../store/useIngestionStore';
 import type { IngestedImage } from '../../types/images';
 import { useTranslation } from 'react-i18next';
@@ -16,11 +16,17 @@ export const IngestionArea: React.FC = React.memo(() => {
     const isDiscovering = useIngestionStore(s => s.isDiscovering);
 
     const [activeSource, setActiveSource] = React.useState('all');
+    const [isFiltersExpanded, setIsFiltersExpanded] = React.useState(false);
     const [visibleCount, setVisibleCount] = React.useState(15);
     const isScrollingRef = React.useRef(false);
     const scrollEndTimerRef = React.useRef<any>(null);
     const lastMousePosRef = React.useRef({ x: 0, y: 0 });
     const sentinelRef = React.useRef<HTMLDivElement>(null);
+    const pillContainerRef = React.useRef<HTMLDivElement>(null);
+    const isPillDragging = React.useRef(false);
+    const pillStartX = React.useRef(0);
+    const pillScrollLeft = React.useRef(0);
+    const [hasPillDragged, setHasPillDragged] = React.useState(false);
 
     const { t } = useTranslation();
     const ingestLookbackDays = useSettingsStore(s => s.ingestLookbackDays);
@@ -105,14 +111,50 @@ export const IngestionArea: React.FC = React.memo(() => {
 
     const visibleBursts = React.useMemo(() => bursts.slice(0, visibleCount), [bursts, visibleCount]);
 
+    const handlePillMouseDown = (e: React.MouseEvent) => {
+        if (isFiltersExpanded || !pillContainerRef.current) return;
+        isPillDragging.current = true;
+        pillStartX.current = e.pageX - pillContainerRef.current.offsetLeft;
+        pillScrollLeft.current = pillContainerRef.current.scrollLeft;
+        setHasPillDragged(false);
+    };
+
+    const handlePillMouseMove = (e: React.MouseEvent) => {
+        if (!isPillDragging.current || !pillContainerRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - pillContainerRef.current.offsetLeft;
+        const walk = (x - pillStartX.current) * 1.5;
+        pillContainerRef.current.scrollLeft = pillScrollLeft.current - walk;
+        if (Math.abs(walk) > 5) {
+            setHasPillDragged(true);
+        }
+    };
+
+    const handlePillMouseUp = () => {
+        isPillDragging.current = false;
+    };
+
+    const handlePillWheel = (e: React.WheelEvent) => {
+        if (isFiltersExpanded || !pillContainerRef.current) return;
+        pillContainerRef.current.scrollLeft += e.deltaY;
+    };
+
     return (
         <section className="ingestion-area" id="tutorial-ingestion-area">
             <header className="area-header">
                 <h2>{t('ingestion')}</h2>
                 <span className="count-badge">{filteredImages.length}</span>
             </header>
-            <div className="filter-bar">
-                <div className="filter-pill-container scrollable-hidden">
+            <div className={`filter-bar ${isFiltersExpanded ? 'expanded' : ''}`}>
+                <div
+                    ref={pillContainerRef}
+                    className={`filter-pill-container ${isFiltersExpanded ? 'wrapped' : 'scrollable-hidden'}`}
+                    onMouseDown={handlePillMouseDown}
+                    onMouseMove={handlePillMouseMove}
+                    onMouseUp={handlePillMouseUp}
+                    onMouseLeave={handlePillMouseUp}
+                    onWheel={handlePillWheel}
+                >
                     {sources.map(src => {
                         const isAll = src === 'all';
                         const folder = watchedFolders.find(f => f.path === src);
@@ -122,13 +164,22 @@ export const IngestionArea: React.FC = React.memo(() => {
                             <button
                                 key={src}
                                 className={`filter-pill ${activeSource === src ? 'active' : ''}`}
-                                onClick={() => setActiveSource(src)}
+                                onClick={() => {
+                                    if (!hasPillDragged) setActiveSource(src);
+                                }}
                             >
                                 {label}
                             </button>
                         );
                     })}
                 </div>
+                <button
+                    className="expand-toggle-btn"
+                    onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
+                    title={isFiltersExpanded ? t('collapse') : t('expand')}
+                >
+                    <MdExpandMore size={20} className={isFiltersExpanded ? 'rotated' : ''} />
+                </button>
             </div>
             <div
                 className="area-body"

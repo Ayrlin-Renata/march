@@ -429,13 +429,20 @@ app.whenReady().then(() => {
     protocol.handle('media', (request) => {
         try {
             const url = new URL(request.url);
+            // pathname will include leading slash, and decodeURIComponent handles emojis/CJK/symbols
             let filePath = decodeURIComponent(url.pathname);
-            // Support both media://local/F:/... and media://F:/...
+            // Support media://local/C:/... and media://C:/...
             if (url.hostname && url.hostname !== 'local') {
                 filePath = url.hostname + ":" + filePath;
             }
-            if (process.platform === 'win32' && filePath.startsWith('/')) {
-                filePath = filePath.slice(1);
+            // Cleanup for Windows drive letters
+            if (process.platform === 'win32') {
+                if (filePath.startsWith('/'))
+                    filePath = filePath.slice(1);
+                // Ensure drive letter format X:/
+                if (/^[a-zA-Z]:/.test(filePath) && !filePath.startsWith('/')) {
+                    // Correct
+                }
             }
             return net.fetch(pathToFileURL(filePath).toString());
         }
@@ -455,8 +462,9 @@ app.whenReady().then(() => {
             if (url.hostname && url.hostname !== 'local') {
                 filePath = url.hostname + ":" + filePath;
             }
-            if (process.platform === 'win32' && filePath.startsWith('/')) {
-                filePath = filePath.slice(1);
+            if (process.platform === 'win32') {
+                if (filePath.startsWith('/'))
+                    filePath = filePath.slice(1);
             }
             // Check Cache
             const stats = await fs.promises.stat(filePath);

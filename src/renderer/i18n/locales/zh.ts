@@ -154,5 +154,8 @@ export default {
     "update_check": "检查更新",
     "copy": "复制",
     "copied": "已复制！",
-    "writing": "写入中..."
+    "writing": "写入中...",
+    "expand": "展开",
+    "collapse": "收起",
+    "changes_pending": "修改待应用..."
 };
