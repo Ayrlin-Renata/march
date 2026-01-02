@@ -55,7 +55,7 @@
 
 .source-image-boundary {
     position: absolute;
-    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border: 1px dashed var(--fg-accent);
     pointer-events: none;
 }
 

@@ -120,13 +120,17 @@ const PreviewContent: React.FC<{
 
             const margin = 100; // Keep 100px visible
 
-            // X clamping
-            // Max X (left edge of image): viewportW - margin
-            // Min X (left edge of image): margin - currentW
-            newX = Math.min(viewportW - margin, Math.max(margin - currentW, newX));
+            // Content is centered via flexbox. 
+            // react-zoom-pan-pinch scales from top-left (0,0) of the content div.
+            // ScreenPos = positionX + (viewportW * scale - imageW * scale) / 2
 
-            // Y clamping
-            newY = Math.min(viewportH - margin, Math.max(margin - currentH, newY));
+            const minX = margin - (viewportW * clampedScale + currentW) / 2;
+            const maxX = viewportW - margin - (viewportW * clampedScale - currentW) / 2;
+            newX = Math.min(maxX, Math.max(minX, newX));
+
+            const minY = margin - (viewportH * clampedScale + currentH) / 2;
+            const maxY = viewportH - margin - (viewportH * clampedScale - currentH) / 2;
+            newY = Math.min(maxY, Math.max(minY, newY));
         }
 
         setCurrentScale(clampedScale);
@@ -234,7 +238,7 @@ const PreviewContent: React.FC<{
                         type="range"
                         min="0"
                         max="100"
-                        step="1"
+                        step="0.1"
                         value={logValMap(currentScale)}
                         onChange={(e) => {
                             const val = parseFloat(e.target.value);
@@ -244,7 +248,7 @@ const PreviewContent: React.FC<{
                         }}
                         className="zoom-slider-input"
                     />
-                    <span className="zoom-percent">{currentScale.toFixed(1)}x</span>
+                    <span className="zoom-percent">{currentScale.toFixed(2)}x</span>
                 </div>
             </div>
         </div>
@@ -285,8 +289,13 @@ const FullScreenPreview: React.FC = () => {
 
         const margin = 100;
 
-        const clampedX = Math.min(viewportW - margin, Math.max(margin - currentW, state.positionX));
-        const clampedY = Math.min(viewportH - margin, Math.max(margin - currentH, state.positionY));
+        const minX = margin - (viewportW * state.scale + currentW) / 2;
+        const maxX = viewportW - margin - (viewportW * state.scale - currentW) / 2;
+        const clampedX = Math.min(maxX, Math.max(minX, state.positionX));
+
+        const minY = margin - (viewportH * state.scale + currentH) / 2;
+        const maxY = viewportH - margin - (viewportH * state.scale - currentH) / 2;
+        const clampedY = Math.min(maxY, Math.max(minY, state.positionY));
 
         if (clampedX !== state.positionX || clampedY !== state.positionY) {
             ref.setTransform(clampedX, clampedY, state.scale, 0);

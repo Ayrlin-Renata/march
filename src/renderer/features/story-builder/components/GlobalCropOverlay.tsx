@@ -75,7 +75,6 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
             width: originalWidth * scale,
             height: originalHeight * scale,
             position: 'absolute' as const,
-            border: '1px solid var(--border-color)',
             boxSizing: 'border-box' as const,
             pointerEvents: 'none' as const,
             zIndex: -1
@@ -413,7 +412,7 @@ export const GlobalCropOverlay: React.FC<GlobalCropOverlayProps> = ({
                         }}
                         className="zoom-slider-input"
                     />
-                    <span className="zoom-percent">{crop.scale.toFixed(1)}x</span>
+                    <span className="zoom-percent">{crop.scale.toFixed(2)}x</span>
                 </div>
             </div>
         </div>
