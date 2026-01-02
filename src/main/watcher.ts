@@ -31,7 +31,26 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
     }
 
     const watcher = chokidar.watch(watchPaths, {
-        ignored: /(^|[\/\\])\../, // ignore dotfiles
+        ignored: (p) => {
+            // Always ignore node_modules
+            if (p.includes('node_modules')) return true;
+
+            // Get the filename/last segment
+            const name = path.basename(p);
+
+            // If it's a dot-file or dot-folder
+            if (name.startsWith('.') && name !== '.') {
+                // Check if this EXACT path is one of the roots we meant to watch
+                const isExplicitRoot = watchPaths.some(wp => {
+                    return path.resolve(p) === path.resolve(wp);
+                });
+                // If it's NOT an explicit root, ignore it (e.g. .git, .DS_Store)
+                if (isExplicitRoot) return false;
+                // If it's NOT an explicit root, ignore it (e.g. .git, .DS_Store)
+                return true;
+            }
+            return false;
+        },
         persistent: true,
         depth: 3, // Support nested folders (e.g., Year/Month/Day organization)
     });
@@ -63,8 +82,12 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                 const img = nativeImage.createFromPath(filePath);
                 const size = img.getSize();
 
-                const normPath = path.normalize(filePath);
-                const sourceRoot = watchPaths.find(p => normPath.startsWith(path.normalize(p))) || path.dirname(filePath);
+                const normPath = path.normalize(filePath).toLowerCase();
+                const sourceRoot = watchPaths.find(p => {
+                    const normP = path.normalize(p).toLowerCase();
+                    return normPath.startsWith(normP);
+                }) || path.dirname(filePath);
+
 
                 const fileData: any = {
                     path: filePath,
@@ -84,6 +107,7 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
                     // Live updates sent immediately
                     mainWindow.webContents.send('file-added', fileData);
                 }
+            } else {
             }
         } catch (err) {
             console.error(`Error reading file stats for ${filePath}:`, err);
