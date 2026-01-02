@@ -253,7 +253,44 @@
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     aspect-ratio: 16/9;
-    /* Standard 4-grid on X is roughly 16:9 total */
+}
+
+/* BlueSky Layouts */
+.mockup-image-grid.layout-1-portrait {
+    grid-template-columns: 1fr;
+    aspect-ratio: 1/2;
+}
+
+.mockup-image-grid.layout-2-bsky {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    aspect-ratio: 2/1;
+    /* 2 Square slots side-by-side */
+}
+
+.mockup-image-grid.layout-3-bsky {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    aspect-ratio: 1.5/1;
+    /* Main square + 2 landscape ones (2:1). W=1+1=2? No. */
+    /* If Main is 1:1 and siblings are 2:1. W_main = 1, H_main = 1. */
+    /* Siblings: W_sib = 1, H_sib = 0.5. Total H = 0.5 + 0.5 = 1. Total W = 1 + 1 = 2. */
+    /* Aspect 2:1? User says 1:1 | 2:1 / 2:1. */
+    /* If Main is 1:1, its height is 1. Siblings' total height is 1. Each is 0.5 high. */
+    /* W of siblings is 1. 1/0.5 = 2. So they are 2:1. This works perfectly. */
+    /* Total aspect = 2:1. */
+    aspect-ratio: 2/1;
+}
+
+.mockup-image-grid.layout-3-bsky .mockup-slot:first-child {
+    grid-row: span 2;
+}
+
+.mockup-image-grid.layout-4-bsky {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    aspect-ratio: 3/2;
+    /* 4 slots of 3:2 each. W=3+3=6, H=2+2=4. Aspect 6/4 = 3/2. */
 }
 
 .mockup-slot {

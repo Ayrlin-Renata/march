@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { type StoryPost, type PlatformKey, type LayoutKey, PLATFORMS, LAYOUTS, type PlatformConfig, type SlotCrop } from '../types/stories';
-import { getInitialPixelCrop } from '../utils/cropUtils';
+import { getInitialPixelCrop, getConstrainedPixelCrop } from '../utils/cropUtils';
 
 interface StoryState {
     posts: StoryPost[];
@@ -27,7 +27,64 @@ interface StoryState {
     isPostMode: boolean;
     setPostMode: (enabled: boolean) => void;
     finalizeCrops: (postId: string) => void;
+    findEquivalentLayout: (sourceLayout: LayoutKey, targetPlatform: PlatformKey) => LayoutKey;
 }
+
+export const findEquivalentLayout = (sourceLayoutKey: LayoutKey, targetPlatform: PlatformKey): LayoutKey => {
+    const sourceLayout = LAYOUTS.find(l => l.key === sourceLayoutKey);
+    if (!sourceLayout) return '1-single';
+
+    // If the source layout is already supported by the target platform, keep it
+    if (sourceLayout.platforms.includes(targetPlatform)) {
+        return sourceLayoutKey;
+    }
+
+    // Otherwise, find a layout on the target platform with the same number of slots
+    const targetLayouts = LAYOUTS.filter(l => l.platforms.includes(targetPlatform));
+    const sameSlotLayout = targetLayouts.find(l => l.slots === sourceLayout.slots);
+
+    if (sameSlotLayout) {
+        return sameSlotLayout.key;
+    }
+
+    // If no same-slot layout exists, fallback to a sensible default or the first one
+    return targetLayouts[0]?.key || '1-single';
+};
+
+export const validatePlatformCrops = (config: PlatformConfig): PlatformConfig => {
+    const layoutInfo = LAYOUTS.find(l => l.key === config.layout);
+    if (!layoutInfo) return config;
+
+    return {
+        ...config,
+        slots: config.slots.map((slot, idx) => {
+            if (!slot.crop.pixelCrop || !slot.originalWidth || !slot.originalHeight) return slot;
+
+            const targetAspect = layoutInfo.slotAspects[idx] || 1;
+            const { pixelCrop: newPixelCrop, expansion: newExpansion } = getConstrainedPixelCrop(
+                slot.crop.pixelCrop,
+                slot.crop.expansion || { top: 0, right: 0, bottom: 0, left: 0 },
+                slot.originalWidth,
+                slot.originalHeight,
+                targetAspect,
+                0, 0, 1 // No move, no zoom
+            );
+
+            // Calculate new scale based on image width vs new pixelCrop width
+            const newScale = slot.originalWidth / newPixelCrop.width;
+
+            return {
+                ...slot,
+                crop: {
+                    ...slot.crop,
+                    pixelCrop: newPixelCrop,
+                    expansion: newExpansion,
+                    scale: newScale
+                }
+            };
+        })
+    };
+};
 
 const createDefaultPlatformConfig = (): PlatformConfig => ({
     enabled: false,
@@ -84,14 +141,19 @@ export const useStoryStore = create<StoryState>()(
                     if (p.id !== postId) return p;
                     // Inherit from the currently active platform configuration
                     const currentActive = p.platforms[p.activePlatform];
+                    const equivalentLayout = findEquivalentLayout(currentActive.layout, platform);
+
+                    const newConfig = validatePlatformCrops({
+                        ...currentActive,
+                        layout: equivalentLayout,
+                        enabled: true
+                    });
+
                     return {
                         ...p,
                         platforms: {
                             ...p.platforms,
-                            [platform]: {
-                                ...currentActive,
-                                enabled: true
-                            }
+                            [platform]: newConfig
                         },
                         activePlatform: platform
                     };
@@ -121,18 +183,16 @@ export const useStoryStore = create<StoryState>()(
             updateLayout: (postId, platform, layout) => set((state) => ({
                 posts: state.posts.map((p) => {
                     if (p.id !== postId) return p;
+                    const validatedConfig = validatePlatformCrops({
+                        ...p.platforms[platform],
+                        layout
+                    });
+
                     return {
                         ...p,
                         platforms: {
                             ...p.platforms,
-                            [platform]: {
-                                ...p.platforms[platform],
-                                layout,
-                                slots: p.platforms[platform].slots.map(s => ({
-                                    ...s,
-                                    crop: { ...s.crop, pixelCrop: undefined }
-                                }))
-                            }
+                            [platform]: validatedConfig
                         }
                     };
                 }),
@@ -214,11 +274,20 @@ export const useStoryStore = create<StoryState>()(
             duplicatePlatformConfig: (postId, from, to) => set((state) => ({
                 posts: state.posts.map((p) => {
                     if (p.id !== postId) return p;
+                    const sourceConfig = p.platforms[from];
+                    const equivalentLayout = findEquivalentLayout(sourceConfig.layout, to);
+
+                    const newConfig = validatePlatformCrops({
+                        ...sourceConfig,
+                        layout: equivalentLayout,
+                        enabled: true
+                    });
+
                     return {
                         ...p,
                         platforms: {
                             ...p.platforms,
-                            [to]: { ...p.platforms[from], enabled: true }
+                            [to]: newConfig
                         },
                         activePlatform: to
                     };
@@ -232,7 +301,13 @@ export const useStoryStore = create<StoryState>()(
                     const newPlatforms = { ...p.platforms };
                     PLATFORMS.forEach(plt => {
                         if (plt.key !== from) {
-                            newPlatforms[plt.key] = { ...sourceConfig, enabled: newPlatforms[plt.key].enabled };
+                            const equivalentLayout = findEquivalentLayout(sourceConfig.layout, plt.key);
+                            const validatedConfig = validatePlatformCrops({
+                                ...sourceConfig,
+                                layout: equivalentLayout,
+                                enabled: newPlatforms[plt.key].enabled
+                            });
+                            newPlatforms[plt.key] = validatedConfig;
                         }
                     });
                     return { ...p, platforms: newPlatforms };
@@ -291,6 +366,8 @@ export const useStoryStore = create<StoryState>()(
                     return { ...p, platforms: newPlatforms };
                 })
             })),
+
+            findEquivalentLayout: (sourceLayout, targetPlatform) => findEquivalentLayout(sourceLayout, targetPlatform),
         }),
         {
             name: 'march-stories',

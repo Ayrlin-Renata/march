@@ -20,7 +20,7 @@ export const LayoutSidebar: React.FC<LayoutSidebarProps> = ({
 
     return (
         <aside className="layout-sidebar">
-            {LAYOUTS.map(l => (
+            {LAYOUTS.filter(l => l.platforms.includes(activePost.activePlatform)).map(l => (
                 <button
                     key={l.key}
                     className={clsx("layout-btn", activePlatform.layout === l.key && "active")}
