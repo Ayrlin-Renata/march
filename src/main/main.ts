@@ -149,7 +149,7 @@ function createWindow() {
             webSecurity: true,
         },
         backgroundColor: '#1e1e1e',
-        icon: path.join(app.getAppPath(), 'src/assets', (settings.get('theme') === 'light') ? 'march_icon_color_dark.png' : 'march_icon_color.png'),
+        icon: path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', (settings.get('theme') === 'light') ? 'march_icon_color_dark.png' : 'march_icon_color.png'),
         titleBarStyle: 'hidden',
         titleBarOverlay: {
             color: '#1a1a1b',
@@ -247,7 +247,7 @@ function createWindow() {
         if (newSettings.theme !== undefined) {
             settings.set('theme', newSettings.theme);
             if (win) {
-                const iconPath = path.join(app.getAppPath(), 'src/assets', newSettings.theme === 'light' ? 'march_icon_color_dark.png' : 'march_icon_color.png');
+                const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', newSettings.theme === 'light' ? 'march_icon_color_dark.png' : 'march_icon_color.png');
                 win.setIcon(iconPath);
             }
         }

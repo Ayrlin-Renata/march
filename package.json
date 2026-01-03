@@ -1,12 +1,12 @@
 {
   "name": "march",
   "private": true,
-  "version": "0.2.17-alpha",
+  "version": "0.2.18-alpha",
   "type": "module",
   "author": {
     "name": "Ayrlin Renata"
   },
-  "icon": "src/assets/march_icon_color.png",
+  "icon": "public/march_icon_color.png",
   "description": "Image management and editing application.",
   "repository": {
     "type": "git",
@@ -33,7 +33,7 @@
       "dist-electron/**/*"
     ],
     "win": {
-      "icon": "src/assets/march_icon_color.ico",
+      "icon": "public/march_icon_color.ico",
       "target": [
         "nsis"
       ]

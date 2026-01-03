@@ -1,7 +1,8 @@
 import React from 'react';
 import { MdRemove, MdCropSquare, MdClose } from 'react-icons/md';
-import logoLight from '../../assets/march_icon_color.png';
-import logoDark from '../../assets/march_icon_color_dark.png';
+// Logos are in the public folder
+const logoLight = './march_icon_color.png';
+const logoDark = './march_icon_color_dark.png';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTheme } from '../context/ThemeContext';
 

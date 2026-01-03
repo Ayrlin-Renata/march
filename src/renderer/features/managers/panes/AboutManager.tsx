@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import logoLight from '../../../../assets/march_icon_color.png';
-import logoDark from '../../../../assets/march_icon_color_dark.png';
+// Logos are in the public folder
+const logoLight = './march_icon_color.png';
+const logoDark = './march_icon_color_dark.png';
 import { useTheme } from '../../../context/ThemeContext';
 import { MdUpdate, MdSync, MdFileDownload, MdCheckCircle, MdError, MdRefresh, MdCode, MdFavoriteBorder } from 'react-icons/md';
 import '../../../styles/features/about.css';
