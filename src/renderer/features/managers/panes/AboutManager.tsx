@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import logo from '../../../../assets/logo.png';
+import logoLight from '../../../../assets/march_icon_color.png';
+import logoDark from '../../../../assets/march_icon_color_dark.png';
+import { useTheme } from '../../../context/ThemeContext';
 import { MdUpdate, MdSync, MdFileDownload, MdCheckCircle, MdError, MdRefresh, MdCode, MdFavoriteBorder } from 'react-icons/md';
 import '../../../styles/features/about.css';
 
@@ -165,6 +167,9 @@ export const AboutManagerPane: React.FC = () => {
                 );
         }
     };
+
+    const { theme } = useTheme();
+    const logo = theme === 'light' ? logoDark : logoLight;
 
     return (
         <div className="manager-pane">

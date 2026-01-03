@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 type Theme = 'dark' | 'light' | 'high-contrast';
 
@@ -11,20 +12,11 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [theme, setThemeState] = useState<Theme>(() => {
-        return (localStorage.getItem('theme') as Theme) || 'dark';
-    });
-
-    const setTheme = (newTheme: Theme) => {
-        setThemeState(newTheme);
-        localStorage.setItem('theme', newTheme);
-    };
+    const theme = useSettingsStore(state => state.theme);
+    const setTheme = useSettingsStore(state => state.setTheme);
 
     const toggleTheme = () => {
-        const themes: Theme[] = ['dark', 'light'];
-        const currentIndex = themes.indexOf(theme);
-        const nextIndex = (currentIndex + 1) % themes.length;
-        setTheme(themes[nextIndex]);
+        setTheme(theme === 'dark' ? 'light' : 'dark');
     };
 
     useEffect(() => {

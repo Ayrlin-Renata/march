@@ -215,15 +215,15 @@ export function setupWatcher(mainWindow: BrowserWindow, watchPaths: string[], lo
     };
 
     watcher.on('add', (filePath) => {
-        const key = normalizeInternalPath(filePath);
-        console.log(`[Watcher] Add: ${filePath} (Key: ${key})`);
+        //const key = normalizeInternalPath(filePath);
+        //console.log(`[Watcher] Add: ${filePath} (Key: ${key})`);
         processFile(filePath, !isReady);
     });
 
     watcher.on('unlink', (filePath) => {
         const key = normalizeInternalPath(filePath);
-        const deleted = discoveredFiles.delete(key);
-        console.log(`[Watcher] Unlink: ${filePath} (Success: ${deleted}, Key: ${key})`);
+        //const deleted = discoveredFiles.delete(key);
+        //console.log(`[Watcher] Unlink: ${filePath} (Success: ${deleted}, Key: ${key})`);
         if (!mainWindow.isDestroyed()) {
             // Send both variants to increase matching probability in the renderer
             mainWindow.webContents.send('file-removed', filePath);

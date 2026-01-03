@@ -1,6 +1,7 @@
 import React from 'react';
 import { MdRemove, MdCropSquare, MdClose } from 'react-icons/md';
-import logo from '../../assets/logo.png';
+import logoLight from '../../assets/march_icon_color.png';
+import logoDark from '../../assets/march_icon_color_dark.png';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useTheme } from '../context/ThemeContext';
 
@@ -43,7 +44,7 @@ export const TitleBar: React.FC = () => {
         <div className="app-title-bar">
             <div className="title-bar-drag-area">
                 <div className="app-logo">
-                    <img src={logo} alt="logo" className="logo-img" />
+                    <img src={theme === 'light' ? logoDark : logoLight} alt="logo" className="logo-img" />
                     <span className="app-name">MARCH</span>
                 </div>
             </div>

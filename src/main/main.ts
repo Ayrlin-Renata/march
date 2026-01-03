@@ -88,6 +88,7 @@ console.log('[Main] User Data Path:', app.getPath('userData'));
 
 interface AppSettings {
     ingestLookbackDays: number;
+    theme: 'dark' | 'light' | 'high-contrast';
     watchedFolders: any[];
     textPresets: any[];
     labels: any[];
@@ -105,6 +106,7 @@ const settings = new ElectronStore<AppSettings>({
     name: 'settings',
     defaults: {
         ingestLookbackDays: 3,
+        theme: 'dark',
         watchedFolders: [],
         textPresets: [
             { id: '1', name: 'March', content: 'Trying out #marchphotobox! 📸 ' }
@@ -147,7 +149,7 @@ function createWindow() {
             webSecurity: true,
         },
         backgroundColor: '#1e1e1e',
-        icon: path.join(__dirname, 'logo.png'),
+        icon: path.join(app.getAppPath(), 'src/assets', (settings.get('theme') === 'light') ? 'march_icon_color_dark.png' : 'march_icon_color.png'),
         titleBarStyle: 'hidden',
         titleBarOverlay: {
             color: '#1a1a1b',
@@ -159,6 +161,7 @@ function createWindow() {
     ipcMain.on('update-titlebar-overlay', (_event, options) => {
         if (win) win.setTitleBarOverlay(options);
     });
+
 
     ipcMain.on('window-minimize', () => {
         if (win) win.minimize();
@@ -240,6 +243,13 @@ function createWindow() {
         }
         if (newSettings.textPresets !== undefined) {
             settings.set('textPresets', newSettings.textPresets);
+        }
+        if (newSettings.theme !== undefined) {
+            settings.set('theme', newSettings.theme);
+            if (win) {
+                const iconPath = path.join(app.getAppPath(), 'src/assets', newSettings.theme === 'light' ? 'march_icon_color_dark.png' : 'march_icon_color.png');
+                win.setIcon(iconPath);
+            }
         }
         if (newSettings.labels !== undefined) {
             settings.set('labels', newSettings.labels);

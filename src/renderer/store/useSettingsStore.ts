@@ -41,6 +41,7 @@ interface SettingsState {
     storedWindowWidthCollapsed: number;
     storedWindowWidthUncollapsed: number;
     language: string;
+    theme: 'dark' | 'light' | 'high-contrast';
     baseTheme: 'simple' | 'march' | 'time';
     hasSeenTutorialPrompt: boolean;
     scaleImagesToPlatforms: boolean;
@@ -54,6 +55,7 @@ interface SettingsState {
     setThumbnailSize: (size: number) => void;
     setBurstThreshold: (val: number) => void;
     setLanguage: (lang: string) => void;
+    setTheme: (theme: 'dark' | 'light' | 'high-contrast') => void;
     setBaseTheme: (theme: 'simple' | 'march' | 'time') => void;
 
     setActiveManager: (manager: 'folders' | 'presets' | 'platforms' | 'labels' | 'settings_ingestion' | 'settings_lightbox' | 'settings_language' | 'settings_general' | 'settings_about' | 'sharing_images' | null) => void;
@@ -111,6 +113,7 @@ export const useSettingsStore = create<SettingsState>()(
             storedWindowWidthCollapsed: 800,
             storedWindowWidthUncollapsed: 1200,
             language: 'en',
+            theme: 'dark',
             baseTheme: 'simple',
             hasSeenTutorialPrompt: false,
             scaleImagesToPlatforms: true,
@@ -126,6 +129,12 @@ export const useSettingsStore = create<SettingsState>()(
             setThumbnailSize: (size) => set({ thumbnailSize: size }),
             setBurstThreshold: (val) => set({ burstThreshold: val }),
             setLanguage: (lang) => set({ language: lang }),
+            setTheme: (theme) => {
+                set({ theme });
+                if (window.electron && window.electron.send) {
+                    window.electron.send('set-settings', { theme });
+                }
+            },
             setBaseTheme: (theme) => set({ baseTheme: theme }),
 
             setActiveManager: (manager) => set({ activeManager: manager, isSettingsOpen: !!(manager && manager.startsWith('settings_')) }),
@@ -187,7 +196,8 @@ export const useSettingsStore = create<SettingsState>()(
                                 ingestLookbackDays: settings.ingestLookbackDays ?? 3,
                                 watchedFolders: settings.watchedFolders ?? [],
                                 textPresets: settings.textPresets ?? [],
-                                labels: settings.labels ?? []
+                                labels: settings.labels ?? [],
+                                theme: settings.theme ?? 'dark'
                             });
                         }
                     } catch (err) {
@@ -215,6 +225,7 @@ export const useSettingsStore = create<SettingsState>()(
                 storedWindowWidthCollapsed: state.storedWindowWidthCollapsed,
                 storedWindowWidthUncollapsed: state.storedWindowWidthUncollapsed,
                 language: state.language,
+                theme: state.theme,
                 baseTheme: state.baseTheme,
                 hasSeenTutorialPrompt: state.hasSeenTutorialPrompt,
                 scaleImagesToPlatforms: state.scaleImagesToPlatforms,

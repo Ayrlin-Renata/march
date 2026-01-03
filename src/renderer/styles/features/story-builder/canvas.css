@@ -27,6 +27,14 @@
 }
 
 .mockup-container.x {
+    background: var(--preview-bg-x);
+    color: var(--preview-text-x);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.mockup-container.bsky {
+    background: var(--preview-bg-bsky);
+    color: var(--preview-text-bsky);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
