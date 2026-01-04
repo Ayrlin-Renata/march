@@ -26,7 +26,7 @@ export function initOverlayManager(mainWindow: BrowserWindow | null, settingsSto
 
     ipcMain.on('update-camera-grid-target', (_event, targetId: string | null) => {
         settings.set('cameraGridTargetId', targetId);
-        if (overlayWin) {
+        if (overlayWin && !overlayWin.isDestroyed()) {
             const targetBounds = getTargetBounds(targetId);
             overlayWin.setBounds(targetBounds);
         }
@@ -140,7 +140,7 @@ export function createOverlayWindow() {
     // Instead of waiting for ready-to-show (which takes ~500ms), 
     // wait exactly 500ms and then move the grid onscreen for the first toggle.
     setTimeout(() => {
-        if (overlayWin) {
+        if (overlayWin && !overlayWin.isDestroyed()) {
             const isActive = settings.get('isCameraGridActive');
             if (isActive) {
                 overlayWin.setBounds(targetBounds);
@@ -163,7 +163,7 @@ export function toggleOverlay() {
     settings.set('isCameraGridActive', isDesiredActive);
 
     if (isDesiredActive) {
-        if (overlayWin) {
+        if (overlayWin && !overlayWin.isDestroyed()) {
             overlayWin.show();
             const targetId = settings.get('cameraGridTargetId');
             const targetBounds = getTargetBounds(targetId);
@@ -175,19 +175,25 @@ export function toggleOverlay() {
         } else {
             createOverlayWindow();
         }
-        if (win) win.webContents.send('camera-grid-status', true);
+        if (win && !win.isDestroyed()) win.webContents.send('camera-grid-status', true);
     } else {
-        if (overlayWin) {
+        if (overlayWin && !overlayWin.isDestroyed()) {
             overlayWin.hide();
             // 2-minute persistence
             if (destroyOverlayTimeout) clearTimeout(destroyOverlayTimeout);
             destroyOverlayTimeout = setTimeout(() => {
-                if (overlayWin && !settings.get('isCameraGridActive')) {
+                if (overlayWin && !overlayWin.isDestroyed() && !settings.get('isCameraGridActive')) {
                     overlayWin.close();
                 }
             }, 2 * 60 * 1000);
+        } else {
+            // If overlayWin is null or destroyed, just clear any timeout
+            if (destroyOverlayTimeout) {
+                clearTimeout(destroyOverlayTimeout);
+                destroyOverlayTimeout = null;
+            }
         }
-        if (win) win.webContents.send('camera-grid-status', false);
+        if (win && !win.isDestroyed()) win.webContents.send('camera-grid-status', false);
     }
 }
 
@@ -210,7 +216,7 @@ export function registerHotkeys() {
 export function handleFeatureToggle(enabled: boolean) {
     if (!enabled) {
         settings.set('isCameraGridActive', false);
-        if (overlayWin) {
+        if (overlayWin && !overlayWin.isDestroyed()) {
             overlayWin.close();
         }
     }

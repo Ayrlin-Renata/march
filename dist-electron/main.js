@@ -230,7 +230,7 @@ function createWindow() {
         }
         if (newSettings.theme !== undefined) {
             settings.set('theme', newSettings.theme);
-            if (win) {
+            if (win && !win.isDestroyed()) {
                 const iconPath = path.join(app.getAppPath(), app.isPackaged ? 'dist' : 'public', newSettings.theme === 'light' ? 'march_icon_color_dark.png' : 'march_icon_color.png');
                 win.setIcon(iconPath);
             }
@@ -276,7 +276,7 @@ function createWindow() {
                 return null;
             })
                 .filter((p) => typeof p === 'string');
-            if (win) {
+            if (win && !win.isDestroyed()) {
                 setupWatcher(win, watchedPaths, newSettings.ingestLookbackDays);
             }
         }
