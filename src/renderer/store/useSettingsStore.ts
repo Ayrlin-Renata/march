@@ -45,6 +45,17 @@ interface SettingsState {
     baseTheme: 'simple' | 'march' | 'time';
     hasSeenTutorialPrompt: boolean;
     scaleImagesToPlatforms: boolean;
+    // Experimental - Photo Grid Overlay
+    isCameraGridFeatureEnabled: boolean;
+    isCameraGridActive: boolean;
+    cameraGridTargetId: string | null;
+    cameraGridHotkeys: {
+        toggle: string;
+    };
+    cameraGridOpacity: number;
+    cameraGridColor: string;
+    cameraGridLinesH: number;
+    cameraGridLinesV: number;
 
     // Actions
     setScrollSensitivity: (val: number) => void;
@@ -77,6 +88,15 @@ interface SettingsState {
     reorderTextPresets: (presets: TextPreset[]) => void;
     removeTextPreset: (id: string) => void;
     resetLabels: () => void;
+    // Experimental Actions
+    setCameraGridFeatureEnabled: (enabled: boolean) => void;
+    setCameraGridActive: (active: boolean) => void;
+    setCameraGridTargetId: (id: string | null) => void;
+    setCameraGridHotkeys: (hotkeys: { toggle: string }) => void;
+    setCameraGridOpacity: (opacity: number) => void;
+    setCameraGridColor: (color: string) => void;
+    setCameraGridLinesH: (count: number) => void;
+    setCameraGridLinesV: (count: number) => void;
     hydrateSettings: () => Promise<void>;
 }
 
@@ -117,6 +137,16 @@ export const useSettingsStore = create<SettingsState>()(
             baseTheme: 'simple',
             hasSeenTutorialPrompt: false,
             scaleImagesToPlatforms: true,
+            isCameraGridFeatureEnabled: false,
+            isCameraGridActive: false,
+            cameraGridTargetId: null,
+            cameraGridHotkeys: {
+                toggle: 'CommandOrControl+Shift+P'
+            },
+            cameraGridOpacity: 0.5,
+            cameraGridColor: '#ffffff',
+            cameraGridLinesH: 2,
+            cameraGridLinesV: 2,
 
             setScrollSensitivity: (val) => set({ scrollSensitivity: val }),
             setIngestLookbackDays: (val) => set({ ingestLookbackDays: val }),
@@ -187,6 +217,59 @@ export const useSettingsStore = create<SettingsState>()(
                     { index: 8, name: 'White', color: '#8a8a8aff' },
                 ]
             }),
+
+            setCameraGridFeatureEnabled: (enabled) => {
+                set((state) => ({
+                    isCameraGridFeatureEnabled: enabled,
+                    isCameraGridActive: !enabled ? false : state.isCameraGridActive
+                }));
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { isCameraGridFeatureEnabled: enabled });
+                }
+            },
+            setCameraGridActive: (active) => {
+                set({ isCameraGridActive: active });
+                if (window.electron?.send) {
+                    window.electron.send('toggle-camera-grid', active);
+                }
+            },
+            setCameraGridTargetId: (id) => {
+                set({ cameraGridTargetId: id });
+                if (window.electron?.send) {
+                    window.electron.send('update-camera-grid-target', id);
+                }
+            },
+            setCameraGridHotkeys: (hotkeys) => {
+                set({ cameraGridHotkeys: hotkeys });
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { cameraGridHotkeys: hotkeys });
+                }
+            },
+            setCameraGridOpacity: (opacity) => {
+                set({ cameraGridOpacity: opacity });
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { cameraGridOpacity: opacity });
+                }
+            },
+            setCameraGridColor: (color) => {
+                set({ cameraGridColor: color });
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { cameraGridColor: color });
+                }
+            },
+            setCameraGridLinesH: (count) => {
+                set({ cameraGridLinesH: count });
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { cameraGridLinesH: count });
+                }
+            },
+            setCameraGridLinesV: (count) => {
+                set({ cameraGridLinesV: count });
+                if (window.electron?.send) {
+                    window.electron.send('set-settings', { cameraGridLinesV: count });
+                }
+            },
+
             hydrateSettings: async () => {
                 if (window.electron && window.electron.getSettings) {
                     try {
@@ -197,7 +280,11 @@ export const useSettingsStore = create<SettingsState>()(
                                 watchedFolders: settings.watchedFolders ?? [],
                                 textPresets: settings.textPresets ?? [],
                                 labels: settings.labels ?? [],
-                                theme: settings.theme ?? 'dark'
+                                theme: settings.theme ?? 'dark',
+                                cameraGridOpacity: settings.cameraGridOpacity ?? 0.5,
+                                cameraGridColor: settings.cameraGridColor ?? '#ffffff',
+                                cameraGridLinesH: settings.cameraGridLinesH ?? 2,
+                                cameraGridLinesV: settings.cameraGridLinesV ?? 2
                             });
                         }
                     } catch (err) {
@@ -229,6 +316,13 @@ export const useSettingsStore = create<SettingsState>()(
                 baseTheme: state.baseTheme,
                 hasSeenTutorialPrompt: state.hasSeenTutorialPrompt,
                 scaleImagesToPlatforms: state.scaleImagesToPlatforms,
+                isCameraGridFeatureEnabled: state.isCameraGridFeatureEnabled,
+                cameraGridTargetId: state.cameraGridTargetId,
+                cameraGridHotkeys: state.cameraGridHotkeys,
+                cameraGridOpacity: state.cameraGridOpacity,
+                cameraGridColor: state.cameraGridColor,
+                cameraGridLinesH: state.cameraGridLinesH,
+                cameraGridLinesV: state.cameraGridLinesV,
             }),
         }
     )

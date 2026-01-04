@@ -35,4 +35,8 @@ contextBridge.exposeInMainWorld('electron', {
     // Auto-update
     checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
     quitAndInstall: () => ipcRenderer.invoke('quit-and-install'),
+    // Experimental - Camera Grid
+    getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
+    toggleCameraGrid: (active) => ipcRenderer.send('toggle-camera-grid', active),
+    updateCameraGridTarget: (targetId) => ipcRenderer.send('update-camera-grid-target', targetId),
 });

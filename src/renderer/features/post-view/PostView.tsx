@@ -63,7 +63,6 @@ const PostView: React.FC = () => {
 
     const handleCopyImage = async (path: string, crop: any, id: string) => {
         if (window.electron && window.electron.copyImage) {
-            console.log(`[PostView/Copy] Path: ${path}`, crop?.pixelCrop);
             const success = await window.electron.copyImage(path, crop?.pixelCrop);
             if (success) {
                 setCopiedPlatform(id);

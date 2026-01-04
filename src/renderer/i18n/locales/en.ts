@@ -142,6 +142,7 @@ export default {
     "sharing_images_settings": "Sharing: Images",
     "scale_images_to_platform": "Scale image resolution to platform constraints",
     "images": "Images",
+    "images_settings": "Images",
     "update_checking": "Checking for updates...",
     "update_available": "Update available!",
     "update_downloading": "Downloading update...",
@@ -156,5 +157,18 @@ export default {
     "writing": "Writing...",
     "expand": "Expand",
     "collapse": "Collapse",
-    "changes_pending": "Changes pending..."
+    "changes_pending": "Changes pending...",
+    "experimental_features": "Experimental Features",
+    "photo_grid_overlay": "Photo Grid Overlay",
+    "photo_grid_overlay_desc": "Display a camera thirds grid over your screen.",
+    "hotkey_toggle": "Grid Toggle Hotkey",
+    "grid_target": "Grid Target",
+    "grid_opacity": "Grid Opacity",
+    "grid_color": "Grid Color",
+    "grid_lines_h": "Horizontal Lines",
+    "grid_lines_v": "Vertical Lines",
+    "grid_update_notice": "Note: You must toggle the grid feature off and on for changes to take effect.",
+    "screen": "Screen",
+    "selectTarget": "Select Target",
+    "press_keys": "Press keys..."
 };

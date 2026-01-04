@@ -157,5 +157,18 @@ export default {
     "writing": "写入中...",
     "expand": "展开",
     "collapse": "收起",
-    "changes_pending": "修改待应用..."
+    "changes_pending": "修改待应用...",
+    "experimental_features": "实验性功能",
+    "photo_grid_overlay": "摄影构图辅助线",
+    "photo_grid_overlay_desc": "在屏幕上显示相机三分法构图辅助线。",
+    "hotkey_toggle": "网格切换快捷键",
+    "grid_target": "网格目标",
+    "grid_opacity": "网格透明度",
+    "grid_color": "网格颜色",
+    "grid_lines_h": "水平线",
+    "grid_lines_v": "垂直线",
+    "grid_update_notice": "注意：您必须关闭并重新开启网格功能才能应用更改。",
+    "screen": "屏幕",
+    "selectTarget": "选择目标",
+    "press_keys": "请按键..."
 };

@@ -157,5 +157,18 @@ export default {
     "writing": "書き込み中...",
     "expand": "展開",
     "collapse": "折りたたむ",
-    "changes_pending": "変更が保留中..."
+    "changes_pending": "変更が保留中...",
+    "experimental_features": "実験的機能",
+    "photo_grid_overlay": "フォトグリッドオーバーレイ",
+    "photo_grid_overlay_desc": "画面にカメラの三分割法ガイドを表示します。",
+    "hotkey_toggle": "グリッド切り替えホットキー",
+    "grid_target": "グリッドターゲット",
+    "grid_opacity": "グリッドの不透明度",
+    "grid_color": "グリッドの色",
+    "grid_lines_h": "水平線",
+    "grid_lines_v": "垂直線",
+    "grid_update_notice": "注意: 変更を反映するには、グリッド機能をオフにしてからオンに切り替える必要があります。",
+    "screen": "画面",
+    "selectTarget": "ターゲットを選択",
+    "press_keys": "キーを押してください..."
 };

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, net, dialog, nativeImage, clipboard, shell, desktopCapturer, screen } from 'electron';
 import updater from 'electron-updater';
 const { autoUpdater } = updater;
 import path from 'path';
@@ -10,6 +10,7 @@ import { toWinLongPath, normalizeInternalPath } from './utils/pathHelper.js';
 import { getWindowState, saveWindowState } from './windowState.js';
 import ElectronStore from 'electron-store';
 import { saveBskyCredentials, hasBskyCredentials, postToBsky } from './platforms/bsky.js';
+import { initOverlayManager, registerHotkeys as registerOverlayHotkeys, handleFeatureToggle } from './overlayManager.js';
 app.name = 'March';
 app.setAppUserModelId('com.ayrlin.march');
 if (app.isPackaged) {
@@ -83,7 +84,6 @@ else {
         }
     });
 }
-console.log('[Main] User Data Path:', app.getPath('userData'));
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Register protocol before app ready
 protocol.registerSchemesAsPrivileged([
@@ -108,10 +108,19 @@ const settings = new ElectronStore({
             { index: 6, name: 'Purple', color: '#ba75ffff' },
             { index: 7, name: 'Pink', color: '#ff7affff' },
             { index: 8, name: 'White', color: '#8a8a8aff' },
-        ]
+        ],
+        isCameraGridFeatureEnabled: false,
+        cameraGridHotkeys: { toggle: 'CommandOrControl+Shift+P' },
+        cameraGridTargetId: null,
+        cameraGridLinesH: 2,
+        cameraGridLinesV: 2,
+        isCameraGridActive: false,
     }
 });
+// Force grid to be inactive on startup
+settings.set('isCameraGridActive', false);
 const labelStore = new ElectronStore({ name: 'image-labels' });
+initOverlayManager(null, settings, __dirname);
 const cacheDir = path.join(app.getPath('userData'), 'thumbnails');
 if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
@@ -231,6 +240,29 @@ function createWindow() {
         }
         if (newSettings.watchedFolders !== undefined) {
             settings.set('watchedFolders', newSettings.watchedFolders);
+        }
+        if (newSettings.isCameraGridFeatureEnabled !== undefined) {
+            settings.set('isCameraGridFeatureEnabled', newSettings.isCameraGridFeatureEnabled);
+            registerOverlayHotkeys();
+            handleFeatureToggle(newSettings.isCameraGridFeatureEnabled);
+            // Ensure renderer knows grid is inactive if feature is disabled
+            if (!newSettings.isCameraGridFeatureEnabled) {
+                newSettings.isCameraGridActive = false;
+            }
+        }
+        if (newSettings.cameraGridHotkeys !== undefined) {
+            settings.set('cameraGridHotkeys', newSettings.cameraGridHotkeys);
+            registerOverlayHotkeys();
+        }
+        if (newSettings.cameraGridTargetId !== undefined) {
+            settings.set('cameraGridTargetId', newSettings.cameraGridTargetId);
+            // Targeted snapping handled via IPC or overlayManager
+        }
+        if (newSettings.cameraGridLinesH !== undefined) {
+            settings.set('cameraGridLinesH', newSettings.cameraGridLinesH);
+        }
+        if (newSettings.cameraGridLinesV !== undefined) {
+            settings.set('cameraGridLinesV', newSettings.cameraGridLinesV);
         }
         // If lookback changed, re-trigger watcher
         if (newSettings.ingestLookbackDays !== undefined && newSettings.ingestLookbackDays !== oldLookback) {
@@ -409,6 +441,36 @@ function createWindow() {
             return false;
         }
     });
+    // --- Overlay IPC ---
+    ipcMain.handle('get-desktop-sources', async () => {
+        const sources = await desktopCapturer.getSources({
+            types: ['screen'], // Screens only
+            thumbnailSize: { width: 150, height: 150 },
+            fetchWindowIcons: false // Not needed for screens
+        });
+        const displays = screen.getAllDisplays();
+        const primaryId = screen.getPrimaryDisplay().id.toString();
+        return sources.map((s) => {
+            let name = s.name;
+            let finalId = s.id;
+            if (s.id.startsWith('screen:')) {
+                const screenIdFromSource = s.id.replace('screen:', '');
+                const screenIndex = parseInt(screenIdFromSource, 10);
+                if (!isNaN(screenIndex) && screenIndex < displays.length) {
+                    const display = displays[screenIndex];
+                    const isPrimary = display.id.toString() === primaryId;
+                    name = `Screen ${screenIndex + 1}${isPrimary ? ' (Primary)' : ''}`;
+                    finalId = `screen:${display.id}`;
+                }
+            }
+            return {
+                id: finalId,
+                name: name,
+                thumbnail: s.thumbnail.toDataURL(),
+                appIcon: null
+            };
+        });
+    });
     if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
         win.loadURL('http://localhost:5173');
         win.webContents.openDevTools();
@@ -416,6 +478,7 @@ function createWindow() {
     else {
         win.loadFile(path.join(__dirname, '../dist/index.html'));
     }
+    initOverlayManager(win, settings, __dirname);
     // Initial setup with lookback
     const lookbackDays = settings.get('ingestLookbackDays');
     const folderData = settings.get('watchedFolders') || [];
@@ -556,15 +619,22 @@ app.whenReady().then(() => {
             return new Response('Not Found', { status: 404 });
         }
     });
+    if (!settings.get('cameraGridTargetId')) {
+        const primaryId = screen.getPrimaryDisplay().id.toString();
+        settings.set('cameraGridTargetId', `screen:${primaryId}`);
+        console.log(`[Main] Set default target to primary screen: ${primaryId}`);
+    }
+    settings.set('isCameraGridActive', false);
+    registerOverlayHotkeys();
     createWindow();
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        }
-    });
 });
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
+    }
+});
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
     }
 });

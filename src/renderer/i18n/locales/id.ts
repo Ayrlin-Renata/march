@@ -157,5 +157,18 @@ export default {
     "writing": "Sedang menulis...",
     "expand": "Perluas",
     "collapse": "Ciutkan",
-    "changes_pending": "Perubahan tertunda..."
+    "changes_pending": "Perubahan tertunda...",
+    "experimental_features": "Fitur Eksperimental",
+    "photo_grid_overlay": "Hamparan Foto Grid",
+    "photo_grid_overlay_desc": "Tampilkan grid sepertiga kamera di layar Anda.",
+    "hotkey_toggle": "Tombol Pintas Toggle Grid",
+    "grid_target": "Target Grid",
+    "grid_opacity": "Opasitas Grid",
+    "grid_color": "Warna Grid",
+    "grid_lines_h": "Garis Horizontal",
+    "grid_lines_v": "Garis Vertikal",
+    "grid_update_notice": "Catatan: Anda harus mematikan dan menyalakan kembali fitur grid agar perubahan diterapkan.",
+    "screen": "Layar",
+    "selectTarget": "Pilih Target",
+    "press_keys": "Tekan tombol..."
 };

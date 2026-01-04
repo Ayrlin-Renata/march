@@ -157,5 +157,18 @@ export default {
     "writing": "저장 중...",
     "expand": "펼치기",
     "collapse": "접기",
-    "changes_pending": "변경 사항 보류 중..."
+    "changes_pending": "변경 사항 보류 중...",
+    "experimental_features": "실험적 기능",
+    "photo_grid_overlay": "포토 그리드 오버레이",
+    "photo_grid_overlay_desc": "화면에 카메라 3분할 가이드를 표시합니다.",
+    "hotkey_toggle": "그리드 토글 단축키",
+    "grid_target": "그리드 대상",
+    "grid_opacity": "그리드 불투명도",
+    "grid_color": "격자 색상",
+    "grid_lines_h": "수평선",
+    "grid_lines_v": "수직선",
+    "grid_update_notice": "참고: 변경 사항을 적용하려면 그리드 기능을 껐다가 다시 켜야 합니다.",
+    "screen": "화면",
+    "selectTarget": "대상 선택",
+    "press_keys": "키를 입력하세요..."
 };

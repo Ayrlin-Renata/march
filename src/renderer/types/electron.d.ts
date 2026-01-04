@@ -29,6 +29,11 @@ export interface ElectronAPI {
     // Auto-update
     checkForUpdates: () => Promise<any>;
     quitAndInstall: () => Promise<void>;
+
+    // Camera Grid
+    getDesktopSources: () => Promise<any[]>;
+    toggleCameraGrid: (active: boolean) => void;
+    updateCameraGridTarget: (targetId: string | null) => void;
 }
 
 declare global {

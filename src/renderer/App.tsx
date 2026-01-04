@@ -18,6 +18,7 @@ import PostView from './features/post-view/PostView';
 import { TutorialPrompt } from './components/Tutorial/TutorialPrompt';
 import { Resizer } from './components/Shared/Resizer';
 import { TitleBar } from './components/TitleBar';
+import PhotoGridOverlay from './features/overlay/PhotoGridOverlay';
 
 // Styles
 import './styles/base/variables.css';
@@ -245,6 +246,9 @@ const App: React.FC = () => {
     }, [setIsDiscovering, clearImages]);
 
     useEffect(() => {
+        // Skip window size tracking if running in overlay mode
+        if (window.location.hash.includes('overlay')) return;
+
         const handleWindowResize = () => {
             // If we are in Post Mode, resizing the window should update the COLLAPSED width
             // because Post Mode uses the narrow view.
@@ -330,6 +334,14 @@ const App: React.FC = () => {
             }
         `).join('\n');
     }, [labels]);
+
+    if (window.location.hash.includes('overlay')) {
+        document.documentElement.style.background = 'transparent';
+        document.body.style.background = 'transparent';
+        const root = document.getElementById('root');
+        if (root) root.style.background = 'transparent';
+        return <PhotoGridOverlay />;
+    }
 
     return (
         <div className={clsx("layout-root", isBuilderCollapsed && "builder-collapsed")} style={{ '--thumb-size': `${thumbnailSize}px`, '--ingestion-width': `${ingestionWidth}px` } as React.CSSProperties}>
