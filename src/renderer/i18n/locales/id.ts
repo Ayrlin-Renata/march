@@ -170,5 +170,14 @@ export default {
     "grid_update_notice": "Catatan: Anda harus mematikan dan menyalakan kembali fitur grid agar perubahan diterapkan.",
     "screen": "Layar",
     "selectTarget": "Pilih Target",
-    "press_keys": "Tekan tombol..."
+    "press_keys": "Tekan tombol...",
+    "about_broken_title": "Ada yang Rusak?",
+    "about_broken_desc": "Aplikasi tidak berjalan semestinya, atau ada fitur yang Anda inginkan? Gunakan pelacak masalah di GitHub, atau silakan @ atau DM saya di media sosial. Atau email, jika Anda lebih suka.",
+    "github_issues": "Pelacak Masalah GitHub",
+    "contact_email": "Kirim Email",
+    "copy_email": "Salin Alamat Email",
+    "contact_twitter": "X.com (sebelumnya Twitter)",
+    "contact_bluesky": "BlueSky",
+    "support_kofi": "Dukung di Ko-fi",
+    "github_repo": "Repositori GitHub"
 };

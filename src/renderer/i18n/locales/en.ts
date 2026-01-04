@@ -170,5 +170,14 @@ export default {
     "grid_update_notice": "Note: You must toggle the grid feature off and on for changes to take effect.",
     "screen": "Screen",
     "selectTarget": "Select Target",
-    "press_keys": "Press keys..."
+    "press_keys": "Press keys...",
+    "about_broken_title": "Something Broken?",
+    "about_broken_desc": "It isn't working right, or there's a feature you'd like to have? You can use the issue tracker on GitHub, or feel free to @ or DM me on socials about it. Or email, if you prefer.",
+    "github_issues": "GitHub Issue Tracker",
+    "contact_email": "Send an Email",
+    "copy_email": "Copy Email Address",
+    "contact_twitter": "X.com (formerly Twitter)",
+    "contact_bluesky": "BlueSky",
+    "support_kofi": "Support on Ko-fi",
+    "github_repo": "GitHub Repository"
 };

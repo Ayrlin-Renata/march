@@ -170,5 +170,14 @@ export default {
     "grid_update_notice": "注意: 変更を反映するには、グリッド機能をオフにしてからオンに切り替える必要があります。",
     "screen": "画面",
     "selectTarget": "ターゲットを選択",
-    "press_keys": "キーを押してください..."
+    "press_keys": "キーを押してください...",
+    "about_broken_title": "不具合がありますか？",
+    "about_broken_desc": "うまく動作しない、または追加してほしい機能がありますか？ GitHubのイシュートラッカーを使用するか、SNSで@またはDMでお気軽にご連絡ください。メールでも結構です。",
+    "github_issues": "GitHub イシュートラッカー",
+    "contact_email": "メールを送る",
+    "copy_email": "メールアドレスをコピー",
+    "contact_twitter": "X.com (旧Twitter)",
+    "contact_bluesky": "BlueSky",
+    "support_kofi": "Ko-fi でサポートする",
+    "github_repo": "GitHub リポジトリ"
 };

@@ -170,5 +170,14 @@ export default {
     "grid_update_notice": "注意：您必须关闭并重新开启网格功能才能应用更改。",
     "screen": "屏幕",
     "selectTarget": "选择目标",
-    "press_keys": "请按键..."
+    "press_keys": "请按键...",
+    "about_broken_title": "发现问题？",
+    "about_broken_desc": "运行不正常，或者有想要的功能？您可以使用 GitHub 上的问题追踪器，或者随时在社交媒体上 @ 或私信我。如果您愿意，也可以发送电子邮件。",
+    "github_issues": "GitHub 问题追踪器",
+    "contact_email": "发送电子邮件",
+    "copy_email": "复制电子邮件地址",
+    "contact_twitter": "X.com (原 Twitter)",
+    "contact_bluesky": "BlueSky",
+    "support_kofi": "在 Ko-fi 上支持",
+    "github_repo": "GitHub 仓库"
 };

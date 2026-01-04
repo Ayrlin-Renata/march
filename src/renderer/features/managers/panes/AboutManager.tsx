@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 const logoLight = './march_icon_color.png';
 const logoDark = './march_icon_color_dark.png';
 import { useTheme } from '../../../context/ThemeContext';
-import { MdUpdate, MdSync, MdFileDownload, MdCheckCircle, MdError, MdRefresh, MdCode, MdFavoriteBorder } from 'react-icons/md';
+import { MdUpdate, MdSync, MdFileDownload, MdCheckCircle, MdError, MdRefresh, MdFavoriteBorder, MdEmail, MdOpenInNew } from 'react-icons/md';
+import { FaGithub, FaBluesky, FaXTwitter } from 'react-icons/fa6';
 import '../../../styles/features/about.css';
 
 type UpdateStatus = 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
@@ -17,6 +18,7 @@ export const AboutManagerPane: React.FC = () => {
     const [updateError, setUpdateError] = React.useState<string | null>(null);
     const [newVersion, setNewVersion] = React.useState<string | null>(null);
     const [hasCopied, setHasCopied] = React.useState(false);
+    const [emailClicked, setEmailClicked] = React.useState(false);
 
     React.useEffect(() => {
         if (window.electron && window.electron.getAppVersion) {
@@ -192,14 +194,66 @@ export const AboutManagerPane: React.FC = () => {
                 </div>
 
                 <div className="about-details">
-                    <p style={{ lineHeight: 1.5, opacity: 0.8 }}>{t('about_description_text')}</p>
+                    <p style={{ lineHeight: 1.5, opacity: 0.8, fontSize: '0.85rem' }}>{t('about_description_text')}</p>
                     <div className="about-links" style={{ marginTop: 24 }}>
-                        <button className="icon-btn-text" style={{ padding: "1em 0.5rem", width: '100%', alignItems: 'center' }} onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march')}>
-                            <MdCode style={{ height: '1.3rem', width: '1.3rem' }} /> GitHub Repository
+                        <button className="icon-btn-text" style={{ padding: "1em 0.5rem", width: '100%', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => window.electron.openExternal('https://ko-fi.com/ayrlin')}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <MdFavoriteBorder style={{ height: '1.3rem', width: '1.3rem' }} /> {t('support_kofi')}
+                            </div>
+                            <MdOpenInNew size={16} opacity={0.4} />
                         </button>
-                        <button className="icon-btn-text" style={{ padding: "1em 0.5rem", width: '100%', alignItems: 'center' }} onClick={() => window.electron.openExternal('https://ko-fi.com/ayrlin')}>
-                            <MdFavoriteBorder style={{ height: '1.3rem', width: '1.3rem' }} /> Support on Ko-fi
+                        <button className="icon-btn-text" style={{ padding: "1em 0.5rem", width: '100%', alignItems: 'center', justifyContent: 'space-between' }} onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march')}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <FaGithub style={{ height: '1.3rem', width: '1.3rem' }} /> {t('github_repo')}
+                            </div>
+                            <MdOpenInNew size={16} opacity={0.4} />
                         </button>
+                    </div>
+
+                    <div className="about-broken-section" style={{ marginTop: 32, borderTop: '1px solid var(--border-color)', paddingTop: 24 }}>
+                        <h4 style={{ margin: '0 0 8px 0' }}>{t('about_broken_title')}</h4>
+                        <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: 16, lineHeight: 1.4 }}>{t('about_broken_desc')}</p>
+
+                        <div className="broken-links-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <button className="icon-btn-text" style={{ justifyContent: 'space-between', padding: '12px' }} onClick={() => window.electron.openExternal('https://github.com/Ayrlin-Renata/march/issues')}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FaGithub /> {t('github_issues')}
+                                </div>
+                                <MdOpenInNew size={14} opacity={0.4} />
+                            </button>
+                            <button
+                                className="icon-btn-text"
+                                style={{ justifyContent: 'space-between', padding: '12px' }}
+                                onClick={async () => {
+                                    const email = 'ayrlin.renata@gmail.com';
+                                    if (!emailClicked) {
+                                        await window.electron.openExternal(`mailto:${email}`);
+                                        setEmailClicked(true);
+                                    } else {
+                                        navigator.clipboard.writeText(email);
+                                        setHasCopied(true);
+                                        setTimeout(() => setHasCopied(false), 2000);
+                                    }
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <MdEmail /> {hasCopied ? t('copied') || 'Copied!' : (emailClicked ? t('copy_email') : t('contact_email'))}
+                                </div>
+                                <MdOpenInNew size={14} opacity={0.4} />
+                            </button>
+                            <button className="icon-btn-text" style={{ justifyContent: 'space-between', padding: '12px' }} onClick={() => window.electron.openExternal('https://bsky.app/profile/ayrl.in')}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FaBluesky /> {t('contact_bluesky')}
+                                </div>
+                                <MdOpenInNew size={14} opacity={0.4} />
+                            </button>
+                            <button className="icon-btn-text" style={{ justifyContent: 'space-between', padding: '12px' }} onClick={() => window.electron.openExternal('https://twitter.com/ayrlinrenata')}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <FaXTwitter /> {t('contact_twitter')}
+                                </div>
+                                <MdOpenInNew size={14} opacity={0.4} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

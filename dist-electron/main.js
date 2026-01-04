@@ -284,8 +284,15 @@ function createWindow() {
     ipcMain.handle('get-app-version', () => {
         return app.getVersion();
     });
-    ipcMain.handle('open-external', (_event, url) => {
-        return shell.openExternal(url);
+    ipcMain.handle('open-external', async (_event, url) => {
+        try {
+            await shell.openExternal(url);
+            return true;
+        }
+        catch (err) {
+            console.error('Failed to open external URL:', url, err);
+            return false;
+        }
     });
     ipcMain.handle('select-folder', async () => {
         if (!win)

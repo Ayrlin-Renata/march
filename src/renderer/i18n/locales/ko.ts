@@ -170,5 +170,14 @@ export default {
     "grid_update_notice": "참고: 변경 사항을 적용하려면 그리드 기능을 껐다가 다시 켜야 합니다.",
     "screen": "화면",
     "selectTarget": "대상 선택",
-    "press_keys": "키를 입력하세요..."
+    "press_keys": "키를 입력하세요...",
+    "about_broken_title": "문제가 발생했나요?",
+    "about_broken_desc": "제대로 작동하지 않거나 원하는 기능이 있으신가요? GitHub의 이슈 트래커를 이용하거나 소셜 미디어에서 @ 또는 DM으로 편하게 연락주세요. 원하신다면 이메일도 가능합니다.",
+    "github_issues": "GitHub 이슈 트래커",
+    "contact_email": "이메일 보내기",
+    "copy_email": "이메일 주소 복사",
+    "contact_twitter": "X.com (이전 Twitter)",
+    "contact_bluesky": "BlueSky",
+    "support_kofi": "Ko-fi에서 후원하기",
+    "github_repo": "GitHub 저장소"
 };

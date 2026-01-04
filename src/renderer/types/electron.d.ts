@@ -15,7 +15,7 @@ export interface ElectronAPI {
     copyImage: (filePath: string, rect?: { x: number; y: number; width: number; height: number }) => Promise<boolean>;
     getSettings: () => Promise<any>;
     getAppVersion: () => Promise<string>;
-    openExternal: (url: string) => Promise<void>;
+    openExternal: (url: string) => Promise<boolean>;
 
     // Bsky
     saveBskyCredentials: (handle: string, password: string) => Promise<boolean>;
