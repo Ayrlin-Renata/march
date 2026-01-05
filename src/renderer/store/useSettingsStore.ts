@@ -248,13 +248,23 @@ export const useSettingsStore = create<SettingsState>()(
             setCameraGridOpacity: (opacity) => {
                 set({ cameraGridOpacity: opacity });
                 if (window.electron?.send) {
-                    window.electron.send('set-settings', { cameraGridOpacity: opacity });
+                    // Debounce persistence
+                    const timeoutId = (window as any)._opacityDebounce;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    (window as any)._opacityDebounce = setTimeout(() => {
+                        window.electron.send('set-settings', { cameraGridOpacity: opacity });
+                    }, 200);
                 }
             },
             setCameraGridColor: (color) => {
                 set({ cameraGridColor: color });
                 if (window.electron?.send) {
-                    window.electron.send('set-settings', { cameraGridColor: color });
+                    // Debounce persistence
+                    const timeoutId = (window as any)._colorDebounce;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    (window as any)._colorDebounce = setTimeout(() => {
+                        window.electron.send('set-settings', { cameraGridColor: color });
+                    }, 200);
                 }
             },
             setCameraGridLinesH: (count) => {

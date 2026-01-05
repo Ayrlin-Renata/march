@@ -24,6 +24,25 @@ export const GeneralManagerPane: React.FC = () => {
     const cameraGridLinesV = useSettingsStore(s => s.cameraGridLinesV);
     const setCameraGridLinesV = useSettingsStore(s => s.setCameraGridLinesV);
 
+    const [localOpacity, setLocalOpacity] = React.useState(cameraGridOpacity);
+    const [localColor, setLocalColor] = React.useState(cameraGridColor);
+    const [localLinesH, setLocalLinesH] = React.useState(cameraGridLinesH);
+    const [localLinesV, setLocalLinesV] = React.useState(cameraGridLinesV);
+
+    // Sync local state if global store changes (e.g. hydration)
+    React.useEffect(() => {
+        setLocalOpacity(cameraGridOpacity);
+    }, [cameraGridOpacity]);
+    React.useEffect(() => {
+        setLocalColor(cameraGridColor);
+    }, [cameraGridColor]);
+    React.useEffect(() => {
+        setLocalLinesH(cameraGridLinesH);
+    }, [cameraGridLinesH]);
+    React.useEffect(() => {
+        setLocalLinesV(cameraGridLinesV);
+    }, [cameraGridLinesV]);
+
     const handleReplayTutorial = () => {
         setActiveManager(null);
         setTimeout(() => {
@@ -96,10 +115,12 @@ export const GeneralManagerPane: React.FC = () => {
                                                 min="0"
                                                 max="1"
                                                 step="0.05"
-                                                value={cameraGridOpacity}
-                                                onChange={(e) => setCameraGridOpacity(parseFloat(e.target.value))}
+                                                value={localOpacity}
+                                                onChange={(e) => setLocalOpacity(parseFloat(e.target.value))}
+                                                onMouseUp={() => setCameraGridOpacity(localOpacity)}
+                                                onTouchEnd={() => setCameraGridOpacity(localOpacity)}
                                             />
-                                            <span>{Math.round(cameraGridOpacity * 100)}%</span>
+                                            <span>{Math.round(localOpacity * 100)}%</span>
                                         </div>
                                     </div>
                                     <div className="settings-group" style={{ border: 'none', padding: 0 }}>
@@ -110,10 +131,11 @@ export const GeneralManagerPane: React.FC = () => {
                                                     type="color"
                                                     className="label-color-input"
                                                     style={{ padding: 0, width: '28px', height: '28px' }}
-                                                    value={cameraGridColor.slice(0, 7)}
-                                                    onChange={(e) => setCameraGridColor(e.target.value + 'ff')}
+                                                    value={localColor.slice(0, 7)}
+                                                    onChange={(e) => setLocalColor(e.target.value + 'ff')}
+                                                    onBlur={() => setCameraGridColor(localColor)}
                                                 />
-                                                <span style={{ fontSize: '11px', opacity: 0.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>{cameraGridColor.slice(0, 7)}</span>
+                                                <span style={{ fontSize: '11px', opacity: 0.5, textTransform: 'uppercase', fontFamily: 'monospace' }}>{localColor.slice(0, 7)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -125,10 +147,12 @@ export const GeneralManagerPane: React.FC = () => {
                                                 min="0"
                                                 max="15"
                                                 step="1"
-                                                value={cameraGridLinesH}
-                                                onChange={(e) => setCameraGridLinesH(parseInt(e.target.value, 10))}
+                                                value={localLinesH}
+                                                onChange={(e) => setLocalLinesH(parseInt(e.target.value, 10))}
+                                                onMouseUp={() => setCameraGridLinesH(localLinesH)}
+                                                onTouchEnd={() => setCameraGridLinesH(localLinesH)}
                                             />
-                                            <span>{cameraGridLinesH}</span>
+                                            <span>{localLinesH}</span>
                                         </div>
                                     </div>
                                     <div className="settings-group" style={{ border: 'none', padding: 0 }}>
@@ -139,10 +163,12 @@ export const GeneralManagerPane: React.FC = () => {
                                                 min="0"
                                                 max="15"
                                                 step="1"
-                                                value={cameraGridLinesV}
-                                                onChange={(e) => setCameraGridLinesV(parseInt(e.target.value, 10))}
+                                                value={localLinesV}
+                                                onChange={(e) => setLocalLinesV(parseInt(e.target.value, 10))}
+                                                onMouseUp={() => setCameraGridLinesV(localLinesV)}
+                                                onTouchEnd={() => setCameraGridLinesV(localLinesV)}
                                             />
-                                            <span>{cameraGridLinesV}</span>
+                                            <span>{localLinesV}</span>
                                         </div>
                                     </div>
                                 </div>

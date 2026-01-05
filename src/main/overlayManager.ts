@@ -9,7 +9,11 @@ let dirname: string = '';
 let isInitialized = false;
 
 export function initOverlayManager(mainWindow: BrowserWindow | null, settingsStore: any, currentDir: string) {
-    win = mainWindow;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        win = mainWindow;
+    } else {
+        win = null;
+    }
     settings = settingsStore;
     dirname = currentDir;
 
@@ -18,6 +22,9 @@ export function initOverlayManager(mainWindow: BrowserWindow | null, settingsSto
 
     // --- Overlay IPC ---
     ipcMain.on('toggle-camera-grid', (_event, active: boolean) => {
+        if (overlayWin && overlayWin.isDestroyed()) {
+            overlayWin = null;
+        }
         const isCurrentlyActive = !!(overlayWin && overlayWin.isVisible());
         if (active !== isCurrentlyActive) {
             toggleOverlay();
@@ -25,6 +32,7 @@ export function initOverlayManager(mainWindow: BrowserWindow | null, settingsSto
     });
 
     ipcMain.on('update-camera-grid-target', (_event, targetId: string | null) => {
+        if (!settings) return;
         settings.set('cameraGridTargetId', targetId);
         if (overlayWin && !overlayWin.isDestroyed()) {
             const targetBounds = getTargetBounds(targetId);
@@ -220,4 +228,15 @@ export function handleFeatureToggle(enabled: boolean) {
             overlayWin.close();
         }
     }
+}
+
+export function destroyOverlay() {
+    if (destroyOverlayTimeout) {
+        clearTimeout(destroyOverlayTimeout);
+        destroyOverlayTimeout = null;
+    }
+    if (overlayWin && !overlayWin.isDestroyed()) {
+        overlayWin.destroy();
+    }
+    overlayWin = null;
 }
